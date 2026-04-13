@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Exportar Ventas y Gastos</ui:define>
+
+    <ui:define name="content">
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Exportar Ventas y Gastos a Excel</h1>
+                        <p:panelGrid id="panelParametros" columns="2"
+                                     columnClasses="ui-grid-col-2,ui-grid-col-4"
+                                     layout="grid" styleClass="ui-panelgrid-blank"
+                                     style="border:0px none; background-color:transparent;">
+
+                            <p:outputLabel value="Año:" for="spinnerAnno"/>
+                            <p:spinner id="spinnerAnno"
+                                       value="#{beanExportarVentasGastos.anno}"
+                                       min="2020" max="2050"
+                                       style="width:150px;"/>
+
+                        </p:panelGrid>
+                    </div>
+                    <p:panelGrid columns="1" columnClasses="ui-grid-col-3"
+                                 layout="grid" styleClass="ui-panelgrid-blank"
+                                 style="border:0px none; background-color:transparent;">
+                        <p:commandButton ajax="false"
+                                         value="Generar Excel"
+                                         actionListener="#{beanExportarVentasGastos.generarExcel}"
+                                         icon="ui-icon-arrowthick-1-s">
+                            <p:fileDownload value="#{beanExportarVentasGastos.reporteDesplegar}"/>
+                        </p:commandButton>
+                    </p:panelGrid>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>
