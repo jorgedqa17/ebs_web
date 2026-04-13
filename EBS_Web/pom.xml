@@ -79,6 +79,14 @@
             <artifactId>jasperreports-fonts</artifactId>
             <version>6.0.0</version>
         </dependency>
+        <!-- ::::::::::::::::::::::::::::::::::: -->
+        <!-- :::   DEPENDENCIA APACHE POI    ::: -->
+        <!-- ::::::::::::::::::::::::::::::::::: -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.14</version>
+        </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
