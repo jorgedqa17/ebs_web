@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <p:panelGrid columnClasses="ui-grid-col-2, ui-grid-col-2" columns="2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+        <p:commandButton icon="fa fa-search"   
+                         update="panelBuscarPersonal"
+                         disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}" 
+                         id="buscarPersonaPanel"
+                         value="Buscar Persona">
+            <f:ajax listener="#{beanFactura.mostrarPanelBuscarPersonal}" render="panelBuscarPersonal" />
+        </p:commandButton>
+        <p:commandButton icon="fa fa-close" disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"  update="panelReceptorIdentificacion" actionListener="#{beanFactura.quitarClienteFactura}" id="btnEliminarUsuarioFactura" value="Quitar Persona"/>
+    </p:panelGrid>
+    <div class="card" style="float: none;" >
+        <p:panelGrid id="panelBuscarPersonal"  columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:dataTable id="listaPersonas" value="#{beanFactura.listaPersonas}"
+                         var="persona"
+                         rendered="#{beanFactura.verPanelBuscarPersona}"
+                         selectionMode="single"
+                         paginator="true" 
+                         rowKey="#{persona}"
+                         reflow="true"
+                         paginatorPosition="bottom"                          
+                         rows="10"
+                         filteredValue="#{beanFactura.listaPersonasFiltro}"
+                         emptyMessage="#{label['tabla.vacia']}">
+                <p:ajax event="rowSelect" update=":form_sisadmin :form_sisadmin:idTablaProductos :form_sisadmin:btnVerModalEx :form_sisadmin:listaActividadEconocimcav2"                          
+                        listener="#{beanFactura.buscarPersonaSeleccionTabla}"  />
+                <p:column  filterMatchMode="contains" filterBy="#{persona.persona.personaPK.numero_cedula}" headerText="Número de Cédula" >
+                    <h:outputText id="numeroCedula" value="#{persona.persona.personaPK.numero_cedula}" />  
+                </p:column>                
+                <p:column  filterMatchMode="contains" filterBy="#{persona.persona.nombreCompleto}" headerText="Nombre de Cliente" >
+                    <h:outputText id="nombreCompleto" value="#{persona.persona.nombreCompleto}" />  
+                </p:column>
+                <p:column filterMatchMode="contains" filterBy="#{persona.persona.nombre_fantasia}" headerText="Nombre de Cliente Fantasia" >
+                    <h:outputText id="nombreFantasia" value="#{persona.persona.nombre_fantasia}" />  
+                </p:column>
+
+            </p:dataTable>                             
+        </p:panelGrid>
+    </div>
+
+
+    <p:panelGrid id="panelReceptorIdentificacion"  
+                 rendered="#{!beanFactura.verPanelNuevaPersona or  !beanFactura.verPanelBuscarPersona}" 
+                 columns="6" 
+                 columnClasses="ui-grid-col-1,ui-grid-col-4,ui-grid-col-1,ui-grid-col-4,ui-grid-col-1,ui-grid-col-4" 
+                 layout="grid" 
+                 styleClass="ui-panelgrid-blank" 
+                 style="border:0px none; background-color:transparent;">
+
+
+        <p:outputLabel for="listaTipoIdentificacion" value="#{label['receptor.tipo.identificacion']}" />
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                          valueChangeListener="#{beanFactura.seleccionarTipoCedula}"
+                          value="#{beanFactura.tipoIdentificacionSeleccionadaReceptor}" 
+                          id="listaTipoIdentificacion"
+                          disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                          effect="fold" >     
+            <p:ajax event="change" update="txtIdentificacion" />     
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanFactura.listaTiposCedulas}"
+                           var="tipoCedula"
+                           itemLabel="#{tipoCedula.descripcion}"
+                           itemValue="#{tipoCedula.id_tipo_cedula}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblIdentificacion" value="#{label['receptor.identificacion']}"/>
+        <p:inputMask id="txtIdentificacion" 
+                     value="#{beanFactura.identificacionReceptor}"     
+                     disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                     maxlength="#{beanFactura.tamannoCedula}" 
+                     mask="#{beanFactura.mascaraSeleccionada}">
+        </p:inputMask>  
+
+        <p:commandButton id="buscarPorPersona"
+                         actionListener="#{beanFactura.buscarPersona}"
+                         update="form_sisadmin"   
+                         icon="fa fa-search"    
+                         disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                         >
+
+        </p:commandButton>
+        <p:commandButton id="btnAgregarPersona" 
+                         update="panelNuevaPersona" 
+                         disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                         widgetVar="btnAgregarPersona" 
+                         icon="fa fa-plus"                      
+                         value="#{label['receptor.agregar.persona']}">
+            <f:ajax listener="#{beanFactura.agregarNUevoCliente}" render="panelNuevaPersona" />
+        </p:commandButton>  
+
+        <p:outputLabel id="lblNombreReceptor" value="#{label['receptor.nombre']}"/>
+        <p:inputText id="txtNombreRecepto" readonly="true"    value="#{beanFactura.personaReceptor.nombreCompleto}" >
+        </p:inputText>
+
+        <p:outputLabel id="lblTelefono" value="#{label['receptor.telefono']}"/>
+        <p:inputText id="txtTelefono" readonly="true"  value="#{beanFactura.personaReceptor.telefono_1}" />
+
+        <p:outputLabel for="listaCorreosCliente" value="Lista Correos Cliente" />
+        <p:selectOneMenu  converter="ConvertidorListasString"                               
+                          value="#{beanFactura.correoSeleccionado}" 
+                          valueChangeListener="#{beanFactura.seleccionarCorreoElectronico}"
+                          id="listaCorreosCliente" 
+                          disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                          effect="fold" >     
+            <p:ajax event="change" update="form_sisadmin" />      
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanFactura.listaPersonasCorreo}"
+                           var="correo"
+                           itemLabel="#{correo.correo_electronico}"
+                           itemValue="#{correo.correo_electronico}"/>
+        </p:selectOneMenu> 
+
+
+        <p:outputLabel id="lblOtraSennas" value="#{label['receptor.otras.sennas']}"/>
+        <p:inputTextarea rows="5" cols="1000"  id="txtOtraSennas" readonly="true"  value="#{beanFactura.personaReceptor.direccion}"/>
+
+        <p:outputLabel id="lblCorreoFactura" value="Correo Electrónico sin cliente:"/>
+        <p:inputText id="txtCorreoFactura" disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}" maxlength="300" value="#{beanFactura.correoElectronicoFactura}" >
+            <f:validator validatorId="EmailValidator" />
+        </p:inputText>
+        <p:outputLabel value="Nombre Cliente Fantasia:"></p:outputLabel>
+        <p:inputText id="txtNombreFantasiaFactura" disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}" maxlength="100" value="#{beanFactura.nombreClienteFantasia}"></p:inputText>
+
+        <p:outputLabel for="listaActividadEconocimcav2" id="actEconocv2" value="Actividad Económica:"/>
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables"           
+                          valueChangeListener="#{beanFactura.seleccionarActividad}"
+                          value="#{beanFactura.idActvidadSeleccionada}" 
+                          id="listaActividadEconocimcav2"     
+                          disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                          filter="true" filterMatchMode="contains"
+                          effect="fold" >     
+            <p:ajax event="change"  />         
+            <f:selectItem  itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanFactura.listaTiposActividadesEconomicas}"
+                           var="barrioP"
+                           itemLabel="#{barrioP.codigoActividadCIIU4}-#{barrioP.dscCIIU4} - #{barrioP.codigoActividadCIIU3} - #{barrioP.dscCIIU3}"
+                           itemValue="#{barrioP.idCodigoActividad}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel />
+        <p:outputLabel />
+    </p:panelGrid>
+
+    <div class="card" style="float: none;">
+        <p:panelGrid id="panelNuevaPersona"    columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <ui:include src="../persona/cliente.xhtml" />
+        </p:panelGrid>  
+    </div>
+
+</ui:composition>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subReporteListaFacturasAnuladas" pageWidth="240" pageHeight="300" whenNoDataType="NoDataSection" columnWidth="200" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="5a4ccbc6-0c6a-43e4-be4e-d20a6835eb16">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="postgres"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="100"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="895"/>
+	<parameter name="fechaInicio" class="java.lang.String"/>
+	<parameter name="fechaFinal" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select tb.login, SUM(tb.TOTAL_COMPROBANTE) 
+from (SELECT T2.DESCRIPCION as login, t1.total_comprobante 
+			FROM SEARMEDICA.FACTURA T1 INNER JOIN SEARMEDICA.BODEGA T2
+	  		ON T1.ID_BODEGA = T2.ID_BODEGA
+			where to_date(to_char(t1.fecha_factura, 'DD/MM/YYYY'),'DD/MM/YYYY') between to_date( $P{fechaInicio} ,'DD/MM/YYYY')  and to_date( $P{fechaFinal} ,'DD/MM/YYY')  
+			AND T1.NUMERO_CONSECUTIVO IS NOT NULL
+AND T1.ID_ANULACION IS NULL
+			
+			)
+tb GROUP BY tb.login]]>
+	</queryString>
+	<field name="login" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="login"/>
+	</field>
+	<field name="sum" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="sum"/>
+	</field>
+	<columnHeader>
+		<band height="20">
+			<staticText>
+				<reportElement x="0" y="0" width="100" height="20" uuid="d8642654-5452-4cfe-93b6-89cea319b05a">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="e100c126-551a-4e00-bde3-e68f59f00907"/>
+				</reportElement>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sucursal]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="100" y="0" width="100" height="20" uuid="c5faa7e0-2e4c-4794-8634-6ea743e9ac3f">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c272563-cbdf-442a-837c-21a4117a4673"/>
+				</reportElement>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Venta]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="100" height="20" uuid="26cdbb98-f7d7-4e19-a28f-912d12da2326">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="e100c126-551a-4e00-bde3-e68f59f00907"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{login}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="100" y="0" width="100" height="20" uuid="1972694a-273a-4c73-8951-77bdcd1302b0">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c272563-cbdf-442a-837c-21a4117a4673"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{sum}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

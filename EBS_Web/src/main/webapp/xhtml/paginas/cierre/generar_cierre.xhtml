@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <ui:define name="title">Generación del Cierre</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">  
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+
+                    <div class="card">
+                        <h1>Parámetros</h1>
+                        <p:panelGrid id="panelFechas" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['cierre.fecha.desde']}"/>
+                            <p:calendar  disabled="#{beanCierre.inhabilitarFechaInicio}" value="#{beanCierre.fechaInicio}" showOn="button" pattern="dd/MM/yyyy" timeZone="America/Costa_Rica" mask="true" />
+
+                            <p:outputLabel value="#{label['cierre.fecha.hasta']}"/>
+                            <p:calendar  value="#{beanCierre.fechaFin}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+
+                            <p:outputLabel value="#{label['cierre.lista.tipos.cierre']}"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                              disabled="#{!beanCierre.tieneRolCierreSemanal}"
+                                              valueChangeListener="#{beanCierre.seleccionarTipoCierre}"
+                                              value="#{beanCierre.idTipoCierreSeleccionado}" 
+                                              id="listaTiposCierres"                         
+                                              effect="fold" >     
+                                <p:ajax event="change"  update="panelFechas" />  
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanCierre.tiposCierre}"
+                                               var="tipoCierre"
+                                               itemLabel="#{tipoCierre.descripcion}"
+                                               itemValue="#{tipoCierre.id_tipo_cierre}"/>
+                            </p:selectOneMenu>  
+
+                        </p:panelGrid>                            
+                    </div>
+
+                    <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton icon="fa fa-search" id="btnBuscarFacturas" update=":form_sisadmin:tabPrincipal:tablaRecibos panelSummay :form_sisadmin:tabPrincipal:tablaAnulacion, :form_sisadmin:tabPrincipal:tablaTotales, :form_sisadmin:tabPrincipal:tablaChques, :form_sisadmin:tabPrincipal:tablaTransferencia, :form_sisadmin:tabPrincipal:tablaFactuars " value="#{label['cierre.buscar']}" actionListener="#{beanCierre.buscarFacturas}"></p:commandButton>
+                    </p:panelGrid>
+                    <p:tabView id="tabPrincipal">
+                        <p:tab title="Información para el cierre">
+                            <div class="card">
+                                <h1>Lista Facturas de Cheque</h1>
+
+                                <p:dataTable editable="true" editMode="cell" reflow="true" rowKey="#{cheque}" 
+                                             id="tablaChques" value="#{beanCierre.listaFacturasCheque}"  var="cheque">
+
+                                    <p:ajax event="cellEdit" listener="#{beanCierre.onCellEdit}" update="tablaChques" />
+
+                                    <p:column headerText="Número de Consecutivo">
+                                        <h:outputText value="#{cheque.numeroConsecutivo}"/>
+                                    </p:column>
+                                    <p:column headerText="Fecha de Factura">
+                                        <h:outputText value="#{cheque.fechaFactura}"/>
+                                    </p:column>
+                                    <p:column headerText="Condición de la Venta">
+                                        <h:outputText value="#{cheque.condicionDescripcion}"/>
+                                    </p:column>
+                                    <p:column headerText="Medio de Pago">
+                                        <h:outputText value="#{cheque.descMedioPago}"/>
+                                    </p:column>
+                                    <p:column headerText="Total de Comprobante">
+                                        <h:outputText value="#{cheque.totalComprobante}"/>
+                                    </p:column>
+                                    <p:column headerText="N° Referencia">
+                                        <p:cellEditor>
+                                            <f:facet name="output"><h:outputText value="#{cheque.numeroReferencia}"/></f:facet>
+                                            <f:facet name="input"><p:inputText value="#{cheque.numeroReferencia}" style="width:96%" /></f:facet>
+                                        </p:cellEditor>
+                                    </p:column> 
+
+                                </p:dataTable> 
+                            </div>
+                            <div class="card">
+                                <h1>Lista Facturas de Transferencia</h1>
+
+                                <p:dataTable  editable="true" editMode="cell" reflow="true" rowKey="#{transferencia}" 
+                                              id="tablaTransferencia" value="#{beanCierre.listaFacturasTransferencia}"  var="transferencia">
+
+                                    <p:ajax event="cellEdit" listener="#{beanCierre.onCellEdit}" update="tablaTransferencia" />
+
+                                    <p:column headerText="Número de Consecutivo">
+                                        <h:outputText value="#{transferencia.numeroConsecutivo}"/>
+                                    </p:column>
+                                    <p:column headerText="Fecha de Factura">
+                                        <h:outputText value="#{transferencia.fechaFactura}"/>
+                                    </p:column>
+                                    <p:column headerText="Condición de la Venta">
+                                        <h:outputText value="#{transferencia.condicionDescripcion}"/>
+                                    </p:column>
+                                    <p:column headerText="Medio de Pago">
+                                        <h:outputText value="#{transferencia.descMedioPago}"/>
+                                    </p:column>
+                                    <p:column headerText="Total de Comprobante">
+                                        <h:outputText value="#{transferencia.totalComprobante}"/>
+                                    </p:column>
+                                    <p:column headerText="N° Referencia">
+                                        <p:cellEditor>
+                                            <f:facet name="output"><h:outputText value="#{transferencia.numeroReferencia}"/></f:facet>
+                                            <f:facet name="input"><p:inputText value="#{transferencia.numeroReferencia}" style="width:96%" /></f:facet>
+                                        </p:cellEditor>
+                                    </p:column>                          
+                                </p:dataTable> 
+                            </div>
+                            <div class="card">
+                                <h1>Listado de Salidas del Cierre</h1>
+                                <p:panelGrid id="panelSalidasCampos" columns="5" columnClasses="ui-grid-col-1,ui-grid-col-5,ui-grid-col-1,ui-grid-col-5,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <p:outputLabel value="#{label['cierra.motivo.salida']}"></p:outputLabel>
+                                    <p:inputText value="#{beanCierre.salida.motivoSalida}"></p:inputText>
+                                    <p:outputLabel value="#{label['cierra.monto.salida']}"></p:outputLabel>
+                                    <p:inputText value="#{beanCierre.salida.monto}" onkeypress="javascript:return soloNumeros(event);"></p:inputText>                    
+                                    <p:commandButton icon="fa fa-plus" value="#{label['cierra.agregar.salida']}" 
+                                                     update=":form_sisadmin:tabPrincipal:tablaSalidas, :form_sisadmin:tabPrincipal:panelSalidasCampos, :form_sisadmin:panelSummay, :form_sisadmin:mensajes" 
+                                                     actionListener="#{beanCierre.agregarSalida}">
+                                    </p:commandButton>
+                                </p:panelGrid>
+                                <p:dataTable reflow="true" rowKey="#{salida}" id="tablaSalidas" value="#{beanCierre.listaSalidas}"  var="salida">
+                                    <p:column headerText="#{label['cierra.motivo.salida']}">
+                                        <h:outputText value="#{salida.motivoSalida}"></h:outputText>
+                                    </p:column>
+                                    <p:column headerText="#{label['cierra.monto.salida']}">
+                                        <h:outputText value="#{salida.monto}"></h:outputText>
+                                    </p:column>  
+                                    <p:column>
+                                        <p:commandButton id="btnElmiinarRegistro" 
+                                                         icon="ui-icon-trash" 
+                                                         actionListener="#{beanCierre.eliminarSalida(salida)}" 
+                                                         update=":form_sisadmin:tabPrincipal:tablaSalidas, form_sisadmin:tabPrincipal:panelSalidasCampos, form_sisadmin:panelSummay">                    
+                                        </p:commandButton>
+                                    </p:column>
+                                </p:dataTable> 
+                            </div> 
+                            <div class="card">
+                                <h1> Totales del Cierre</h1>
+                                <p:dataTable reflow="true" rowKey="#{total}" id="tablaTotales" value="#{beanCierre.listaTotales}"  var="total">
+                                    <p:column headerText="Medio de Pago">
+                                        <h:outputText value="#{total.descripcion}"></h:outputText>
+                                    </p:column>
+                                    <p:column headerText="Monto">
+                                        <h:outputText value="#{total.monto}"></h:outputText>
+                                    </p:column>  
+                                </p:dataTable> 
+
+
+                            </div>
+                        </p:tab>
+                        <p:tab title="Detalle" >
+                            <div class="card">
+                                <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <h1>Listado de Facturas Realizadas</h1>
+                                    <p:dataTable  paginator="true" id="tablaFactuars" value="#{beanCierre.listaFacturas}" 
+                                                  rows="20"
+                                                  reflow="true"
+                                                  var="factura" sortBy="#{factura.idMedioPago}" >                   
+                                        <p:column headerText="Id Factura">
+                                            <h:outputText value="#{factura.idFactura}"/>
+                                        </p:column>
+                                        <p:column headerText="Número de Consecutivo">
+                                            <h:outputText value="#{factura.numeroConsecutivo}"/>
+                                        </p:column>
+                                        <p:column headerText="Fecha de Factura">
+                                            <h:outputText value="#{factura.fechaFactura}"/>
+                                        </p:column>
+                                        <p:column headerText="Condición de la Venta">
+                                            <h:outputText value="#{factura.condicionDescripcion}"/>
+                                        </p:column>
+                                        <p:column headerText="Medio de Pago">
+                                            <h:outputText value="#{factura.descMedioPago}"/>
+                                        </p:column>
+                                        <p:column headerText="Nombre Cliente Fantasia">
+                                            <h:outputText value="#{factura.nombreClienteFantasia}"/>
+                                        </p:column>
+                                        <p:column headerText="Nombre Cliente">
+                                            <h:outputText value="#{factura.nombreCliente}"/>
+                                        </p:column>
+                                        <p:column headerText="Total de Comprobante">
+                                            <h:outputText value="#{factura.totalComprobante}"/>
+                                        </p:column>
+                                    </p:dataTable>   
+                                </p:panelGrid>     
+                            </div>
+                            <div class="card">
+                                <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <h1>Listado de Recibos</h1>
+                                    <p:dataTable  paginator="true" id="tablaRecibos" value="#{beanCierre.listaReciboCierre}" 
+                                                  rows="20"
+                                                  reflow="true"
+                                                  var="recibo"  >                   
+                                        <p:column headerText="N° Recibo">
+                                            <h:outputText value="#{recibo.numeroRecibo}"/>
+                                        </p:column>
+                                        <p:column headerText="Número Consecutivo">
+                                            <h:outputText value="#{recibo.numeroConsecutivoFactura}"/>
+                                        </p:column>   
+
+                                        <p:column headerText="Estado">
+                                            <h:outputText value="#{recibo.estadoRecibo}"/>
+                                        </p:column>
+                                        <p:column headerText="Nombre Cliente">
+                                            <h:outputText value="#{recibo.nombreCliente}"/>
+                                        </p:column>
+                                        <p:column headerText="Monto Recibo">
+                                            <h:outputText value="#{recibo.monto_pago}"/>
+                                        </p:column>
+                                        <p:column headerText="Medio Pago">
+                                            <h:outputText value="#{recibo.medioPago}"/>
+                                        </p:column>
+                                        <p:column headerText="N° Referencia">
+                                            <h:outputText value="#{recibo.numero_referencia}"/>
+                                        </p:column>     
+                                        <p:column headerText="Saldo">
+                                            <h:outputText value="#{recibo.monto_restante}"/>
+                                        </p:column>
+                                    </p:dataTable>   
+                                </p:panelGrid>     
+                            </div>
+                            <div class="card">
+                                <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <h1>Listado de Notas de Crédito Realizadas</h1>
+                                    <p:dataTable id="tablaAnulacion" reflow="true" value="#{beanCierre.listaFacturasAnulacion}"  var="facAnulacion">
+                                        <p:column headerText="#{label['cierre.numero.consecutivo']}">
+                                            <h:outputText value="#{facAnulacion.numeroConsecutivo}"></h:outputText>
+                                        </p:column>
+                                        <p:column headerText="#{label['cierre.cliente']}">
+                                            <h:outputText value="#{facAnulacion.nombreCliente}"></h:outputText>
+                                        </p:column>
+                                        <p:column headerText="#{label['cierre.condiciones']}">
+                                            <h:outputText value="#{facAnulacion.condicionDescripcion}"></h:outputText>
+                                        </p:column>
+                                        <p:column headerText="Motivo Nota de Crédito">
+                                            <h:outputText value="#{facAnulacion.motivoAnulacion}"></h:outputText>
+                                        </p:column>
+                                        <p:column headerText="#{label['cierre.total.comprobante']}">
+                                            <h:outputText value="#{facAnulacion.totalComprobante}">
+
+                                            </h:outputText>
+                                        </p:column>     
+
+
+                                    </p:dataTable>                         
+                                </p:panelGrid>
+
+                            </div>
+                        </p:tab>
+                    </p:tabView>
+                    <p:panelGrid columnClasses="ui-grid-col-12" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" columns="1" id="panelSummay">
+                        <div class="ui-g ui-fluid dashboard"   >
+
+
+                            <div class="ui-g-12 ui-md-64">
+                                <div class="card clearfix summary">
+                                    <span style="margin-right:  100%;" class="title">Total Efectivo Entregar</span>     
+                                    <span class="detail">Total entregar</span>
+                                    <span class="count visitors">#{beanCierre.montoEfectivo}</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </p:panelGrid>
+
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-3,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton icon="fa fa-save" id="btnGenerarCierre" update=":form_sisadmin" value="#{label['cierre.boton']}" actionListener="#{beanCierre.guadarCierre}"></p:commandButton>
+                        <p:commandButton  icon="fa fa-print" id="btnImprirReporte" value="Imprimir Cierre"   ajax="false" >
+                            <p:fileDownload value="#{beanCierre.reporteDesplegar}"/>     
+                        </p:commandButton>
+                    </p:panelGrid>
+                </div>
+            </div>
+        </div>
+
+    </ui:define>
+</ui:composition>

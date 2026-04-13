@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <ui:define name="title">#{label['anulacion.titulo']}</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">      
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <p:tabView>
+                        <p:tab title="Facturas">
+                            <div class="card">
+                                <h1>Lista de Facturas</h1>
+                                <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <p:dataTable id="idTablaFacturasAnulacion"
+                                                 var="factura"
+                                                 editable="true"
+                                                 filteredValue="#{beanAnulacionFactura.listaFacturasSeleccionadas}"
+                                                 editMode="cell"
+                                                 paginator="true" 
+                                                 reflow="true"
+                                                 rowKey="#{listaFacturas}"
+                                                 paginatorPosition="bottom" 
+                                                 rows="7"
+                                                 value="#{beanAnulacionFactura.listaFacturas}"
+                                                 emptyMessage="#{label['tabla.vacia']}">
+                                        <p:column  filterMatchMode="contains" filterBy="#{factura.consecutivo}" headerText="#{label['anulacion.numero.consecutivo']}" >
+                                            <h:outputText id="numeroConsecutivo" value="#{factura.consecutivo}" />  
+                                        </p:column>
+                                        <p:column filterMatchMode="contains" filterBy="#{factura.estadoHacienda}" headerText="#{label['anulacion.estado']}" >
+                                            <h:outputText id="estado" value="#{factura.estadoHacienda}" />  
+                                        </p:column>
+                                        <p:column filterMatchMode="contains" filterBy="#{factura.montoTotal}" headerText="#{label['anulacion.monto']}" >
+                                            <h:outputText id="monto" value="#{factura.montoTotal}" />  
+                                        </p:column>
+                                        <p:column>
+                                            <p:commandButton id="btnAnularFactura" 
+                                                             icon="fa fa-check" 
+                                                             update=":form_sisadmin :form_sisadmin:btnGuadarAnulacion :form_sisadmin:listaTiposMotivosAnulacion :form_sisadmin:listaTiposDocumentoReferencia :form_sisadmin:txtMotivoAnulacion"
+                                                             value="Seleccionar"
+                                                             actionListener="#{beanAnulacionFactura.seleccionarFactura(factura)}">                    
+                                            </p:commandButton>
+                                        </p:column>
+                                    </p:dataTable>
+                                </p:panelGrid>
+                            </div>
+                        </p:tab>
+                        <p:tab title="Nota de Débito">
+                            <div class="card">
+                                <h1>Lista de Notas de Débito</h1>
+                                <p:dataTable id="tablasNotasDebito"
+                                             widgetVar="tablasNotasDebito"
+                                             var="notaDebito"
+                                             resizableColumns="true"
+                                             editable="true"
+                                             filteredValue="#{beanAnulacionFactura.listaNotasDebitoFiltro}"
+                                             editMode="cell"
+                                             reflow="true"
+                                             paginator="true" 
+                                             rowKey="#{notaDebito}"
+                                             paginatorPosition="bottom" 
+                                             rows="5"
+                                             value="#{beanAnulacionFactura.listaNotasDebito}"
+                                             emptyMessage="#{label['tabla.vacia']}">
+
+                                    <p:column   filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.id_nota_debito}" headerText="Id" >
+                                        <h:outputText id="id_nota_debito" value="#{notaDebito.notaDebito.id_nota_debito}" />  
+                                    </p:column>
+                                    <p:column   filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.numero_consecutivo}" headerText="N° Consecutivo" >
+                                        <h:outputText id="numero_consecutivo" value="#{notaDebito.notaDebito.numero_consecutivo}" />  
+                                    </p:column>
+                                    <p:column filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.fecha_emision}" headerText="Fecha Emisión" >
+                                        <h:outputText id="fecha_emision" value="#{notaDebito.notaDebito.fecha_emision}" />  
+                                    </p:column> 
+                                    <p:column filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.estadoFactura.descripcion}" headerText="Estado" >
+                                        <h:outputText id="Estado" value="#{notaDebito.notaDebito.estadoFactura.descripcion}" />  
+                                    </p:column> 
+                                    <p:column>
+                                        <p:commandButton update="form_sisadmin" id="btnSeleccionarFactura"  
+                                                         actionListener="#{beanAnulacionFactura.seleccionarNotaDebito(notaDebito)}"
+                                                         value="Ver Nota Débito" icon="fa fa-search" >
+                                        </p:commandButton>  
+                                    </p:column>
+                                </p:dataTable>
+                            </div>
+
+                        </p:tab>
+                    </p:tabView>
+
+
+                    <div class="card" style="#{beanAnulacionFactura.esNotaCreditoParaFactura ?'':'display: none'}">
+                        <h1>Notas de Crédito</h1>
+                        <br/>
+                        <br/>
+                        <h2>Líneas de la Factura</h2>
+                        <br/>
+
+                        <p:dataTable id="listaDetalleFactura" 
+                                     value="#{beanAnulacionFactura.facturaSeleccionada.listaDetalleFactura}"
+                                     filteredValue="#{beanAnulacionFactura.listaDetalleFacturaFiltro}"
+                                     rowKey="#{lineaFactura}" 
+                                     var="lineaFactura" 
+                                     rowStyleClass="#{lineaFactura.esParaNotaCredito  ?'filaRoja':''}"
+                                     reflow="true" 
+                                     paginator="true"  
+                                     rows="5">
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFactura.numeroLinea}" headerText="Núm. Línea" >
+                                <h:outputText id="numLinea" value="#{lineaFactura.numeroLinea}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFactura.detalle}" headerText="Producto" >
+                                <h:outputText id="dscProducto" value="#{lineaFactura.detalle}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFactura.cantidad}" headerText="Cantidad" >
+                                <h:outputText id="cantidad" value="#{lineaFactura.cantidad}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFactura.precioUnitario}" headerText="Precio Unit." >
+                                <h:outputText id="precioUnitario" value="#{lineaFactura.precioUnitario}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFactura.montoDescuento}" headerText="Total Descuento" >
+                                <h:outputText id="montoDescuento" value="#{lineaFactura.montoDescuento}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFactura.montoTotalLinea}" headerText="Total Línea" >
+                                <h:outputText id="montoTotalLinea" value="#{lineaFactura.montoTotalLinea}" />  
+                            </p:column>
+
+                            <p:column   filterMatchMode="contains"  headerText="Acción" >
+                                <p:commandButton value="Seleccionar"      update="form_sisadmin" icon="fa fa-check"   style="#{!lineaFactura.esParaNotaCredito ?'':'display: none'}"
+                                                 disabled="#{!lineaFactura.puedeModificar or beanAnulacionFactura.inhabilitarControles}"    actionListener="#{beanAnulacionFactura.seleccionarLineaDetalle(lineaFactura)}"/>
+                                <p:commandButton value="Quitar"      update="form_sisadmin" icon="fa fa-check"  style="#{lineaFactura.esParaNotaCredito  ?'':'display: none'}"
+                                                 disabled="#{!lineaFactura.puedeModificar or beanAnulacionFactura.inhabilitarControles or beanAnulacionFactura.esNotaCreditoInterna}" actionListener="#{beanAnulacionFactura.seleccionarLineaDetalleQuitar(lineaFactura)}"/>
+                            </p:column>
+                        </p:dataTable>
+                        <p:outputLabel style="color:red;" value="** Las filas marcadas en rojo son las filas que se van a eliminar de la factura y se utilizarán para crear la nota de crédito"/>
+                        <br/>
+                        <p:outputLabel style="color:red;" value="** Cuando los botones están deshabilitados es porque anteriormente se creo una nota de crédito sobre dichas líneas de la factura"/>
+
+                    </div>
+
+
+
+
+                    <div class="card" style="#{beanAnulacionFactura.esNotaCreditoParaFactura ?'display: none':''}">
+                        <h1>Información de la Nota de Débito</h1>
+                        <br/>
+                        <h2>Detalle Nota Débito</h2>
+                        <br/>
+                        <p:panelGrid id="panelNotaDebito" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="Id"/>
+                            <p:inputText readonly="true" value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaDebito.id_nota_debito}"/>
+                            <p:outputLabel value="Clave"/>
+                            <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaDebito.clave}"/>
+                            <p:outputLabel value="#{label['anulacion.numero.consecutivo']}"/>                            
+                            <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaDebito.numero_consecutivo}"/>
+                            <p:outputLabel value="Fecha Nota Débito"/>
+                            <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaDebito.fecha_nota_debito}"/>
+                            <p:outputLabel value="Fecha Emisión"/>
+                            <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaDebito.fecha_emision}"/>
+                            <p:outputLabel value="Estado de Nota Débito"/>
+                            <p:inputText readonly="true" value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaDebito.estadoFactura.descripcion}"/>
+                            <p:outputLabel value="Login"/>
+                            <p:inputText readonly="true" value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaDebito.login}"/>
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value=""/>
+                        </p:panelGrid>
+                        <h2>Líneas de la Nota de Débito</h2>
+                        <br/>
+
+                        <p:dataTable id="listaLineasDetalleNotaDebito" 
+                                     value="#{beanAnulacionFactura.listaLineasDetalleNotaDebito}"
+                                     filteredValue="#{beanAnulacionFactura.listaDetalleFacturaFiltro}"
+                                     rowKey="#{lineaFacturaNotaDebito}" 
+                                     var="lineaFacturaNotaDebito" 
+                                     rowStyleClass="#{lineaFactura.tieneProblemasInventario  ?'filaRoja':''}"
+                                     reflow="true" 
+                                     paginator="true"  
+                                     rows="5">
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFacturaNotaDebito.numeroLinea}" headerText="Núm. Línea" >
+                                <h:outputText id="numLineaNotaDebito" value="#{lineaFacturaNotaDebito.numeroLinea}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFacturaNotaDebito.detalle}" headerText="Producto" >
+                                <h:outputText id="dscProductoNotaDebito" value="#{lineaFacturaNotaDebito.detalle}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFacturaNotaDebito.cantidad}" headerText="Cantidad" >
+                                <h:outputText id="cantidadNotaDebito" value="#{lineaFacturaNotaDebito.cantidad}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFacturaNotaDebito.precioUnitario}" headerText="Precio Unit." >
+                                <h:outputText id="precioUnitarioNotaDebito" value="#{lineaFacturaNotaDebito.precioUnitario}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFacturaNotaDebito.montoDescuento}" headerText="Total Descuento" >
+                                <h:outputText id="montoDescuentoNotaDebito" value="#{lineaFacturaNotaDebito.montoDescuento}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{lineaFacturaNotaDebito.montoTotalLinea}" headerText="Total Línea" >
+                                <h:outputText id="montoTotalLineaNotaDebito" value="#{lineaFacturaNotaDebito.montoTotalLinea}" />  
+                            </p:column>
+
+                        </p:dataTable>
+                        <br/>
+
+                        <div  style="#{beanAnulacionFactura.notaDebitoSeleccionada.factura!=null?'':'display: none'}">
+                            <h2>Factura Asociada</h2>
+                            <br/>
+                            <p:panelGrid id="panelFacturas" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                <p:outputLabel value="Id"/>
+                                <p:inputText readonly="true" value="#{beanAnulacionFactura.notaDebitoSeleccionada.factura.id_factura}"/>
+                                <p:outputLabel value="Clave"/>
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.factura.clave}"/>
+                                <p:outputLabel value="#{label['anulacion.numero.consecutivo']}"/>                            
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.factura.numero_consecutivo}"/>
+                                <p:outputLabel value="Fecha Factura"/>
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.factura.fecha_factura}"/>
+                                <p:outputLabel value="Fecha Emisión"/>
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.factura.fecha_emision}"/>
+                                <p:outputLabel value="Estado de Factura"/>
+                                <p:inputText readonly="true" value="#{beanAnulacionFactura.notaDebitoSeleccionada.factura.estadoFactura.descripcion}"/>
+                                s<p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                            </p:panelGrid>
+
+                        </div>
+                        <br/>
+                        <div  style="#{beanAnulacionFactura.notaDebitoSeleccionada.notaCredito!=null?'':'display: none'}">
+                            <h2>Nota de Crédito Asociada</h2>
+                            <br/>
+                            <p:panelGrid id="panelNotasCredito" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                <p:outputLabel value="Id"/>
+                                <p:inputText readonly="true" value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaCredito.id_anulacion}"/>
+                                <p:outputLabel value="Clave"/>
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaCredito.clave}"/>
+                                <p:outputLabel value="#{label['anulacion.numero.consecutivo']}"/>                            
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaCredito.numero_consecutivo}"/>
+                                <p:outputLabel value="Fecha Factura"/>
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaCredito.fecha_anulacion}"/>
+                                <p:outputLabel value="Fecha Emisión"/>
+                                <p:inputText  readonly="true"  value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaCredito.fecha_emision}"/>
+                                <p:outputLabel value="Estado de Factura"/>
+                                <p:inputText readonly="true" value="#{beanAnulacionFactura.notaDebitoSeleccionada.notaCredito.estadoFactura.descripcion}"/>
+                                s<p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                            </p:panelGrid>
+                        </div>
+
+
+                    </div>
+                    <div class="card" style="#{beanAnulacionFactura.notaDebitoAsociadaFactura ?'':'display: none'}">
+                        <h1>Información de Factura</h1>
+                        <br/>
+                        <h2>Totales</h2>
+                        <br/>
+                        <p:panelGrid id="panelSummay" columns="4" columnClasses="ui-grid-col-2 ui-grid-col-8 ui-grid-col-2 ui-grid-col-8" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                            <p:outputLabel  value="#{label['facturacion.total.venta']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanAnulacionFactura.totalVenta}"></p:inputNumber>  
+                            <p:outputLabel  value="#{label['facturacion.descuento.factura']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanAnulacionFactura.totalDescuentosLineas}"></p:inputNumber>  
+                            <p:outputLabel  value="#{label['facturacion.total.venta.neta']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanAnulacionFactura.totalVentaNeta}"></p:inputNumber>  
+                            <p:outputLabel  value="Total Impuestos"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanAnulacionFactura.totalImpuestos}"></p:inputNumber> 
+                            <p:outputLabel  value="#{label['facturacion.total.factura']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanAnulacionFactura.totalFactura}"></p:inputNumber>                            
+                            <p:outputLabel/>
+                            <p:outputLabel/>
+                        </p:panelGrid>
+                        <p:outputLabel style="color:red;" value="** Los totales presentado representan a los totales después de aplicar la nota de crédito"/>
+                    </div>
+                    <div class="card">
+                        <h1>Información Nota Crédito</h1>
+                        <p:panelGrid columns="2" columnClasses="ui-grid-col-4,ui-grid-col-8" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="Tipo Documento Referencia"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables"                                   
+                                              value="#{beanAnulacionFactura.tipoDocumentoReferenciaSeleccionado}" 
+                                              id="listaTiposDocumentoReferencia" 
+                                              valueChangeListener="#{beanAnulacionFactura.seleccionarTipoDocReferencia}"
+                                              disabled="#{beanAnulacionFactura.inhabilitarControles or !beanAnulacionFactura.puedeCrearNotaCredito or beanAnulacionFactura.esNotaCreditoInterna}"
+                                              effect="fold" >         
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanAnulacionFactura.listaTipoDocumentoReferencia}"
+                                               var="tipoDocRef"
+                                               itemLabel="#{tipoDocRef.descripcion}"
+                                               itemValue="#{tipoDocRef.id_tipo_doc_referencia}"/>
+                                <p:ajax event="change" update="form_sisadmin" />    
+                            </p:selectOneMenu> 
+
+
+                            <p:outputLabel value="Motivo de Nota de Crédito"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables"                                   
+                                              value="#{beanAnulacionFactura.motivoAnulacionSeleccionado}" 
+                                              id="listaTiposMotivosAnulacion" 
+                                              disabled="#{beanAnulacionFactura.inhabilitarControles or !beanAnulacionFactura.puedeCrearNotaCredito or beanAnulacionFactura.esNotaCreditoInterna}"
+                                              effect="fold" >         
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanAnulacionFactura.listaMotivosAnulacion}"
+                                               var="tipoMotvAnulacion"
+                                               itemLabel="#{tipoMotvAnulacion.descripcion}"
+                                               itemValue="#{tipoMotvAnulacion.id_motivo_anulacion}"/>
+                            </p:selectOneMenu> 
+                            <p:outputLabel value="#{label['anulacion.motivo']}"/>
+                            <p:inputTextarea disabled="#{beanAnulacionFactura.inhabilitarControles or !beanAnulacionFactura.puedeCrearNotaCredito or beanAnulacionFactura.esNotaCreditoInterna}" rows="6" cols="33" counterTemplate="{0} caracteres restantes" counter="display"  id="txtMotivoAnulacion" value="#{beanAnulacionFactura.motivoAnulacion}" maxlength="100">
+                            </p:inputTextarea >
+                            <p:outputLabel/>
+                            <h:outputText id="display" />   
+                        </p:panelGrid>
+
+                    </div>
+
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton disabled="#{beanAnulacionFactura.inhabilitarControles or !beanAnulacionFactura.puedeCrearNotaCredito}" update=":form_sisadmin" id="btnGuadarAnulacion" icon="fa fa-save" value="#{label['anulacion.guardar']}" actionListener="#{beanAnulacionFactura.guardarAnulacion}">
+                        </p:commandButton> 
+
+                        <p:commandButton id="btnImprirReporteNotaCredito" disabled="#{!beanAnulacionFactura.inhabilitarControles or beanAnulacionFactura.puedeCrearNotaCredito}" actionListener="#{beanAnulacionFactura.imprirmirNotaCredito}" value="Imprimir Nota Crédito" icon="fa fa-download" ajax="false" >
+                            <p:fileDownload value="#{beanAnulacionFactura.notaCredito}"/>     
+                        </p:commandButton>
+
+                    </p:panelGrid>
+                </div>
+            </div>
+        </div>
+
+    </ui:define>
+</ui:composition>

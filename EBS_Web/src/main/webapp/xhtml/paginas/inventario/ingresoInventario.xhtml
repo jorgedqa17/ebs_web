@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">
+        Ingreso de Inventario
+    </ui:define>
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Datos Generales</h1>
+                        <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-3,ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['inventario.ingreso.seleccionBodega']}"/>
+                            <p:selectOneMenu id="bodegas" value="#{beanIngresoInventario.valorBodega}"  disabled="#{beanIngresoInventario.esAdministrador}" >
+                                <f:selectItems value="#{beanIngresoInventario.listaBodegas}" />
+                            </p:selectOneMenu>
+                            <p:outputLabel value="#{label['inventario.ingreso.nombreUsuario']}"/>
+                            <h:outputText value="#{beanIngresoInventario.usuarioActual.login}" style="font-weight: bold;"/>
+                        </p:panelGrid>
+                    </div>
+                    <div class="card">
+
+                        <h1>Incluir Nuevo Producto</h1>
+                        <p:panelGrid id="panelAccion" columns="2" columnClasses="ui-grid-col-2,ui-grid-col-15" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <!-- <p:outputLabel value="Producto:"/>
+                              <p:autoComplete id="busquedaProducto" maxResults="10" value="#{beanIngresoInventario.valorproducto}" 
+                                              completeMethod="#{beanIngresoInventario.busquedadProductos}" var="produc" itemLabel="#{produc.descripcion}" 
+                                              itemValue="#{produc}" converter="convertidorProducto" />  -->   
+
+                            <p:outputLabel id="lblCodigoBarras" value="#{label['detalle.factura.codigo.barras']}"/>        
+                            <p:inputText id="txtCodigoBarras"  value="#{beanIngresoInventario.busquedaCodigoBarras}">
+                                <p:ajax event="blur" listener="#{beanIngresoInventario.buscarProducto}" update="panelAccion listadeProductos form_sisadmin:mensajes"></p:ajax>
+                            </p:inputText>
+                            <p:outputLabel   value="Nombre Producto"/>        
+                            <p:inputText  id="txtDescripcionProductoBusqueda" value="#{beanIngresoInventario.nombreProducto}" >
+                                <p:ajax event="keyup" listener="#{beanIngresoInventario.buscarProductoPorDescripcion}" update="tablaProductoDescripcion" ></p:ajax>
+                            </p:inputText>
+                        </p:panelGrid>
+
+
+
+                        <p:dataTable id="tablaProductoDescripcion"
+                                     widgetVar="tablaProductoDescripcion"
+                                     var="productoBusqueda"
+                                     reflow="true"
+                                     paginator="true"
+                                     paginatorPosition="bottom"
+                                     rowKey="#{productoBusqueda.id_producto}"
+                                     rows="10"
+                                     value="#{beanIngresoInventario.listaProductosBusqueda}"
+                                     emptyMessage="#{label['tabla.vacia']}" 
+                                     selection="#{beanIngresoInventario.busquedadSeleccionados}">
+
+                            <p:column selectionMode="multiple" style="text-align:center;"/>
+
+                            <p:column style="text-align: left;" headerText="#{label['producto.descripcion']}">
+                                <p:outputLabel  value="#{productoBusqueda.descripcion}"/>
+                            </p:column>
+
+                        </p:dataTable>                            
+
+
+                        <br/>
+                        <p:panelGrid id="panelAccion2" columns="3" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:commandButton id="nuevaFila" actionListener="#{beanIngresoInventario.agregarNuevaFila}" icon="ui-icon-plus"
+                                             update="listadeProductos form_sisadmin:mensajes tablaProductoDescripcion"  value="#{label['inventario.ingreso.nuevaFila']}" />
+                            <p:commandButton id="eliminarFila" actionListener="#{beanIngresoInventario.eliminarFila}" icon="ui-icon-circle-minus"
+                                             update="listadeProductos form_sisadmin:mensajes" value="#{label['inventario.ingreso.eliminarProducto']}"/>
+                            <p:commandButton id="guardaTabla" value="#{label['inventario.ingreso.guardarTabla']}" icon="ui-icon-circle-check"
+                                             update="listadeProductos form_sisadmin:mensajes" actionListener="#{beanIngresoInventario.guardarInventario}"/>
+                        </p:panelGrid>
+                    </div>
+                    <div class="card">
+                        <h1>Lista de Productos</h1>
+                        <h:panelGroup id="PanelTabla">
+                            <p:dataTable id="listadeProductos" 
+                                         widgetVar="listadeProductos" 
+                                         var="producto"
+                                         editable="true"
+                                         editMode="cell"
+                                         reflow="true"
+                                         paginator="true"
+                                         rowKey="#{producto.numeroFila}"
+                                         paginatorPosition="bottom"
+                                         rows="10"
+                                         value="#{beanIngresoInventario.listaNuevosProductos}"                                      
+                                         emptyMessage="Tabla Vacía"                                       
+                                         selection="#{beanIngresoInventario.seleccionados}">    
+
+                                <p:column selectionMode="multiple" style="text-align:center;"/>
+
+                                <p:column headerText="Producto" sortBy="#{producto.nombreProducto}" filterBy="#{producto.nombreProducto}">
+                                    <h:outputText value="#{producto.nombreProducto}" />
+                                </p:column>    
+                                <p:column headerText="Precio con Impuesto">
+                                    <h:outputText value="#{producto.tipoPrecio.precioConImpuesto}" />
+                                </p:column>    
+                                <p:column headerText="Cantidad" sortBy="#{producto.cantidad}" filterBy="#{producto.cantidad}">
+                                    <p:cellEditor>
+                                        <f:facet name="output" ><h:outputText value="#{producto.cantidad}" style="width: 20px" /></f:facet>
+                                        <f:facet name="input"><p:inputNumber value="#{producto.cantidad}" style="width: 20px" minValue="0"  decimalPlaces="0" /></f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+                                <p:column headerText="Precio al por Mayor">
+                                    <h:outputText value="#{producto.tipoPrecioAlPorMayor.productoPrecio.precio}" >
+                                        <f:convertNumber pattern="#,##0.00" />
+                                    </h:outputText>
+                                </p:column>   
+
+                               <!-- <p:column headerText="Fecha Vencimiento" sortBy="#{producto.fechaTexto}" filterBy="#{producto.fechaTexto}">
+                                    <p:cellEditor>
+                                        <f:facet name="output"><h:outputText value="#{producto.fechaTexto}" /></f:facet>
+                                        <f:facet name="input">
+                                            <p:calendar id="calendario" value="#{producto.fechaVencimiento}" pattern="dd/MM/yyyy" mask="true"/>
+                                        </f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+
+                                <p:column headerText="Número de Lote" sortBy="#{producto.numeroLote}" filterBy="#{producto.numeroLote}">
+                                    <p:cellEditor>
+                                        <f:facet name="output"><h:outputText value="#{producto.numeroLote}" /></f:facet>
+                                        <f:facet name="input"><p:inputText id="insertNumeroLote" value="#{producto.numeroLote}" /></f:facet>
+                                    </p:cellEditor>
+                                </p:column> -->
+
+                                <p:column headerText="Proveedor" sortBy="#{producto.nombreProveedor}" filterBy="#{producto.nombreProveedor}">
+                                    <p:cellEditor>
+                                        <f:facet name="output"><h:outputText value="#{producto.nombreProveedor}" /></f:facet>
+                                        <f:facet name="input"><p:inputText id="insertProveedor" value="#{producto.nombreProveedor}" /></f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+
+                                <p:column headerText="Precio" sortBy="#{producto.precio}" filterBy="#{producto.precio}">
+                                    <p:cellEditor>
+                                        <f:facet name="output"><h:outputText value="#{producto.precio}" /></f:facet>
+                                        <f:facet name="input"><p:inputNumber decimalPlaces="4" id="insertPrecio" value="#{producto.precio}" /></f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+
+                            </p:dataTable>
+                        </h:panelGroup>   
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>

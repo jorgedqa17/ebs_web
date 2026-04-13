@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <h:head>
+        <f:facet name="first">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+        </f:facet>
+        <title>EBS</title>
+    </h:head>
+
+    <h:body styleClass="login-body">
+        <h:form id="form_sisadmin">
+            <p:growl id="mensajes"  showDetail="true" sticky="true"/>
+            <div id="login-wrapper">
+
+
+                <div id="login-container">
+                    <span class="title">Sear Médica 4.4</span>
+
+                    <div class="ui-g ui-fluid">
+                        <div class="ui-g-12">
+                            <p:inputText id="txtUser" value="#{beanLogin.usuario}" placeholder="Usuario" />
+                        </div>
+                        <div class="ui-g-12">
+                            <p:password id="txtPassword" value="#{beanLogin.password}" placeholder="Contraseña" feedback="false"/>
+                        </div>
+                        <div class="ui-g-12 ui-md-6">
+                            <span class="remember-me">Recuérdame</span>
+                            <p:selectBooleanCheckbox />
+                        </div>
+                        <div class="ui-g-12 ui-md-6">
+                            <p:commandLink actionListener="#{beanLogin.redirigirCambioContrasena}"    value="Olvidé Contraseña"/>
+                        </div>
+                        <div class="ui-g-12">
+                            <p:commandButton id="btnIngresar" value="Login" icon="fa fa-check" update="mensajes listaBodegas" actionListener="#{beanLogin.ingresar}"/>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="login-footer"></div>
+            </div>
+            <p:dialog header="Lista de Bodegas" 
+                      widgetVar="bodegaDialog" 
+                      modal="true"    
+                      minWidth="50"
+                      id="bodegaDialog"
+                      showEffect="fade" 
+                      hideEffect="fade" 
+                      resizable="true">          
+                <div class="card">      
+                    <p:outputLabel value="Seleccione una bodega sobre la cual desea trabajar"/>
+                    <br/>
+                    <p:selectOneMenu 
+                        converter="ConvertidorListaDesplegables"                                   
+                        value="#{beanLogin.idBodegaSeleccionada}" 
+                        id="listaBodegas"   
+                        effect="fold" > 
+                        <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                        <f:selectItems value="#{beanLogin.listaBodegasUsuario}"
+                                       var="bodega"
+                                       itemLabel="#{bodega.descripcion}"
+                                       itemValue="#{bodega.bodegaPK.id_bodega}"/>
+
+                    </p:selectOneMenu> 
+                    <br/>
+                    <div class="ui-g-12">
+                        <p:commandButton id="btnLoguear" value="Ingresar" icon="fa fa-check" update="mensajes listaBodegas" actionListener="#{beanLogin.seleccionarBodega()}"/>
+
+                    </div>
+                </div>
+
+            </p:dialog>
+            <h:outputStylesheet name="css/layout.css" library="omega-layout" />
+        </h:form>
+    </h:body>
+
+</html>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Listado de Usuarios</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">  
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Lista de Usuarios</h1>
+                        <p:dataTable id="listaUsuarios" value="#{beanUsuario.listaUsuarios}"
+                                     var="persona"
+                                     paginator="true" 
+                                     rowKey="#{listaUsuarios}"
+                                     paginatorPosition="bottom" 
+                                     rows="10"
+                                     reflow="true"
+
+                                     filteredValue="#{beanUsuario.listaUsuariosFiltro}"
+                                     emptyMessage="#{label['tabla.vacia']}">
+
+                            <p:column filterMatchMode="contains" filterBy="#{persona.login}" headerText="Login " >
+                                <h:outputText id="login" value="#{persona.login}" />  
+                            </p:column>                
+                            <p:column  filterMatchMode="contains" filterBy="#{persona.nombre}" headerText="Nombre de Usuario" >
+                                <h:outputText id="nombreCompleto" value="#{persona.nombre}" />  
+                            </p:column>
+
+                            <p:column>
+                                <p:commandButton id="btnSeleccionarCliente" icon="ui-icon-search" value="#{label['consultacierre.verdetalle']}" update=":form_sisadmin:listaBodegas" actionListener="#{beanUsuario.seleccionarUsuario(persona)}">                    
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-16, ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnAgregarNuevoUsuario" value="Nuevo Usuario"
+                                         update=":form_sisadmin" actionListener="#{beanUsuario.nuevoUsuario}" ></p:commandButton>
+                        <p:commandButton id="btnEditarUsuario"
+                                         value="Editar Usuario"
+                                         update=":form_sisadmin"
+                                         actionListener="#{beanUsuario.editarUsuario}">
+                        </p:commandButton>
+
+                    </p:panelGrid>
+                    <div class="card">
+                        <h1>Información de Usuario</h1>
+                        <p:panelGrid columns="4" columnClasses="ui-grid-col-1,ui-grid-col-6,ui-grid-col-1,ui-grid-col-6" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="Login"/>
+                            <p:inputText value="#{beanUsuario.usuario.login}" disabled="#{beanUsuario.inhablitarControles}"/>
+                            <p:outputLabel value="Nombre"/>
+                            <p:inputText value="#{beanUsuario.usuario.nombre}" disabled="#{beanUsuario.inhablitarControles}"/>
+                        </p:panelGrid>
+                        <br/>
+                        <h2>Información de Bodegas</h2>
+                        <br/>
+                        <p:pickList id="listaBodegas"  value="#{beanUsuario.listaBodegasDual}" var="bodegas" effect="bounce"
+                                    itemLabel="#{bodegas.descripcion}" itemValue="#{bodegas}" showSourceControls="true" showTargetControls="true" showCheckbox="true"
+                                    showSourceFilter="true" showTargetFilter="true" filterMatchMode="contains" converter="bodegasConverter" responsive="true">
+                            
+                            <f:facet name="sourceCaption">Disponible</f:facet>
+                            <f:facet name="targetCaption">Asignado</f:facet>
+
+                            <p:ajax event="transfer" listener="#{beanUsuario.onTransfer}" update="listaBodegas" />
+                            <p:ajax event="select" listener="#{beanUsuario.onSelect}" update="listaBodegas"/>
+                            <p:ajax event="unselect" listener="#{beanUsuario.onUnselect}" update="listaBodegas"/>
+                            <p:ajax event="reorder" listener="#{beanUsuario.onReorder}" update="listaBodegas"/>
+                        </p:pickList>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+        </div>
+
+
+
+
+    </ui:define>
+
+</ui:composition>

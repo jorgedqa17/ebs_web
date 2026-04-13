@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <p:panelGrid columnClasses="ui-grid-col-32" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" columns="1" id="panelSummay">
+        <div class="ui-g ui-fluid dashboard"   >
+
+            <div class="ui-g-12 ui-md-4">
+                <div class="card clearfix summary">
+                    <span style="margin-right:  100%;" class="title">#{label['facturacion.total.venta']}</span>     
+                    <span class="detail">Total de la venta</span>
+                    <span class="count revenue">#{beanFactura.totalVenta}</span>
+                </div>
+            </div>
+
+            <div class="ui-g-12 ui-md-4">
+                <div class="card clearfix summary">
+                    <span style="margin-right:  100%;" class="title">#{label['facturacion.descuento.factura']}</span>     
+                    <span class="detail">Total descuento</span>
+                    <span class="count revenue">#{beanFactura.totalDescuentosLineas}</span>
+                </div>
+            </div>
+
+            <div class="ui-g-12 ui-md-4">
+                <div class="card clearfix summary">
+                    <span style="margin-right:  100%;" class="title">#{label['facturacion.total.venta.neta']}</span>     
+                    <span class="detail">Total Venta Neta</span>
+                    <span class="count revenue">#{beanFactura.totalVentaNeta}</span>
+                </div>
+            </div>
+
+            <div class="ui-g-12 ui-md-4">
+                <div class="card clearfix summary">
+                    <span style="margin-right:  100%;" class="title">Impuestos</span>     
+                    <span class="detail">Total Impuestos</span>
+                    <span class="count revenue">#{beanFactura.totalImpuestos}</span>
+                </div>
+            </div>
+
+            <div class="ui-g-12 ui-md-4">
+                <div class="card clearfix summary">
+                    <span style="margin-right:  100%;" class="title">#{label['facturacion.total.factura']}</span>     
+                    <span class="detail">Total a pagar</span>
+                    <span class="count visitors">#{beanFactura.totalFactura}</span>
+                </div>
+            </div>
+            <div class="ui-g-12 ui-md-4">
+                <div class="card clearfix summary">
+               
+                </div>
+            </div>
+        </div>
+
+        <p:outputLabel style="font-weight: bold; display: none;" value="#{label['facturacion.servicios.titulo']}"></p:outputLabel>     
+        <p:outputLabel style="font-weight: bold; display: none;" value=""></p:outputLabel>  
+        <p:outputLabel  style="font-weight: bold; display: none;" value="#{label['facturacion.exentos']}"></p:outputLabel>
+        <p:outputLabel  style="font-weight: bold; display: none;" id="txtTotalServicioGravados" value="#{beanFactura.totalExentosServicios}"/>
+        <p:outputLabel style="font-weight: bold; display: none;" value="#{label['facturacion.gravados']}"></p:outputLabel>
+        <p:outputLabel  style="font-weight: bold; display: none;" id="txtTotalMercanciaGravados" value="#{beanFactura.totalGravadosServicios}"/>
+
+        <p:outputLabel style="font-weight: bold; display: none;"  value="#{label['facturacion.mercancias.titulo']}"></p:outputLabel>   
+        <p:outputLabel style="font-weight: bold; display: none;" value=""></p:outputLabel>  
+        <p:outputLabel style="font-weight: bold; display: none;" value="#{label['facturacion.exentos']}"></p:outputLabel>
+        <p:outputLabel style="font-weight: bold; display: none;" id="txtTotalServiciosExentos" value="#{beanFactura.totalExentosMercancias}"/>
+        <p:outputLabel style="font-weight: bold; display: none;" value="#{label['facturacion.gravados']}"></p:outputLabel>
+        <p:outputLabel style="font-weight: bold; display: none;" id="txtTotalMercanciasExentas" value="#{beanFactura.totalGravadosMercancias}"/>
+    </p:panelGrid>
+
+
+    <!--    <p:panelGrid columnClasses="ui-grid-col-4,ui-grid-col-4,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" columns="3" id="panelSummay">
+    
+            <p:panelGrid columns="2" columnClasses="ui-grid-col-4,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+               
+            </p:panelGrid>
+    
+    
+    
+            <p:panelGrid columns="2" columnClasses="ui-grid-col-4, ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+           
+            </p:panelGrid>
+    
+    
+    
+            <p:panelGrid columns="2" columnClasses="ui-grid-col-4,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                <p:outputLabel style="font-weight: bold;"  value="#{label['facturacioon.totales']}"></p:outputLabel>  
+                <p:outputLabel value=""></p:outputLabel>  
+                <p:outputLabel value="#{label['facturacion.total.venta']}"></p:outputLabel>
+                <p:outputLabel value="#{beanFactura.totalVenta}"></p:outputLabel>
+                <p:outputLabel value="#{label['facturacion.descuento.factura']}"/>
+                <p:outputLabel id="txtTotalDescuentosFactura" value="#{beanFactura.totalDescuentosLineas}"/>
+    
+    
+                <p:outputLabel value="#{label['facturacion.total.venta.neta']}"></p:outputLabel>
+                <p:outputLabel value="#{beanFactura.totalVentaNeta}"></p:outputLabel>
+    
+    
+                <p:outputLabel value="#{label['facturacion.total.impuestos']}"></p:outputLabel>
+                <p:outputLabel value="#{beanFactura.totalImpuestos}"></p:outputLabel>     
+    
+    
+    
+    
+    
+                <p:outputLabel style="font-weight: bold; font-size: 17px;" value="#{label['facturacion.total.factura']}"></p:outputLabel>
+                <p:outputLabel style="font-weight: bold; font-size: 17px;" class="count revenue" value="#{beanFactura.totalFactura}"></p:outputLabel>
+            </p:panelGrid>
+    
+    
+    
+    
+            <p:dialog id="dialogoReporte"
+                      header="#{label['generacion.reporte']} / #{beanFactura.numeroConsecutivo}"
+                      modal="true"
+                      position="center"
+                      width="15%"
+                      widgetVar="dialogoReporte" 
+                      showEffect="fade" 
+                      hideEffect="fade">
+                <p:ajax  event="close" listener="#{beanFactura.inicializar}" update=":form_sisadmin"/>
+                <p:panelGrid columns="1">
+                    <p:outputLabel id="lblConsec" value="¿Desea Imprimir la Factura"/>
+    
+                    <p:commandButton id="btnImprirReporte" value="Generar" icon="ui-icon-arrowthick-1-s" ajax="false" >
+                        <p:fileDownload value="#{beanFactura.reporteDesplegar}"/>     
+                    </p:commandButton>               
+                    <br/>
+                </p:panelGrid>
+            </p:dialog>
+    
+        </p:panelGrid>
+    -->
+
+</ui:composition>

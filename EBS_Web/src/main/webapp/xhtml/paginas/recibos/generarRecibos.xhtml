@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <p:panelGrid columns="1" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:commandButton disabled="#{beanRecibo.bloquearNuevoRecibo}" icon="fa fa-plus" update="form_sisadmin" id="btnGenerarNuevoRecibo" value="Nuevo Recibo" actionListener="#{beanRecibo.habilitarGenerarRecibo}"/>       
+
+    </p:panelGrid>
+    <div class="card">
+        <h1>Generar Recibo</h1>
+        <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-12" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:outputLabel  value="Tipo Recibo"></p:outputLabel>
+            <p:inputSwitch onLabel="Automatizado" offLabel="Manual" disabled="#{beanRecibo.habilitarControlesNuevoRecibo or beanRecibo.puedeGenerarReciboAutomatico}" value="#{beanRecibo.recibo.esUnReciboManual}">
+                <p:ajax listener="#{beanRecibo.verNumeroReciboManual}" update="form_sisadmin" />
+            </p:inputSwitch>
+
+            <p:outputLabel value="N° Recibo Manual"></p:outputLabel>
+            <p:inputText value="#{beanRecibo.recibo.numero_recibo_manual}" disabled="#{!beanRecibo.verInputNumeroReciboManual}"/>
+
+            <p:outputLabel value="Concepto del Recibo"></p:outputLabel>
+            <p:inputText value="#{beanRecibo.recibo.concepto_recibo}" disabled="#{beanRecibo.habilitarControlesNuevoRecibo}"/>
+
+            <p:outputLabel value="Monto a Cancelar"></p:outputLabel>
+            <p:inputNumber value="#{beanRecibo.recibo.monto_pago}" decimalPlaces="3" disabled="#{beanRecibo.habilitarControlesNuevoRecibo}">
+
+            </p:inputNumber>
+            <p:outputLabel value="Número de Referencia"></p:outputLabel>
+            <p:inputText value="#{beanRecibo.recibo.numero_referencia}" disabled="#{beanRecibo.habilitarControlesNuevoRecibo}"/>
+
+            <p:outputLabel for="listaMedioPago" value="#{label['facturacion.medio.pago']}" />
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              valueChangeListener="#{beanRecibo.seleccionarMedioPago}"
+                              value="#{beanRecibo.recibo.id_medio_pago}" 
+                              disabled="#{beanRecibo.habilitarControlesNuevoRecibo}"
+                              id="listaMedioPago"                         
+                              effect="fold" >     
+                <p:ajax event="change"  />       
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanRecibo.listaMedioPago}"
+                               var="medioPago"
+                               itemLabel="#{medioPago.descripcion}"
+                               itemValue="#{medioPago.id_medio_pago}"/>
+            </p:selectOneMenu> 
+        </p:panelGrid>
+
+    </div>
+    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:commandButton update="form_sisadmin" id="btnGenerar" icon="fa fa-save" disabled="#{beanRecibo.habilitarControlesNuevoRecibo}" value="Guardar Recibo" actionListener="#{beanRecibo.generarRecibo}"/>       
+
+        <p:commandButton style="#{beanRecibo.verImprimirAgente ?'':'display: none'}" icon="fa fa-print" update="form_sisadmin" ajax="false" id="btnImprimirAgente" disabled="#{beanRecibo.inhabilitarBotonImprimirAgente}"  value="Imprimir Recibo" actionListener="#{beanRecibo.imprimirRecibo(beanRecibo.recibo)}">
+            <p:fileDownload value="#{beanRecibo.reporteDesplegar}"/>   
+        </p:commandButton>  
+
+
+
+    </p:panelGrid>
+</ui:composition>

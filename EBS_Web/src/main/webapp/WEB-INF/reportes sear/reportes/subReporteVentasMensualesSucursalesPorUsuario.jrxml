@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subReporteListaFacturasAnuladas" pageWidth="637" pageHeight="300" whenNoDataType="NoDataSection" columnWidth="597" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="5a4ccbc6-0c6a-43e4-be4e-d20a6835eb16">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Produccion"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="207"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="788"/>
+	<property name="com.jaspersoft.studio.unit." value="cm"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="cm"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="cm"/>
+	<parameter name="fechaInicio" class="java.lang.String"/>
+	<parameter name="fechaFinal" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select tb.login, SUM(tb.TOTAL_IMPUESTOS) as totalImpuestos ,
+	SUM(TB.TOTAL_GRAVADO) as totalGravado ,
+	SUM(TB.TOTAL_EXENTO) as totalExento, 
+	SUM(TB.TOTAL_DESCUENTOS) as totalDescuentos,
+	SUM(tb.TOTAL_COMPROBANTE) as totalComprobantes
+from (SELECT t1.LOGIN,  t1.total_comprobante, t1.TOTAL_IMPUESTOS, t1.TOTAL_GRAVADO, t1.TOTAL_EXENTO, t1.TOTAL_DESCUENTOS
+			FROM SEARMEDICA.FACTURA T1 
+			where to_date(to_char(t1.fecha_factura, 'DD/MM/YYYY'),'DD/MM/YYYY') between to_date( $P{fechaInicio} ,'DD/MM/YYYY')  and to_date( $P{fechaFinal} ,'DD/MM/YYY') 
+		AND T1.ID_TIPO_FACTURA IN( 1, 4 )
+		AND T1.ESTADO_FACTURA NOT IN (8)
+			  ) 
+tb GROUP BY tb.login]]>
+	</queryString>
+	<field name="login" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="login"/>
+	</field>
+	<field name="totalimpuestos" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="totalimpuestos"/>
+	</field>
+	<field name="totalgravado" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="totalgravado"/>
+	</field>
+	<field name="totalexento" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="totalexento"/>
+	</field>
+	<field name="totaldescuentos" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="totaldescuentos"/>
+	</field>
+	<field name="totalcomprobantes" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="totalcomprobantes"/>
+	</field>
+	<columnHeader>
+		<band height="20">
+			<staticText>
+				<reportElement x="0" y="0" width="100" height="20" uuid="d8642654-5452-4cfe-93b6-89cea319b05a">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="e100c126-551a-4e00-bde3-e68f59f00907"/>
+				</reportElement>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sucursal]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="100" y="0" width="90" height="20" uuid="614920b6-fa23-48fc-bcab-d43a2d2433ad">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c272563-cbdf-442a-837c-21a4117a4673"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Gravado]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="190" y="0" width="90" height="20" uuid="2f25cac3-118e-4651-8a2b-8d6beebf145e">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c272563-cbdf-442a-837c-21a4117a4673"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Exento]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="0" width="100" height="20" uuid="91fee967-2544-47bd-a660-fbf89e426592">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c272563-cbdf-442a-837c-21a4117a4673"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Descuentos]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="480" y="0" width="100" height="20" uuid="0c92e1d9-288c-4b43-a989-9b6f7730d9a5">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7c272563-cbdf-442a-837c-21a4117a4673"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Venta]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="380" y="0" width="100" height="20" uuid="5ca3e8c2-952d-4888-9c77-d4c59ea0254d">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="13ddfca8-12df-421a-89ab-69cd5d5c81bb"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Impuestos]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="100" height="20" uuid="26cdbb98-f7d7-4e19-a28f-912d12da2326">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="e100c126-551a-4e00-bde3-e68f59f00907"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{login}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.##;¤-#,##0.##" isBlankWhenNull="true">
+				<reportElement x="480" y="0" width="100" height="20" uuid="86480fb2-53f4-4143-bca0-dfb042edc785">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c3632465-b3a5-41ca-bca4-14a8e31907b9"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totalcomprobantes}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.##;¤-#,##0.##" isBlankWhenNull="true">
+				<reportElement x="380" y="0" width="100" height="20" uuid="8cb9714e-d0dd-4b0d-b9a0-abc8b997db45">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="13ddfca8-12df-421a-89ab-69cd5d5c81bb"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totalimpuestos}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.##;¤-#,##0.##" isBlankWhenNull="true">
+				<reportElement x="280" y="0" width="100" height="20" uuid="e3d2fc44-4822-4e3b-8cdc-42fcff719d49">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6c85a66e-80f9-4911-94b9-92657f8180e6"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totaldescuentos}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.##;¤-#,##0.##" isBlankWhenNull="true">
+				<reportElement x="190" y="0" width="90" height="20" uuid="dd8f91e0-bfa3-4412-8065-028e39174d8c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c204f0cb-ef44-4484-b600-995e0d8c744f"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totalexento}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.##;¤-#,##0.##" isBlankWhenNull="true">
+				<reportElement x="100" y="0" width="90" height="20" uuid="fd6ce943-2d80-4a99-ac32-8091facf875f">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c35d9722-27b7-4f0d-a15b-d3ee36f0a3fd"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{totalgravado}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

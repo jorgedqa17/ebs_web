@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">
+        Solicitudes
+    </ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">  
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <p:tabView id="paneles" orientation="top">
+                        <p:tab id="panelSolicitud" title="#{label['inventario.solicitud.panelSolicitud']}">   
+                            <div class="card">
+                                <h1>Datos Generales</h1>                            
+                                <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-1,ui-grid-col-1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <p:outputLabel value="#{label['inventario.solicitud.seleccionBodega']}"/>
+                                    <p:selectOneMenu id="bodegasOrigen" value="#{beanSolicitudInventario.valorBodegaOrigenCreacion}" disabled="#{beanSolicitudInventario.esAdministrador}" >
+                                        <f:selectItems value="#{beanSolicitudInventario.listaBodegas}" />
+                                    </p:selectOneMenu>
+                                    <p:outputLabel value="#{label['inventario.solicitud.nombreUsuario']}"/>
+                                    <h:outputText value="#{beanSolicitudInventario.usuarioActual.login}" style="font-weight: bold;"/>
+                                </p:panelGrid>                            
+                            </div>
+                            <div class="card">
+                                <h1>Producto a Solicitar</h1>                            
+                                <p:panelGrid id="PanelSeleccion" columns="2" columnClasses="ui-grid-col-3,ui-grid-col-7" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <h:outputText value="#{label['inventario.solicitud.bodegaDestino']}" />     
+                                    <p:selectOneMenu id="bodegasDestino" 
+                                                     valueChangeListener="#{beanSolicitudInventario.seleccionarBodegaDestino}"
+                                                     value="#{beanSolicitudInventario.valorBodegaDestinoCreacion}" 
+                                                     class="ui-selectonemenu" >
+                                        <p:ajax event="change" update="bodegasDestino" />  
+                                        <f:selectItems id="itemsDestino" value="#{beanSolicitudInventario.listaBodegas}" />
+                                    </p:selectOneMenu>
+                                    <!--  <h:outputText value="#{label['inventario.solicitud.cantidad']}"/>
+                                    <p:inputNumber id="cantProducto" value="#{beanSolicitudInventario.cantidadProductoCreacion}" style="width: 20px" 
+                                                   minValue="0" maxValue="9999999"  decimalPlaces="0" />
+                                   <h:outputText value="#{label['inventario.solicitud.productoSolicitud']}"/> 
+                                    <p:autoComplete id="busquedaProducto" maxResults="10" value="#{beanSolicitudInventario.valorProductoCreacion}" 
+                                                    completeMethod="#{beanSolicitudInventario.busquedaProductos}" var="produc" itemLabel="#{produc.descripcion}" 
+                                                    itemValue="#{produc}" converter="convertidorProducto" class="ui-autocomplete" />-->
+
+                                    <h:outputText value="#{label['inventario.codigl.barras']}"/> 
+                                    <p:inputText id="codBarras" value="#{beanSolicitudInventario.codigoBarras}">
+                                        <p:ajax event="blur" listener="#{beanSolicitudInventario.buscarProducto}" update="form_sisadmin:paneles:PanelSeleccion form_sisadmin:paneles:listaNuevaSolicitud form_sisadmin:mensajes form_sisadmin:paneles:tablaProductoDescripcion form_sisadmin:paneles:codBarras form_sisadmin:paneles:descripcion" ></p:ajax>
+                                    </p:inputText>
+
+                                    <h:outputText value="#{label['inventario.descripcion']}"/> 
+                                    <p:inputText id="descripcion" value="#{beanSolicitudInventario.nombreProducto}">
+                                        <p:ajax event="keyup" listener="#{beanSolicitudInventario.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+                                    </p:inputText>
+                                </p:panelGrid>
+                                <p:dataTable  id="tablaProductoDescripcion"
+                                              value="#{beanSolicitudInventario.listaProductosBusqueda}"                   
+                                              var="productoBusqueda"
+                                              reflow="true"
+                                              paginator="true" 
+                                              paginatorPosition="bottom" 
+                                              rowKey="#{productoBusqueda}"
+                                              emptyMessage="#{label['tabla.vacia']}" 
+                                              selection="#{beanSolicitudInventario.busquedadSeleccionados}"                                             
+                                              rows="10">
+                                    <p:column selectionMode="multiple" style="text-align:center;"/>
+                                    <p:column style="text-align: left;" headerText="#{label['producto.descripcion']}">
+                                        <p:outputLabel id="descripcionProductoBusqueda" value="#{productoBusqueda.descripcion}"></p:outputLabel>
+                                    </p:column>
+                                </p:dataTable>
+
+
+                                <br/>
+                                <p:panelGrid id="acciones" columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <p:commandButton id="btnAgregaProducto" value="#{label['inventario.botones.agregarProducto']}"  icon="ui-icon-circle-plus"
+                                                     actionListener="#{beanSolicitudInventario.agregarNuevoProducto}" update="form_sisadmin:paneles:PanelSeleccion form_sisadmin:paneles:listaNuevaSolicitud form_sisadmin:mensajes form_sisadmin:paneles:tablaProductoDescripcion form_sisadmin:paneles:codBarras form_sisadmin:paneles:descripcion"/>
+                                    <p:commandButton id="btnEliminarProducto" actionListener="#{beanSolicitudInventario.eliminarNuevaSolicitud}" icon="ui-icon-circle-minus" 
+                                                     value="#{label['inventario.ingreso.eliminarProducto']}" update="form_sisadmin:paneles:listaNuevaSolicitud form_sisadmin:mensajes"/>
+                                </p:panelGrid>
+                            </div>
+                            <div id="PanelListaProductos" class="card">
+                                <h1>Lista de Productos</h1>
+                                <p:panelGrid id="proceso" columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <p:commandButton id="btnGuardarSolicitud" value="#{label['inventario.botones.guardarSolicitud']}" icon="ui-icon-circle-check" rendered="false"
+                                                     actionListener="#{beanSolicitudInventario.guardarNuevaSolicitud}" update="form_sisadmin:paneles:listaNuevaSolicitud form_sisadmin:mensajes"  />
+                                    <p:commandButton id="btnenviarSolicitud" actionListener="#{beanSolicitudInventario.enviarNuevaSolicitud}"  icon="ui-icon-circle-check"
+                                                     value="#{label['inventario.botones.enviarSolicitud']}" update="form_sisadmin:paneles:listaNuevaSolicitud form_sisadmin:mensajes"/>
+                                </p:panelGrid>
+                                <p:dataTable id="listaNuevaSolicitud" 
+                                             widgetVar="listaNuevaSolicitud" 
+                                             var="nueva"
+                                             editable="true"
+                                             editMode="cell"
+                                             reflow="true"
+                                             paginator="true"
+                                             rowKey="#{nueva.identificador}"
+                                             paginatorPosition="bottom"
+                                             rows="10"
+                                             value="#{beanSolicitudInventario.listaSolicitudesCreacion}" 
+                                             emptyMessage="Tabla Vacía" 
+                                             selection="#{beanSolicitudInventario.listaSeleccionadosCreacion}" >
+                                    <p:column selectionMode="multiple" style="text-align: center;"/>
+
+                                    <p:column headerText="Bodega Destino" sortBy="#{nueva.bodegaDestino.descripcion}">
+                                        <p:cellEditor>
+                                            <f:facet name="output"><h:outputText value="#{nueva.bodegaDestino.descripcion}"/></f:facet>
+                                            <f:facet name="input">
+                                                <p:selectOneMenu id="bodegasDestino2" value="#{nueva.valorBodega}" >
+                                                    <f:selectItems id="itemsDestino2" value="#{nueva.listaBodegas}" />
+                                                </p:selectOneMenu>
+                                            </f:facet>
+                                        </p:cellEditor>
+                                    </p:column>
+
+                                    <p:column headerText="Producto" sortBy="#{nueva.producto.descripcion}" >
+                                        <h:outputText value="#{nueva.producto.descripcion}" />
+                                    </p:column>
+                                    <p:column headerText="Cantidad" sortBy="#{nueva.cantidad}">
+                                        <p:cellEditor>
+                                            <f:facet name="output">
+                                                <h:outputText value="#{nueva.cantidad}">
+                                                    <f:convertNumber pattern="###,###" type="currency"/>
+                                                </h:outputText>
+                                            </f:facet>
+                                            <f:facet name="input">
+                                                <p:inputNumber value="#{nueva.cantidad}" minValue="0"  maxValue="9999999"  
+                                                               decimalPlaces="0"   />
+                                            </f:facet>
+                                        </p:cellEditor>
+                                    </p:column>
+
+                                </p:dataTable>
+                            </div>
+                        </p:tab>
+                        <p:tab id="panelPendientes" title="#{label['inventario.solicitud.panelPendientes']}" >
+                            <div class="card">
+                                <h1>Tipo de Solicitud</h1>
+                                <center>
+                                    <p:selectOneButton id="tipoSolicitud" value="#{beanSolicitudInventario.tipoSolicitud}"  >
+                                        <f:selectItem itemLabel="Solicitudes Pendientes" itemValue="1" />
+                                        <f:selectItem itemLabel="Solicitudes Recibidas" itemValue="2"/>
+                                        <p:ajax event="change" update="form_sisadmin:paneles:PanelFiltros form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes" 
+                                                listener="#{beanSolicitudInventario.seleccionarTipoSolicitud}" />
+                                    </p:selectOneButton>
+                                </center>
+                            </div>
+                            <div class="card">
+                                <h1>Filtro de Búsqueda</h1>
+                                <p:panelGrid id="PanelFiltros" columns="5" columnClasses="ui-grid-col-2,ui-grid-col-3,ui-grid-col-2,ui-grid-col-3,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <h:outputText value="#{label['inventario.solicitud.bodegaOrigenDestino']}" />
+                                    <p:selectOneMenu id="bodegasOrigenPendiente" value="#{beanSolicitudInventario.valorBodegaPendiente}" disabled="false" >
+                                        <f:selectItems value="#{beanSolicitudInventario.listaBodegas}" />
+                                    </p:selectOneMenu>
+                                    <h:outputText value="#{label['inventario.solicitud.estado']}" />
+                                    <p:selectOneMenu id="listaEstados" value="#{beanSolicitudInventario.estadoActualPendiente}" >
+                                        <f:selectItems value="#{beanSolicitudInventario.listaEstadosPendiente}"/>
+                                    </p:selectOneMenu>
+                                    <p:commandButton id="btnBuscar" value="#{label['inventario.botones.buscarEstado']}" icon="ui-icon-circle-check" 
+                                                     actionListener="#{beanSolicitudInventario.buscarSolicitudesEstados}"
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes"/>
+                                </p:panelGrid>
+                            </div>
+                            <div class="card">
+                                <h1>Lista de Solicitudes</h1>
+                                <p:dataTable id="SolicitudesPendientes" 
+                                             widgetVar="SolicitudesPendientes" 
+                                             var="pendiente"
+                                             filteredValue="#{beanSolicitudInventario.filtroPendientes}"
+                                             reflow="true"
+                                             paginator="true"
+                                             rowKey="#{pendiente.inventarioSolicitud.idInventarioSolicitud}"
+                                             paginatorPosition="bottom" 
+                                             rows="10"
+                                             value="#{beanSolicitudInventario.listaEncabezadoSolicitud}" 
+                                             emptyMessage="Tabla Vacía"                                            
+                                             selection="#{beanSolicitudInventario.seleccionadoPendiente}"                                     
+                                             selectionMode="single" >
+
+                                    <p:ajax event="rowSelect" />
+
+                                    <p:column headerText="Bodega Origen"
+                                              sortBy="#{pendiente.idBodegaOrigen.descripcion}" filterBy="#{pendiente.idBodegaOrigen.descripcion}"
+                                              filterMatchMode="contains" rendered="#{beanSolicitudInventario.tipoSolicitud eq 1}">                                
+                                        <h:outputText value="#{pendiente.idBodegaOrigen.descripcion}"/>                              
+                                    </p:column>
+
+                                    <p:column headerText="Solicitante"
+                                              sortBy="#{pendiente.inventarioSolicitud.login}" filterBy="#{pendiente.inventarioSolicitud.login}"
+                                              filterMatchMode="contains">                                
+                                        <h:outputText value="#{pendiente.inventarioSolicitud.login}"/>                              
+                                    </p:column>
+
+                                    <p:column headerText="Consecutivo" 
+                                              sortBy="#{pendiente.inventarioSolicitud.consecutivo}" filterBy="#{pendiente.inventarioSolicitud.consecutivo}"
+                                              filterMatchMode="contains">                                
+                                        <h:outputText value="#{pendiente.inventarioSolicitud.consecutivo}"/>                              
+                                    </p:column>                           
+
+                                    <p:column headerText="Fecha Registro"
+                                              sortBy="#{pendiente.fechaTexto}" filterBy="#{pendiente.fechaTexto}"
+                                              filterMatchMode="contains">                                
+                                        <h:outputText value="#{pendiente.fechaTexto}"/>                              
+                                    </p:column>  
+
+                                    <p:column >                   
+                                        <p:commandButton id="btnVerDetalle" value="Ver Detalle" actionListener="#{beanSolicitudInventario.buscarDetallesSolicitud}" 
+                                                         update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes" >
+                                            <f:attribute name="idSolicitud" value="#{pendiente}" />
+                                        </p:commandButton>
+                                    </p:column>
+
+                                </p:dataTable>
+                            </div>
+                            <div class="card">
+                                <h1>Lista de Productos</h1>
+                                <p:panelGrid id="listaBotones" columns="2" columnClasses="ui-grid-col-3,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">                            
+                                    <p:commandButton id="btnDespachar" value="#{label['inventario.botones.solicitudPreparada']}" icon="ui-icon-circle-check"
+                                                     actionListener="#{beanSolicitudInventario.aplicarEnviarDespacho}" rendered="#{beanSolicitudInventario.estadoActualPendiente eq 2}" 
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes"/>
+                                    <p:commandButton id="btnLiberarDespacho" value="#{label['inventario.botones.liberarSolicitudPreparada']}" icon="ui-icon-circle-minus"
+                                                     actionListener="#{beanSolicitudInventario.liberarLotes}" rendered="#{beanSolicitudInventario.estadoActualPendiente eq 2}" 
+                                                     update="form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes"/>
+                                    <p:commandButton id="btnSolicDespachada" value="#{label['inventario.botones.despacharSolicitud']}" icon="ui-icon-circle-check"
+                                                     actionListener="#{beanSolicitudInventario.aplicarEnviarSolicitud}" rendered="#{beanSolicitudInventario.estadoActualPendiente eq 3}" 
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes"/>
+                                    <p:commandButton id="btnDevolverSolicitud" value="#{label['inventario.botones.devolverSolicitud']}" icon="ui-icon-circle-check"
+                                                     actionListener="#{beanSolicitudInventario.devolverSolicitud}" rendered="#{beanSolicitudInventario.estadoActualPendiente eq 3}" 
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes"/>
+                                    <p:commandButton id="btnRecibirSolicitud" value="#{label['inventario.botones.recibirSolicitud']}" icon="ui-icon-circle-check"
+                                                     rendered="#{beanSolicitudInventario.estadoActualPendiente eq 4}" 
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes" actionListener="#{beanSolicitudInventario.recibirSolicitud}"/>
+                                    <p:commandButton id="btnRechazarSolicitud" value="#{label['inventario.botones.rechazarSolicitud']}" icon="ui-icon-circle-check"
+                                                     rendered="#{beanSolicitudInventario.estadoActualPendiente eq 4}" 
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes" actionListener="#{beanSolicitudInventario.rechazarSolicitud}"/>
+                                    <p:commandButton id="btnReintegrarSolicitudRechazada" value="#{label['inventario.botones.reintegrarSolicitud']}" icon="ui-icon-circle-check" 
+                                                     rendered="#{beanSolicitudInventario.estadoActualPendiente eq 5 and beanSolicitudInventario.tipoSolicitud eq 1 }" 
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes" actionListener="#{beanSolicitudInventario.reintegrarSolicitud}"/>
+                                    <p:commandButton id="btnSolicitudRechazada" value="#{label['inventario.botones.devolverRechazoSolicitud']}" icon="ui-icon-circle-check"
+                                                     rendered="#{beanSolicitudInventario.estadoActualPendiente eq 5 and beanSolicitudInventario.tipoSolicitud eq 2}" 
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes" actionListener="#{beanSolicitudInventario.devolverRechazoSolicitud}"/>
+                                    <p:commandButton id="btnenviarSolicitudPendiente" value="#{label['inventario.botones.enviarSolicitud']}" icon="ui-icon-circle-check"
+                                                     rendered="#{beanSolicitudInventario.estadoActualPendiente eq 1}" actionListener="#{beanSolicitudInventario.enviarSolicitud}"
+                                                     update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:listaBotones form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes"/>
+                                </p:panelGrid>
+                                <p:dataTable id="DetallesPendientes" 
+                                             widgetVar="DetallesPendientes" 
+                                             var="detalle"
+                                             filteredValue="#{beanSolicitudInventario.filtroDetalles}"
+                                             reflow="true"
+                                             paginator="true" 
+                                             rowKey="#{detalle.inventarioSolicitudDetalle.idInventarioSolicitudDetalle}"
+                                             paginatorPosition="top" 
+                                             rows="10"
+                                             value="#{beanSolicitudInventario.listaDetalleSolicitud}" 
+                                             emptyMessage="Tabla Vacía"                                            
+                                             selection="#{beanSolicitudInventario.listaSelecProductosPendientes}" rowsPerPageTemplate="5,10,15,20,30,50"
+                                             rowStyleClass="#{detalle.semaforo eq 0 ? 'filaRoja':''}">
+
+                                    <p:column selectionMode="multiple" style="text-align: center;width: 8em !important;" />
+
+                                    <p:column headerText="Bodega Origen"
+                                              sortBy="#{detalle.bodegaDestino.descripcion}" filterBy="#{detalle.bodegaDestino.descripcion}"
+                                              filterMatchMode="contains" rendered="#{beanSolicitudInventario.tipoSolicitud eq 2}">                                
+                                        <h:outputText value="#{detalle.bodegaDestino.descripcion}"/>                              
+                                    </p:column>
+
+                                    <p:column headerText="Producto" 
+                                              sortBy="#{detalle.producto.descripcion}" filterBy="#{detalle.producto.descripcion}"
+                                              filterMatchMode="contains">                                
+                                        <h:outputText value="#{detalle.producto.descripcion}"/>                              
+                                    </p:column>
+
+                                    <p:column headerText="Cantidad" style="width: 6em;"
+                                              sortBy="#{detalle.inventarioSolicitudDetalle.cantidad}" filterBy="#{detalle.inventarioSolicitudDetalle.cantidad}"
+                                              filterMatchMode="contains">                                
+                                        <h:outputText value="#{detalle.inventarioSolicitudDetalle.cantidad}">
+                                            <f:convertNumber pattern="###,###" type="currency"/>
+                                        </h:outputText>                              
+                                    </p:column>
+
+                                    <!--<p:column headerText="Estado"
+                                              sortBy="#{detalle.estadoSolicitudDetalle.descripcion}" filterBy="#{detalle.estadoSolicitudDetalle.descripcion}"
+                                              filterMatchMode="contains">                                
+                                        <h:outputText value="#{detalle.estadoSolicitudDetalle.descripcion}"/>                              
+                                    </p:column>-->
+
+                                    <p:column visible="#{beanSolicitudInventario.estadoActualPendiente eq 2}" style="width: 8em !important;">
+                                        <p:panelGrid id="PanelAccesoRapido" columns="1" columnClasses="ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                            <p:commandButton id="btnInclusionRapida" value="#{label['inventario.botones.incluirLoteDefault']}" style="font-size:11px;width: 9em;"
+                                                             actionListener="#{beanSolicitudInventario.incluirRapido}" update="form_sisadmin:mensajes form_sisadmin:paneles:DetallesPendientes form_sisadmin:panelAviso" >                                   
+                                                <f:param name="idDetalleSolicitudRapida" value="#{detalle.inventarioSolicitudDetalle.idInventarioSolicitudDetalle}" />
+                                            </p:commandButton>
+                                            <p:commandButton id="btnMostrarPanel" value="#{beanSolicitudInventario.visualizarColumnaEnviada ? label['inventario.botones.agregarCaracteristicas'] : label['inventario.botones.visualizarCaracteristicas']}" 
+                                                             actionListener="#{beanSolicitudInventario.abrirCaracteristicas}" update="form_sisadmin:panelModal"  style="font-size:11px;width: 8em;" >                                   
+                                                <f:param name="idDetalleSolicitud" value="#{detalle.inventarioSolicitudDetalle.idInventarioSolicitudDetalle}" />
+                                            </p:commandButton>
+                                        </p:panelGrid>
+                                    </p:column>
+
+                                    <p:column visible="#{beanSolicitudInventario.estadoActualPendiente eq 2}" style="width: 8em !important;">
+                                        <p:panelGrid id="PanelAccesoInventario" columns="1" columnClasses="ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                            <p:commandButton id="btnEliminarSolicitud" value="#{label['inventario.botones.eliminarSolicitud']}" style="font-size:11px;width: 8em;" 
+                                                             actionListener="#{beanSolicitudInventario.eliminarSolicitud}" update="form_sisadmin:paneles:SolicitudesPendientes form_sisadmin:paneles:DetallesPendientes form_sisadmin:mensajes">  
+                                                <p:confirm header="Eliminación del producto" message="¿Está usted seguro?" icon="ui-icon-alert" />
+                                                <f:param name="idDetalleEliminar" value="#{detalle.inventarioSolicitudDetalle.idInventarioSolicitudDetalle}" />
+                                            </p:commandButton>
+                                            <p:commandButton id="btnSustituirSolicitud" value="#{label['inventario.botones.sustituirSolicitud']}" update="form_sisadmin:panelModal" style="font-size:11px;width: 8em;"
+                                                             actionListener="#{beanSolicitudInventario.sustituirSolicitud}" >                                   
+                                                <f:param name="idDetalleSustituir" value="#{detalle.inventarioSolicitudDetalle.idInventarioSolicitudDetalle}" />
+                                            </p:commandButton>
+                                        </p:panelGrid>
+                                    </p:column>
+
+                                </p:dataTable> 
+                                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                                    <center>
+                                        <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                                        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                                    </center>
+                                </p:confirmDialog>
+                            </div>
+                        </p:tab>    
+                    </p:tabView>    
+                </div>
+            </div>
+        </div>
+    </ui:define>
+
+
+    <!-- :::::::::::::::::::: PERSONALIZAR EL PANEL DE CONFIRMACIÓN :::::::::::::::::::-->
+    <ui:define name="dialogoHeader">
+        <h2>#{label['inventario.solicitud.panelModalEnviadas.titulo']}</h2>
+    </ui:define>
+    <ui:define name="dialogoMensaje">
+        <h3>#{beanSolicitudInventario.modalDetalleSolicitud.producto.descripcion}</h3>
+        <br/>
+        <p:panelGrid id="modalDatos" columns="2" rendered="#{beanSolicitudInventario.visualizarColumnaEnviada}"
+                     columnClasses="ui-grid-col-4,ui-grid-col-7" layout="grid" styleClass="ui-panelgrid-blank">                                       
+            <h:outputText value="#{label['inventario.solicitud.panelModalEnviadas.numeroLote']}"/>
+            <p:selectOneMenu id="listaLote" value="#{beanSolicitudInventario.numeroLoteModal}">
+                <f:selectItems value="#{beanSolicitudInventario.listaNumeroLotes}" />
+                <p:ajax event="change" listener="#{beanSolicitudInventario.cargarFechasVencimiento}" update="modalDatos"/>
+            </p:selectOneMenu>
+            <h:outputText value="#{label['inventario.solicitud.panelModalEnviadas.fechaVencimiento']}" />
+            <p:selectOneMenu id="listaFechaVencimiento" value="#{beanSolicitudInventario.fechaVencimientoModal}">
+                <f:selectItems value="#{beanSolicitudInventario.listaFechaVencimiento}" />
+            </p:selectOneMenu>
+            <h:outputText value="#{label['inventario.solicitud.panelModalEnviadas.cantidad']}"/>         
+            <p:inputNumber value="#{beanSolicitudInventario.cantidadModal}" autocomplete="off"  minValue="0"  decimalPlaces="0" />                                
+        </p:panelGrid>
+        <p:panelGrid id="btnAgregarModal" columns="1" rendered="#{beanSolicitudInventario.visualizarColumnaEnviada}"
+                     columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" >
+            <p:commandButton id="btnPanelAgregar" value="#{label['inventario.botones.agregar']}" actionListener="#{beanSolicitudInventario.agregarCaracteristica}" update="ElementosPendientes modalDatos form_sisadmin:mensajes" />
+        </p:panelGrid>
+        <p:dataTable id="ElementosPendientes" 
+                     widgetVar="ElementosPendientes" 
+                     var="elemento"
+                     reflow="true"
+                     paginator="true"
+                     rows="5"
+                     paginatorPosition="bottom"
+                     value="#{beanSolicitudInventario.modalDetalleSolicitud.listaElementos}" 
+                     emptyMessage="Tabla Vacía">
+            <p:column headerText="Número de Lote" >                                
+                <h:outputText value="#{elemento.numeroLote}"/>                
+            </p:column> 
+            <p:column headerText="Fecha de Vencimiento" >                                
+                <h:outputText value="#{elemento.fechaTexto}"/>          
+            </p:column>
+            <p:column headerText="Cantidad" >                                
+                <h:outputText value="#{elemento.cantidad}">
+                    <f:convertNumber pattern="###,###" type="currency"/>
+                </h:outputText>
+            </p:column>
+            <p:column visible="#{beanSolicitudInventario.visualizarColumnaEnviada}">                                
+                <p:commandButton id="btnEliminarFila" value="Borrar" actionListener="#{beanSolicitudInventario.borrarCaracteristica}" update="ElementosPendientes" >
+                    <f:param name="idDetalleElemento" value="#{elemento.identificador}" />
+                </p:commandButton>                
+            </p:column>
+        </p:dataTable>
+    </ui:define>
+    <ui:define name="dialogoBotones">
+        <p:commandButton id="boton_dialogo_si" icon="ui-icon-circle-plus" 
+                         value="#{label['sistema.boton.guardar']}" actionListener="#{beanSolicitudInventario.guardarCaracteristicas}"
+                         update="form_sisadmin:paneles:DetallesPendientes form_sisadmin:panelAviso ElementosPendientes modalDatos form_sisadmin:mensajes" rendered="#{beanSolicitudInventario.visualizarColumnaEnviada}"/>
+        <p:commandButton id="boton_dialogo_no" icon="ui-icon-circle-close" 
+                         value="#{label['sistema.boton.cerrar']}" actionListener="#{beanSolicitudInventario.cerrarCaracteristicas}"
+                         update="ElementosPendientes modalDatos"/>
+    </ui:define>
+    <!-- ::::::::::::::::::::::::::: FIN ::::::::::::::::::::::::::::::::::::::::::::--> 
+
+    <!-- :::::::::::::::::::: PERSONALIZAR EL PANEL DE AVISO :::::::::::::::::::-->
+    <ui:define name="panelAvisoHeader">
+        <p:outputLabel value="Inconsistencias Detectadas"/>
+    </ui:define>
+    <ui:define name="panelAvisoMensaje">
+        <p:inputTextarea id="InfoError" style="resize: none;" readonly="true" autoResize="false" 
+                         value="#{beanSolicitudInventario.informacionError}" rows="5" />
+    </ui:define>
+    <ui:define name="panelAvisoBotones">
+        <p:commandButton id="boton_AVISO_no" 
+                         value="#{label['sistema.boton.cerrar']}" icon="ui-icon-circle-close"
+                         type="button" onclick="PF('panelAviso').hide();"/>
+    </ui:define>
+    <!-- ::::::::::::::::::::::::::: FIN ::::::::::::::::::::::::::::::::::::::::::::-->
+
+    <!-- :::::::::::::::::::: PERSONALIZAR EL PANEL DE SUSTITUCION :::::::::::::::::::-->
+    <ui:define name="sustitucionHeader">
+        <p:outputLabel value="Sustitución de Productos"/>
+    </ui:define>
+    <ui:define name="sustitucionMensaje">
+        <p:panelGrid id="contenidoSustitucion" columns="1" columnClasses="ui-grid-col-7" layout="grid" styleClass="ui-panelgrid-blank" >
+            <h:outputText value="#{label['inventario.solicitud.productoSolicitud']}"/> 
+            <p:autoComplete id="busquedaProductoSustituto" maxResults="10" value="#{beanSolicitudInventario.valorProductoSustituto}"  style="width: 13em !important;" 
+                            completeMethod="#{beanSolicitudInventario.busquedaProductos}" var="produc" itemLabel="#{produc.descripcion}" 
+                            itemValue="#{produc}" converter="convertidorProducto" class="ui-autocomplete" />
+        </p:panelGrid>
+    </ui:define>
+    <ui:define name="sustitucionBotones">
+        <p:commandButton id="boton_sustitucion_si" icon="ui-icon-circle-plus" 
+                         value="#{label['sistema.boton.guardar']}" actionListener="#{beanSolicitudInventario.guardarSustitucion}"
+                         update="form_sisadmin:paneles:DetallesPendientes form_sisadmin:panelSustitucion form_sisadmin:mensajes" />
+        <p:commandButton id="boton_sustitucion_no" icon="ui-icon-circle-close" 
+                         value="#{label['sistema.boton.cerrar']}" actionListener="#{beanSolicitudInventario.cerrarSustitucion}"
+                         update="form_sisadmin:panelSustitucion"/>
+    </ui:define>
+    <!-- ::::::::::::::::::::::::::: FIN ::::::::::::::::::::::::::::::::::::::::::::-->
+</ui:composition>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+
+    <h:head>
+      <!--  <link rel="shortcut icon" href="#{request.contextPath}/resources/imagenes/favicon.ico" />-->
+        <f:loadBundle basename="cr.go.rnp.spj.base.recursos.etiquetas" var="label" />
+        <title>
+            <ui:insert name="titulo">#{label['titulo.nombre.sistema']}</ui:insert>
+        </title>
+        <meta http-equiv="Content-Language" content="es" />
+        <meta http-equiv="Content-type" content="application/xhtml+xml; charset=UTF-8" />
+        <link href="#{request.contextPath}/resources/css/base.css" type="text/css" rel="stylesheet"></link>
+        <link href="#{request.contextPath}/resources/css/css_primefaces.css" type="text/css" rel="stylesheet"></link>
+        <link href="#{request.contextPath}/resources/css/personalizado.css" type="text/css" rel="stylesheet"></link>
+
+    </h:head>
+
+    <h:body>
+
+
+        <!--**************************************** 
+            SE DEFINE LA ESTRUCTURA PRINCIPAL DE LA 
+            PAGINA CON UN TABLE 
+        -->
+
+        <p:ajaxStatus id="ajaxStatusPanel">
+            <f:facet  name="start">
+                <div id="ajaxStatusPanelDiv">
+                    <table><tr><td align="right" width="55%"><img src="#{request.contextPath}/resources/imagenes/yellow-loader.gif" /></td>
+                            <td><span>Cargando...</span></td></tr>
+                    </table>
+                </div>
+            </f:facet>
+
+            <f:facet name="complete">  
+                <h:outputText value="" />
+            </f:facet>  
+        </p:ajaxStatus>
+
+        <table id="tablaContenedora" width="100%" cellpadding="0" cellspacing="0" >
+
+            <!-- HEADER -->
+            <tr>
+                <td id="header"  >
+                    <img src="#{request.contextPath}/resources/imagenes/logo_registro.png" style="margin-left: 10px;"></img>
+                    <img src="#{request.contextPath}/resources/imagenes/encabezado.png" style="margin-left: 50px;"></img>
+                </td>
+            </tr>
+
+            <!-- Area de Trabajo -->
+            <tr>
+                <td>
+                    <h:form id="form_spj">
+                        <table width="100%">
+                            <tr>        <!-- CONTENIDO -->
+                                <td id="contenido" width="100%">
+
+                                    <!-- Titulos Principales -->
+                                    <table style="width: 100%">
+                                        <tr> <td style="text-align: left;" class="titulo"> <ui:insert name="titulo"></ui:insert> </td> <td style="text-align: right;"> <b><ui:insert name="archivo"></ui:insert></b> </td> </tr> 
+                                        <tr> <td style="text-align: left;" class="subtitulo"> <ui:insert name="subtitulo"></ui:insert> </td> <td style="text-align: right;"> <strong><ui:insert name="mapa"></ui:insert></strong> </td> </tr>
+                                    </table>
+                                    <hr id="horizontalLine" style="width: 100%; margin: 0 0 1% 0"/>
+                                    <center>
+                                        <ui:insert name="contenido"> </ui:insert>
+                                    </center>
+                                </td>
+                            </tr>
+                        </table>
+                    </h:form>
+                </td>
+            </tr>
+        </table>
+
+        <br></br>
+        <br></br>
+        <br></br>
+        <br></br>
+
+    </h:body>
+</html>

@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Facturación</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+
+
+    </ui:define>
+    <ui:define name="content"> 
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+
+                    <div class="card">
+                        <h1>Buscar Facturas</h1>
+                        <ui:include src="busquedaFactura.xhtml"/>   
+                    </div>
+
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton icon="fa fa-plus" value="Nuevo" actionListener="#{beanFactura.generaerNuevaFactura(false)}" 
+                                         action="#{beanFactura.nuevaFactura}" disabled="#{beanFactura.deshabilitaBotonNuevo}" update=":form_sisadmin"></p:commandButton>
+                        <p:commandButton icon="fa fa-fw fa-edit" value="Editar" actionListener="#{beanFactura.editarFactura}" disabled="#{!beanFactura.deshabilitaBotonNuevo}"  update=":form_sisadmin"></p:commandButton>
+
+                    </p:panelGrid>
+                    <div class="card">
+                        <h1>#{label['nombre.encabezado.factura']}</h1>
+                        <ui:include src="factura_finalizacion.xhtml"/>
+                    </div>
+                    <div class="card">
+                        <h1>#{label['receptor.informacion.cliente']}</h1>
+                        <ui:include src="receptor.xhtml" />                
+                    </div>
+                    <div class="card">
+                        <h1>Detalle Productos</h1>
+                        <ui:include src="detalle_factura.xhtml"/>
+                    </div>
+
+
+
+                    <div class="card">
+                        <h1>Información de Facturas en Contingencia</h1>
+                        <p:panelGrid id="panelInformacionDocReferencia" columns="3" columnClasses="ui-grid-col-3,ui-grid-col-8, ui-grid-col-3"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >
+
+                            <p:outputLabel value="Situación del Comprobante"/>
+                            <p:selectOneMenu 
+                                value="#{beanFactura.informacionReferenciaDocumento.tipoDoc}" 
+                                disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                                id="listaSituacionesComprobante"                         
+                                effect="fold" >     
+                                <p:ajax event="change" update=":form_sisadmin:panelInformacionDocReferencia" />       
+                                <f:selectItem itemLabel="Normal" itemValue="1" />
+                                <f:selectItem itemLabel="Contingencia" itemValue="2" />
+                                <f:selectItem itemLabel="Sin Internet" itemValue="3" />
+                                <f:selectItem itemLabel="Rechazos de parte de hacienda" itemValue="4" />
+                            </p:selectOneMenu> 
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value="Número de Factura a la que hace Referencia"/>
+                            <p:inputText id="txtNUmeroFacturaReferencia" 
+                                         maxlength="50"
+                                         value="#{beanFactura.informacionReferenciaDocumento.numero}" 
+                                         disabled="#{beanFactura.informacionReferenciaDocumento.tipoDoc eq '1' or beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"/>
+                            <p:commandButton icon="fa fa-search" id="btnBuscarFacturasRechNotC" value="Buscar Facturas" update=":form_sisadmin:tablasFacturas"
+                                             oncomplete="PF('dialogBuscarFacturaReferencia').show()" 
+                                             actionListener="#{beanFactura.obtenerFacturaRechazasReferencias}"                                            
+                                             disabled="#{beanFactura.informacionReferenciaDocumento.tipoDoc eq '1' or beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"/>
+                            <p:outputLabel value="Fecha en que se creó la fecha a la que se hace referencia"/>
+                            <p:calendar id="CalendarioFechaEmisionFactua" 
+                                        value="#{beanFactura.informacionReferenciaDocumento.fecha}" 
+                                        pattern="dd/MM/yyyy HH:mm:ss"
+                                        disabled="#{beanFactura.informacionReferenciaDocumento.tipoDoc eq '1'or beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"/>
+
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value="Código de Referencia"/>
+                            <p:selectOneMenu 
+                                value="#{beanFactura.informacionReferenciaDocumento.codigo}" 
+                                disabled="#{beanFactura.informacionReferenciaDocumento.tipoDoc eq '1' or beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                                id="listaTiposDocuemtnoReferencia"                         
+                                effect="fold" >     
+                                <p:ajax event="change" update=":form_sisadmin:panelInformacionDocReferencia" />    
+                                <f:selectItem itemLabel="Seleccione" itemValue="00" />
+                                <f:selectItem itemLabel="Sustituye comprobante provisional por contingencia" itemValue="05" />
+                                <f:selectItem itemLabel="Anulado documento referencia" itemValue="01" />
+                            </p:selectOneMenu> 
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value="Tipo de Documento de Referencia"/>
+                            <p:selectOneMenu 
+                                value="#{beanFactura.informacionReferenciaDocumento.tipoDocumentoReferencia}" 
+
+                                disabled="#{beanFactura.informacionReferenciaDocumento.tipoDoc eq '1' or beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
+                                id="listaCodigoReferencia"                         
+                                effect="fold" >     
+                                <p:ajax event="change" update=":form_sisadmin:panelInformacionDocReferencia" />       
+                                <f:selectItem itemLabel="Seleccione" itemValue="00" />
+                                <f:selectItem itemLabel="Factura electrónica" itemValue="01" />
+                                <f:selectItem itemLabel="Nota de débito electrónica" itemValue="02" />
+                                <f:selectItem itemLabel="Nota de crédito electrónica" itemValue="03" />
+                                <f:selectItem itemLabel="Tiquete electrónico" itemValue="04" />
+                                <f:selectItem itemLabel="Nota de despacho" itemValue="05" />
+                                <f:selectItem itemLabel="Contrato" itemValue="06" />
+                                <f:selectItem itemLabel="Procedimiento" itemValue="07" />
+                                <f:selectItem itemLabel="Comprobante emitido en contingencia" itemValue="08" />
+                                <f:selectItem itemLabel="Devolución mercadería" itemValue="09" />
+                                <f:selectItem itemLabel="Sustituye factura rechazada por el Ministerio de Hacienda" itemValue="10" />
+                                <f:selectItem itemLabel="Sustituye factura rechazada por el Receptor del comprobante" itemValue="11" />
+                                <f:selectItem itemLabel="Sustituye Factura de exportación" itemValue="12" />
+                            </p:selectOneMenu> 
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value="Razón"/>
+                            <p:inputTextarea id="RazonFacturaReferencia" 
+                                             maxlength="150"
+                                             value="#{beanFactura.informacionReferenciaDocumento.razon}" 
+                                             disabled="#{beanFactura.informacionReferenciaDocumento.tipoDoc eq '1'or beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"/>
+                            <p:outputLabel value=""/>
+                            <!--  <div style="margin-left: 30%; font-size: 14px;">
+                                  <p>Recuerde que, en caso de que no tenga acceso al sistema de información y requiera facturar producto/servicios 
+                                      es requerido facturar manualmente y que, cuando ya se tenga acceso al sistema de información <b>TODAS</b> las facturas
+                                      hechas manualmente debe registrarse en el Sistema de Información, <b>SIN EXCEPCION</b>.</p>
+                                  <p>En este caso, debe seleccionar en el campo <b>Situación del Comprobante</b> según corresponda a la situación dada e ingresar la información que se le solicita, a saber:</p>
+                                  <p><b>Número de Factura a la que se  hace Refencia:</b> Corresponde al número de factura manual que se le entregó al cliente.</p>
+                                  <p><b>Fecha en que se creó la factura a la que se hace Referencia:</b> Corresponde a la fecha de creación de la factura manual que se le entregó al cliente.</p>
+                                  <p><b>Razón: </b>Corresponde a la razón del porque se creo una factura manual.</p>
+
+                              </div>-->
+                        </p:panelGrid>                            
+                    </div>
+                    <div class="card" style="#{beanFactura.puedeAgregarLineasNotaDebito?'':'display: none'}">
+                        <h1>Información para Notas de Débito</h1>
+                        <p:panelGrid columns="2" columnClasses="ui-grid-col-3,ui-grid-col-8" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                            <p:outputLabel value="Tipo Documento Referencia"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables"                                   
+                                              value="#{beanFactura.tipoDocumentoReferenciaSeleccionado}" 
+                                              id="listaTiposDocumentoReferencia" 
+                                              effect="fold" >         
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanFactura.listaTipoDocumentoReferencia}"
+                                               var="tipoDocRef"
+                                               itemLabel="#{tipoDocRef.descripcion}"
+                                               itemValue="#{tipoDocRef.id_tipo_doc_referencia}"/>
+                            </p:selectOneMenu> 
+
+                            <p:outputLabel value="Motivo de Nota de Débito"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables"                                   
+                                              value="#{beanFactura.motivoDebitoSeleccionado}" 
+                                              id="listaTiposMotivosAnulacion" 
+                                              disabled="#{beanFactura.inhabilitarComponentes}"
+                                              effect="fold" >         
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanFactura.listaMotivoDebito}"
+                                               var="tipoMotvAnulacion"
+                                               itemLabel="#{tipoMotvAnulacion.descripcion}"
+                                               itemValue="#{tipoMotvAnulacion.id_motivo_nota_debito}"/>
+                            </p:selectOneMenu> 
+                            <p:outputLabel value="Razón"/>
+                            <p:inputTextarea rows="6"  
+                                             disabled="#{beanFactura.inhabilitarComponentes}"
+                                             cols="33" 
+                                             counterTemplate="{0} caracteres restantes" 
+                                             counter="display2"  
+                                             id="txtMotivoAnulacion" 
+                                             value="#{beanFactura.motivoDebito}" 
+                                             maxlength="100">
+                            </p:inputTextarea >
+                            <p:outputLabel/>
+                            <h:outputText id="display2" />   
+                        </p:panelGrid>
+
+                    </div>
+                    <div class="card">
+                        <h1>Pago</h1>
+                        <p:panelGrid id="panelVuelto" columns="2" columnClasses="ui-grid-col-3,ui-grid-col-8"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >
+                            <p:outputLabel value="Paga con "/>
+                            <p:inputNumber disabled="#{beanFactura.inhabilitarComponentes}" value="#{beanFactura.pagaCon}" decimalPlaces="3">
+                                <p:ajax event="keyup" listener="#{beanFactura.calcularVuelto}" update="vueltoMotno"></p:ajax>
+                            </p:inputNumber>
+                            <p:outputLabel  value="Vuelto"/>
+                            <p:outputLabel id="vueltoMotno" value="#{beanFactura.vuelto}"/>
+
+                        </p:panelGrid>
+
+                    </div>
+                    <div class="card">
+                        <h1>Vencimiento</h1>
+
+
+                        <p:panelGrid  columns="2" columnClasses="ui-grid-col-3,ui-grid-col-8"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >
+                            <h:outputLabel for="cantidadDiasVigencia" value="Cantidad días de vigencia " />
+                            <p:spinner disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}" id="cantidadDiasVigencia" value="#{beanFactura.cantidadDiasVigencia}" />
+                        </p:panelGrid>
+                    </div>
+
+                    <div class="card">
+                        <h1>Totales</h1>
+                        <ui:include src="factura_summary.xhtml"/>
+                    </div>
+
+
+                    <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                        <p:commandButton icon="fa fa-save" id="btnGuardar" value="Guardar Factura" update=":form_sisadmin" disabled="#{beanFactura.inhabilitarComponentes}"  actionListener="#{beanFactura.guardarFactura}"/>
+
+                        <p:commandButton id="btnImprirReporte"  disabled="#{!beanFactura.inhabilitarComponentes}" actionListener="#{beanFactura.generarReporteFactura}" value="Imprimir Factura" icon="fa fa-print" ajax="false" >
+                            <p:fileDownload value="#{beanFactura.reporteDesplegar}"/>     
+                        </p:commandButton>   
+
+                        <p:commandButton onclick="callPrinter(#{beanFactura.facturaNueva.id_factura});" id="btnImprirReportePuntVenta"  disabled="#{!beanFactura.inhabilitarComponentes}" actionListener="#{beanFactura.generarReporteFacturaFacturaElectronicaPuntoVenta}" value="Imprimir Factura Punto Venta" icon="fa fa-print" ajax="false" >
+                            <p:fileDownload value="#{beanFactura.reporteDesplegar}"/>     
+                        </p:commandButton> 
+                       <!--    <p:commandButton icon="fa fa-send" value="Enviar Factura" disabled="#{eanFactura.envioFactura}" update=":form_sisadmin" actionListener="#{beanFactura.enviarFactura}"></p:commandButton>-->
+                        <p:commandButton icon="fa fa-cancel" value="Cancelar" update=":form_sisadmin" disabled="#{!beanFactura.deshabilitaBotonNuevo}" actionListener="#{beanFactura.cancelar}" action="#{beanFactura.inicializar}" ></p:commandButton>                     
+                    </p:panelGrid>
+                  
+                    <p:dialog header="#{label['persona.titulo']}" 
+                              widgetVar="dialogcliente" 
+                              resizable="false"
+                              id="dialogcliente"
+                              showEffect="fade" 
+                              hideEffect="fade" 
+                              closable="false">
+                        <!--  <ui:include src="../persona/cliente.xhtml"/>    -->
+
+                    </p:dialog>
+
+                    <p:dialog widgetVar="dialogBuscarFacturaReferencia" 
+                              resizable="false"
+                              id="dialogBuscarFacturaReferencia"
+                              showEffect="fade" 
+                              hideEffect="fade" 
+                              modal="true"
+                              closable="false">
+
+                        <div class="card">
+                            <h1>Buscar Facturas de Referencia</h1>
+                            <p:panelGrid  columns="1" columnClasses="ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >
+                                <p:dataTable id="tablasFacturas"
+                                             var="factura"      
+                                             reflow="true"
+                                             editable="true"
+                                             editMode="cell"
+                                             paginator="true" 
+                                             rowKey="#{factura}"
+                                             paginatorPosition="bottom" 
+                                             rows="7"
+
+                                             value="#{beanFactura.listaFacturaRechazadasReferencias}"
+                                             filteredValue="#{beanFactura.listaFacturaRechazadasReferenciasFiltro}"
+                                             emptyMessage="#{label['tabla.vacia']}">
+                                    <p:column headerText="Id Factura" filterMatchMode="contains"  filterBy="#{factura.id_factura}">
+                                        <h:outputText id="idFactura" value="#{factura.id_factura}" />  
+                                    </p:column>
+                                    <p:column headerText="Clave" filterMatchMode="contains" filterBy="#{factura.clave}" >
+                                        <h:outputText id="clave" value="#{factura.clave}" />  
+                                    </p:column>
+                                    <p:column headerText="Número de Consecutivo" filterMatchMode="contains" filterBy="#{factura.numero_consecutivo}">
+                                        <h:outputText id="consec" value="#{factura.numero_consecutivo}" />  
+                                    </p:column>
+                                    <p:column headerText="Estado" filterMatchMode="contains"  filterBy="#{factura.descripcionEstado}">
+                                        <h:outputText id="estado" value="#{factura.descripcionEstado}" />  
+                                    </p:column>
+                                    <p:column>
+                                        <p:commandButton id="btnSeleccionarFacturasRechazdas"                                                         
+                                                         icon="ui-icon-check" 
+                                                         update=":form_sisadmin"
+                                                         actionListener="#{beanFactura.seleccionarFacturRechazadaReferencias(factura.id_factura, factura.clave)}"                                                         
+                                                         value="Seleccionar">                    
+                                        </p:commandButton>
+                                    </p:column>
+                                </p:dataTable>
+
+                            </p:panelGrid>
+                        </div>
+                        <p:commandButton icon="fa fa-check" id="btnAceptarFacturaReferencia" value="Aceptar" update=":form_sisadmin" />
+
+                    </p:dialog>
+                    <p:dialog widgetVar="dialogControlInventario" 
+                              resizable="false"
+                              id="dialogControlInventario"
+                              showEffect="fade" 
+                              hideEffect="fade" 
+                              modal="true"
+                              closable="false">
+
+                        <div class="card">
+                            <h1>Aviso</h1>
+                            <p:panelGrid  columns="1" columnClasses="ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >
+                                <p:outputLabel value="Se han encontrado facturas inconclusas que realizaron reservas a inventario. Se eliminaran las reservas y retornarán a inventario."/>
+                            </p:panelGrid>
+                        </div>
+                        <p:commandButton icon="fa fa-save" id="btnAceptarDevolucionReservas" value="Aceptar" update=":form_sisadmin"  actionListener="#{beanFactura.retornarReservasInventario}"/>
+
+                    </p:dialog>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>

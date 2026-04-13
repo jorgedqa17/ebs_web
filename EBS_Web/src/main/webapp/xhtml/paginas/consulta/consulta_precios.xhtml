@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <ui:define name="title">Consulta de Precios</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+
+
+    </ui:define>
+    <ui:define name="content"> 
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Detalle Producto</h1>
+                        <p:panelGrid   columnClasses="ui-grid-col-16,ui-grid-col-2" columns="2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:inputText  id="txtDescripcionProductoBusqueda" value="#{beanConsultaPrecios.nombreProducto}" >
+                                <p:ajax event="keyup" listener="#{beanConsultaPrecios.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+                            </p:inputText>
+
+                            <p:commandButton      
+
+                                icon="fa fa-clean"           
+                                id="limpiar" 
+                                update="form_sisadmin"
+                                actionListener="#{beanConsultaPrecios.limpiar}"
+                                value="Limpiar">
+                            </p:commandButton> 
+                        </p:panelGrid>
+
+
+
+
+
+                        <p:panelGrid   columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+
+                            <p:dataTable  id="tablaProductoDescripcion"
+                                          value="#{beanConsultaPrecios.listaProductosBusqueda}"                   
+                                          var="productoBusqueda"
+                                          reflow="true"
+                                          paginator="true" 
+                                          paginatorPosition="bottom" 
+                                          rowKey="#{productoBusqueda}"
+                                          selectionMode="single"
+                                          rows="10"                     
+                                          emptyMessage="#{label['tabla.vacia']}">
+
+                                <p:column style="text-align: left;" headerText="#{label['producto.descripcion']}">
+                                    <p:outputLabel id="descripcionProductoBusqueda" value="#{productoBusqueda.descripcion}"></p:outputLabel>
+
+                                </p:column>
+
+                                <p:column headerText="Acciones">
+                                    <p:commandButton      
+                                        oncomplete="PF('precioDialog').show()" 
+                                        icon="fa fa-search"           
+                                        id="buscarDetalleProducto" 
+                                        update="form_sisadmin"
+                                        actionListener="#{beanConsultaPrecios.buscarDetalleProducto(productoBusqueda)}"
+                                        value="Ver Detalle">
+                                    </p:commandButton> 
+                                </p:column>
+                            </p:dataTable>
+
+
+                        </p:panelGrid>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p:dialog id="tiposPreciosDialog"
+                  minWidth="50"
+                  header="Detalle del Producto - #{beanConsultaPrecios.nombreProductoDetalle}"
+                  modal="true"
+                  widgetVar="precioDialog" 
+                  showEffect="fade" 
+                  hideEffect="fade">
+
+            <p:panelGrid  columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >  
+                <h1>Listado de Precios</h1>
+                <p:dataTable
+                    id="tablaListaTiposPrecios"
+                    paginator="true"
+                    rows="5"
+                    rowKey="#{tipoPrecio}"
+                    value="#{beanConsultaPrecios.listaPreciosProductoSeleccionado}"
+                    filteredValue="#{beanConsultaPrecios.listaPreciosProductoSeleccionadoFiltro}"
+                    var="tipoPrecio">
+                    <p:ajax event="rowSelect" update="form_sisadmin"   
+                            listener="#{beanConsultaPrecios.onRowSelect}"  />
+                    <p:column  headerText="#{label['producto.tipo.precio.descripcion']}">
+                        <p:outputLabel value="#{tipoPrecio.descripcion}"></p:outputLabel>
+                    </p:column>
+                    <p:column headerText="#{label['producto.tipo.precio.precio']}">
+                        <p:outputLabel value="#{tipoPrecio.productoPrecio.precio}">
+                            <f:convertNumber pattern="#0.000" type="currency" currencySymbol="CRC" locale="en_US" />
+                        </p:outputLabel>
+                    </p:column>
+                    <p:column headerText="Impuesto">
+                        <p:outputLabel value="#{tipoPrecio.costoImpuesto}">
+                            <f:convertNumber pattern="#0.000" type="currency" currencySymbol="CRC" locale="en_US" />
+                        </p:outputLabel>
+                    </p:column>
+                    <p:column headerText="Total">
+                        <p:outputLabel value="#{tipoPrecio.precioConImpuesto}">
+                            <f:convertNumber pattern="#0.000" type="currency" currencySymbol="CRC" locale="en_US" />
+                        </p:outputLabel>
+                    </p:column>
+                   <!-- <p:column headerText="#{label['producto.moneda']}">
+                        <h:outputText id="tipoMoneda" value="#{tipoPrecio.descripcionTipoMoneda}" />
+                    </p:column>
+                    <p:column headerText="#{label['producto.tipo.cambio']}">
+                        <p:outputLabel value="#{tipoPrecio.tipo_cambio}"></p:outputLabel>
+                    </p:column>-->
+                </p:dataTable>
+                <br/>
+                <br/>
+                <h1>Listado de Existencias</h1>
+                <p:dataTable id="tablaExistenciasDet" 
+                             rows="5"
+                             paginator="true"
+                             filteredValue="#{beanConsultaPrecios.listaExistenciasProductoSeleccionadoFiltro}"
+                             value="#{beanConsultaPrecios.listaExistenciasProductoSeleccionado}"
+                             var="existencia">
+                    <p:column filterMatchMode="contains" filterBy="#{existencia.descripcion_bodega}" headerText="#{label['producto.existencia.bodega']}">
+                        <p:outputLabel value="#{existencia.descripcion_bodega}"></p:outputLabel>
+                    </p:column>
+                    <p:column filterMatchMode="contains" filterBy="#{existencia.cantidad}" headerText="#{label['producto.existencia.cantidad']}">
+                        <p:outputLabel value="#{existencia.cantidad}"></p:outputLabel>
+                    </p:column>
+                </p:dataTable>
+            </p:panelGrid>
+
+        </p:dialog>
+    </ui:define>
+
+
+</ui:composition>

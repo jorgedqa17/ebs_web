@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+        <p:outputLabel for="listaTipoIdentificacionNPER" value="#{label['receptor.tipo.identificacion']}" />
+        <p:selectOneMenu   converter="ConvertidorListaDesplegables" 
+                           valueChangeListener="#{beanPersona.seleccionarTipoCedula}"
+                           value="#{beanPersona.tipoIdentificacionSeleccionadaReceptor}" 
+                           disabled="#{beanPersona.inhabilitaBotones or beanPersona.estaModificando}"
+                           id="listaTipoIdentificacionNPER"                         
+                           effect="fold" >     
+            <p:ajax event="change" update="txtIdentificacionNPER" />      
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanPersona.listaTiposCedulas}"
+                           var="tipoCedula"
+                           itemLabel="#{tipoCedula.descripcion}"
+                           itemValue="#{tipoCedula.id_tipo_cedula}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblIdentificacionNPER" value="#{label['receptor.identificacion']}"/>
+        <p:inputMask  id="txtIdentificacionNPER" 
+                      value="#{beanPersona.identificacion}"                     
+                      maxlength="#{beanPersona.tamannoCedula}" 
+                      disabled="#{beanPersona.inhabilitaBotones or beanPersona.estaModificando}"
+                      mask="#{beanPersona.mascaraSeleccionada}">
+            <p:ajax event="blur" listener="#{beanPersona.buscarPersonaTSE}"
+                    update="txtNombreReceptoNPER, txtPrimerApellidoReceptoNPER, txtSegundoApellidReceptoNPER, listaCorreosElectronicos"></p:ajax>
+        </p:inputMask>
+        <h:outputText value="#{label['receptor.requiere.transporte']}" />
+        <p:selectBooleanCheckbox id="chkRequiereTrans"  disabled="#{beanPersona.inhabilitaBotones}" value="#{beanPersona.requiereTransporte}" />
+
+
+        <p:outputLabel for="listaTipoClienteNPER" value="#{label['receptor.tipo.cliente']}" />
+        <p:selectOneMenu   converter="ConvertidorListaDesplegables" 
+                           valueChangeListener="#{beanPersona.seleccionarTiposClientes}"
+                           value="#{beanPersona.idTipoClienteSeleccionado}" 
+                           id="listaTipoClienteNPER"  
+                           disabled="#{beanPersona.inhabilitaBotones}"
+                           effect="fold" >     
+            <p:ajax event="change"  />       
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanPersona.listaTiposClientes}"
+                           var="tipoCliente"
+                           itemLabel="#{tipoCliente.descripcion}"
+                           itemValue="#{tipoCliente.id_tipo_cliente}"/>
+        </p:selectOneMenu>  
+
+        <p:outputLabel id="lblNombreReceptorNPER" value="#{label['receptor.nombre']}"/>
+        <p:inputText id="txtNombreReceptoNPER" disabled="#{beanPersona.inhabilitaBotones}"    maxlength="50"  value="#{beanPersona.persona.nombre}" />
+
+        <p:outputLabel id="lblPrimerApellidoReceptorNPER" value="#{label['receptor.nombre.primer.apellido']}"/>
+        <p:inputText  id="txtPrimerApellidoReceptoNPER"  disabled="#{beanPersona.inhabilitaBotones}"  maxlength="50"  value="#{beanPersona.persona.primer_apellido}" />
+
+        <p:outputLabel id="lblSegundoApellidoNPER" value="#{label['receptor.nombre.segundo.apellido']}"/>
+        <p:inputText  id="txtSegundoApellidReceptoNPER"  disabled="#{beanPersona.inhabilitaBotones}"  maxlength="50"  value="#{beanPersona.persona.segundo_apellido}" />
+
+        <p:outputLabel id="lblNombreFantasiaReceptorNPER" value="#{label['receptor.nombre.nombre.fantasia']}"/>
+        <p:inputText id="txtNombreFantasiaReceptoNPER"  disabled="#{beanPersona.inhabilitaBotones}" value="#{beanPersona.persona.nombre_fantasia}" />    
+
+        <p:outputLabel id="lblCodAreaNPER" value="#{label['receptor.telefono.codigo.area']}"/>
+        <p:inputText   disabled="#{beanPersona.inhabilitaBotones}" onkeypress="javascript:return soloNumeros(event);" maxlength="3" id="txtCodAreaNPER"   value="#{beanPersona.persona.codigo_pais}" />
+
+       <!-- <p:outputLabel id="lblCorreoElectronicomm" value="#{label['receptor.correo.electronico']}"/>
+        <p:inputText   disabled="#{beanPersona.inhabilitaBotones}" id="txtCorreoElectronicoNPEuuR" maxlength="50"   value="#{beanPersona.persona.correo_electronico}" >
+            <f:validator validatorId="EmailValidator" />
+        </p:inputText> -->
+
+        <p:outputLabel id="lblTelefonoNPER" value="#{label['receptor.telefono']}"/>
+        <p:inputMask   disabled="#{beanPersona.inhabilitaBotones}" mask="99999999" id="txtTelefonoNPER" onkeypress="javascript:return soloNumeros(event);" maxlength="8" value="#{beanPersona.persona.telefono_1}" />
+
+        <p:outputLabel id="lblTelefono2NPER" value="#{label['receptor.telefono2']}"/>
+        <p:inputMask  disabled="#{beanPersona.inhabilitaBotones}" mask="99999999" id="txtTelefono2NPER" onkeypress="javascript:return soloNumeros(event);" maxlength="8" value="#{beanPersona.persona.telefono_2}" />
+
+        <h:outputText value="Exento" />
+        <p:selectBooleanCheckbox id="chkExento" disabled="#{beanPersona.inhabilitaBotones or beanPersona.persona.esExonerado}" value="#{beanPersona.persona.esExento}">
+            <p:ajax update=":form_sisadmin:chkExonerado" listener="#{beanPersona.marcarPersonaExenta}"  />
+        </p:selectBooleanCheckbox>
+        <h:outputText value="Exonerado" />
+        <p:selectBooleanCheckbox id="chkExonerado" disabled="#{beanPersona.inhabilitaBotones or beanPersona.persona.esExento}" value="#{beanPersona.persona.esExonerado}">
+            <p:ajax update=":form_sisadmin:chkExento" listener="#{beanPersona.marcarPersonaExonerada}"  />
+        </p:selectBooleanCheckbox>
+
+        <p:outputLabel id="lblProvinciaNPER" value="#{label['receptor.provincia']}"/>
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                          valueChangeListener="#{beanPersona.seleccionarProvincias}"
+                          value="#{beanPersona.idProvinciaSeleccionadaReceptor}" 
+                          id="listaProvinciasNPER"    
+                          disabled="#{beanPersona.inhabilitaBotones}"
+                          filter="true" filterMatchMode="startsWith"
+                          effect="fold" >     
+            <p:ajax event="change" update="listaCantonesNPER" />   
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanPersona.listaProvincias}"
+                           var="provinciaP"
+                           itemLabel="#{provinciaP.descripcion}"
+                           itemValue="#{provinciaP.id_provincia}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblCantonNPER" value="#{label['receptor.canton']}"/>
+        <p:selectOneMenu   converter="ConvertidorListaDesplegables" 
+                           valueChangeListener="#{beanPersona.seleccionarCantones}"
+                           value="#{beanPersona.idCantonSeleccionadaReceptor}" 
+                           id="listaCantonesNPER"       
+                           disabled="#{beanPersona.inhabilitaBotones}"
+                           filter="true" filterMatchMode="startsWith"
+                           effect="fold" >     
+            <p:ajax event="change" update="listaDistritosNPER" />   
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanPersona.listaCantones}"
+                           var="cantonP"
+                           itemLabel="#{cantonP.descripcion}"
+                           itemValue="#{cantonP.id_canton}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblDistritoNPER" value="#{label['receptor.distrito']}"/>
+        <p:selectOneMenu    converter="ConvertidorListaDesplegables" 
+                            valueChangeListener="#{beanPersona.seleccionarDistritos}"
+                            value="#{beanPersona.idDistritoSeleccionadaReceptor}" 
+                            disabled="#{beanPersona.inhabilitaBotones}"
+                            id="listaDistritosNPER"         
+                            filter="true" filterMatchMode="startsWith"
+                            effect="fold" >     
+            <p:ajax event="change" update="listaBarriosNPER" />       
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanPersona.listaDistritos}"
+                           var="distritoP"
+                           itemLabel="#{distritoP.descripcion}"
+                           itemValue="#{distritoP.id_distrito}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblBarrioNPER" value="#{label['receptor.barrio']}"/>
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables"           
+                          valueChangeListener="#{beanPersona.seleccionarBarrios}"
+                          value="#{beanPersona.idBarioSeleccionadaReceptor}" 
+                          id="listaBarriosNPER"     
+                          disabled="#{beanPersona.inhabilitaBotones}"
+                          filter="true" filterMatchMode="startsWith"
+                          effect="fold" >     
+            <p:ajax event="change"  />         
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanPersona.listaBarrios}"
+                           var="barrioP"
+                           itemLabel="#{barrioP.descripcion}"
+                           itemValue="#{barrioP.id_barrio}"/>
+        </p:selectOneMenu> 
+
+
+        <p:outputLabel id="lblOtraSennasNPER" value="Dirección Domicilio:"/>
+        <p:inputTextarea  rows="5" cols="200"   counter="displayPersonas" 
+                          value="#{beanPersona.persona.direccion}"  disabled="#{beanPersona.inhabilitaBotones}" maxlength="100" counterTemplate="{0} restantes." id="txtOtraSennasNPER" autoResize="false" />
+        <h:outputText  />         
+        <p:outputLabel  value=""/>
+        <h:outputText id="displayPersonas" /> 
+
+        <p:outputLabel  value=""/>
+        <p:outputLabel id="actEconoc" value="Actividad Económica:"/>
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables"           
+                          valueChangeListener="#{beanPersona.seleccionarActividad}"
+                          value="#{beanPersona.idActvidadSeleccionada}" 
+                          id="listaActividadEconocimca"     
+                          disabled="#{beanPersona.inhabilitaBotones}"
+                          filter="true" filterMatchMode="contains"
+                          effect="fold" >     
+            <p:ajax event="change"  />         
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanPersona.listaTiposActividadesEconomicas}"
+                           var="barrioP"
+                           itemLabel="#{barrioP.codigoActividadCIIU4} - #{barrioP.dscCIIU4} - #{barrioP.codigoActividadCIIU3} - #{barrioP.dscCIIU3}"
+                           itemValue="#{barrioP.idCodigoActividad}"/>
+        </p:selectOneMenu>  
+
+    </p:panelGrid>
+    <h2>Listado de Exoneraciones</h2>
+    <p:panelGrid columns="2" columnClasses="ui-grid-col-16, ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" 
+                 style="border:0px none; background-color:transparent;">
+        <p:commandButton id="btnVerModalEx" action="#{beanPersona.agregarExoneracion}"
+                         value="Agregar Exoneraciones" 
+                         disabled="true"
+                         icon="fa fa-save"
+                         update=":form_sisadmin:listaPersonas, :form_sisadmin,listaTipoIdentificacionNPER,btnGuadarPersona,
+                         chkRequiereTrans,listaTipoClienteNPER,txtIdentificacionNPER,txtNombreFantasiaReceptoNPER,txtOtraSennasNPER,
+                         listaProvinciasNPER, listaCantonesNPER,listaDistritosNPER,listaBarriosNPER,
+                         txtCodAreaNPER,txtTelefono2NPER,txtTelefonoNPER,txtCorreoElectronicoNPER,listaActividadEconocimca"/>
+
+    </p:panelGrid>
+    <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+
+        <p:dataTable id="listadoExoneraciones" 
+                     value="#{beanPersona.listaExoneraciones}"
+                     var="exoneracion"
+                     paginator="true" 
+                     rowKey="#{exoneracion}"
+
+                     paginatorPosition="bottom" 
+                     reflow="true"
+                     rows="10"                       
+                     emptyMessage="#{label['tabla.vacia']}">
+            <p:column headerText="Número de Documento" >
+                <h:outputText   value="#{exoneracion.numeroDocumento}" />  
+            </p:column>    
+            <p:column headerText="Año" >
+                <h:outputText   value="#{exoneracion.ano}" />  
+            </p:column>              
+            <p:column >
+                <p:commandButton id="btnEliminarExoneracion" 
+                                 disabled="#{beanPersona.inhabilitaBotones}"
+                                 icon="ui-icon-trash" 
+                                 actionListener="#{beanPersona.eliminarExoneracion}"
+                                 update="listadoExoneraciones">                    
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+    </p:panelGrid>
+
+    <h2>Listado de correos electrónicos</h2>
+    <br/><br/>  
+    <p:panelGrid columns="5" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:outputLabel id="lblalias" value="Alias"/>
+        <p:inputText   disabled="#{beanPersona.inhabilitaBotones}" id="txtAlias" maxlength="50"   value="#{beanPersona.alias}" >
+        </p:inputText> 
+        <p:outputLabel id="lblCorreoElectronicoNPER" value="#{label['receptor.correo.electronico']}"/>
+        <p:inputText   disabled="#{beanPersona.inhabilitaBotones}" id="txtCorreoElectronicoNPER" maxlength="50"   value="#{beanPersona.correoElectronico}" >
+            <f:validator validatorId="EmailValidator" />
+        </p:inputText> 
+        <p:commandButton id="btnGuardarCorreo" icon="fa fa-plus" disabled="#{beanPersona.inhabilitaBotones}" value="Agregar Correo" update="mensajes, listaCorreosElectronicos,txtCorreoElectronicoNPER, txtAlias" actionListener="#{beanPersona.agregarCorreoElectronico}"/>
+    </p:panelGrid>
+    <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+
+        <p:dataTable id="listaCorreosElectronicos" 
+                     value="#{beanPersona.persona.listaCorreosPersona}"
+                     var="correo"
+                     paginator="true" 
+                     rowKey="#{correo}"
+                     paginatorPosition="bottom" 
+                     reflow="true"
+                     rows="10"                       
+                     emptyMessage="#{label['tabla.vacia']}">
+            <p:column headerText="Alias" >
+                <h:outputText id="alias" value="#{correo.alias_cliente}" />  
+            </p:column>    
+            <p:column headerText="Correo Electrónico" >
+                <h:outputText id="correoElec" value="#{correo.correo_electronico}" />  
+            </p:column>              
+            <p:column >
+                <p:commandButton id="btnElmiinarRegistroCorreo" 
+                                 disabled="#{beanPersona.inhabilitaBotones}"
+                                 icon="ui-icon-trash" 
+                                 actionListener="#{beanPersona.eliminarCorreoElectronico(correo)}" 
+                                 update="listaCorreosElectronicos">                    
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+    </p:panelGrid>
+
+    <p:panelGrid columns="2" columnClasses="ui-grid-col-16, ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:commandButton id="btnGuadarPersona" actionListener="#{beanPersona.guardarPersonaMantenimiento}" 
+                         value="#{label['anulacion.guardar']}"
+                         disabled="#{beanPersona.inhabilitaBotones}"
+                         icon="fa fa-save"
+                         update=":form_sisadmin:listaPersonas, :form_sisadmin,listaTipoIdentificacionNPER,btnGuadarPersona,chkRequiereTrans,listaTipoClienteNPER,txtIdentificacionNPER,txtNombreFantasiaReceptoNPER,txtOtraSennasNPER,listaProvinciasNPER, listaCantonesNPER,listaDistritosNPER,listaBarriosNPER,txtCodAreaNPER,txtTelefono2NPER,txtTelefonoNPER,txtCorreoElectronicoNPER"/>
+
+        <p:commandButton id="cancelar" icon="fa fa-times" oncomplete="PF('listaPersonas').clearFilters()" disabled="#{beanPersona.inhabilitaBotones}" update=":form_sisadmin" value="Cancelar" actionListener="#{beanPersona.inicializarCancelar}" ></p:commandButton>
+    </p:panelGrid>
+
+    <p:dialog   header="Exoneración" 
+                widgetVar="idDialogoExoneracion" 
+                modal="true"    
+                minWidth="1000"
+                id="idDialogoExoneracion"
+                showEffect="fade" 
+                hideEffect="fade" 
+                resizable="true">
+        <div class="card">   
+            <p:panelGrid   columnClasses="ui-grid-col-4" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                <p:outputLabel value="Número de Documento" />
+                <p:inputText id="txtNumDoc" maxlength="40" 
+                             value="#{beanPersona.exoneracionUsuario.numeroDocumento}" >
+                    <p:ajax event="blur" listener="#{beanPersona.buscarExoneracion}"
+                            update="listaInstituciones,listaExoneraciones,fechaEmisionExoneracionLinea,txtArticulo,txtArticulo"></p:ajax>
+                </p:inputText>
+                <p:outputLabel value="#{label['producto.exoneracion.relacionada']}" />
+                <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                  filter="true" filterMatchMode="startsWith"
+                                  value="#{beanPersona.codigoExoneracion}" 
+                                  id="listaExoneraciones"                         
+                                  effect="fold"  >                         
+                    <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                    <f:selectItems value="#{beanPersona.listaTipoExoneracion}"
+                                   var="exoneracion"
+                                   itemLabel="#{exoneracion.descripcion}"
+                                   itemValue="#{exoneracion.id_exoneracion}"/>
+                </p:selectOneMenu> 
+                <p:outputLabel value="Nombre Institución" />
+                <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                  filter="true" filterMatchMode="startsWith"
+                                  value="#{beanPersona.exoneracionUsuario.codigoInstitucion}" 
+                                  id="listaInstituciones"                         
+                                  effect="fold"  >                         
+                    <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                    <f:selectItem itemLabel="Ministerio de Hacienda" itemValue="01" />
+                    <f:selectItem itemLabel="Ministerio de Relaciones Exteriores y Culto" itemValue="02" />
+                    <f:selectItem itemLabel="Ministerio de Agricultura y Ganadería" itemValue="03" />
+                    <f:selectItem itemLabel="Ministerio de Economía, Industria y Comercio" itemValue="04" />
+                    <f:selectItem itemLabel="Cruz Roja Costarricense" itemValue="05" />
+                    <f:selectItem itemLabel="Benemérito Cuerpo de Bomberos de Costa Rica" itemValue="06" />
+                    <f:selectItem itemLabel="Asociación Obras del Espíritu Santo" itemValue="07" />
+                    <f:selectItem itemLabel="Federación Cruzada Nacional de protección al Anciano (Fecrunapa)" itemValue="08" />
+                    <f:selectItem itemLabel="Escuela de Agricultura de la Región Húmeda (EARTH)" itemValue="09" />
+                    <f:selectItem itemLabel="Instituto Centroamericano de Administración de Empresas (INCAE)" itemValue="10" />
+                    <f:selectItem itemLabel="Junta de Protección Social (JPS)" itemValue="11" />
+                    <f:selectItem itemLabel="Autoridad Reguladora de los Servicios Públicos (Aresep)" itemValue="12" />
+                    <f:selectItem itemLabel="Otros" itemValue="99" />
+                </p:selectOneMenu> 
+
+
+                <p:outputLabel value="Fecha Emisión" />
+                <p:inputText id="fechaEmisionExoneracionLinea" maxlength="6" 
+                             value="#{beanPersona.exoneracionUsuario.fechaEmision}" >
+                </p:inputText>
+
+                <p:outputLabel value="Articulo" />
+                <p:inputText id="txtArticulo" maxlength="6" 
+                             value="#{beanPersona.exoneracionUsuario.articulo}" >
+                </p:inputText>
+                <p:outputLabel value="Inciso" />
+                <p:inputText id="txtInciso" maxlength="6" 
+                             value="#{beanPersona.exoneracionUsuario.inciso}" >
+                </p:inputText>
+
+                <p:commandButton  
+                    update=":form_sisadmin:listadoExoneraciones mensajes" 
+                    icon="fa fa-save"
+                    id="btnGuardarExoneracion" 
+                    actionListener="#{beanPersona.agregarExoneracionLinea}"
+                    value="#{label['anulacion.guardar']}" >
+                </p:commandButton>      
+                <p:outputLabel value="" />
+            </p:panelGrid>
+        </div>
+    </p:dialog>
+
+
+</ui:composition>

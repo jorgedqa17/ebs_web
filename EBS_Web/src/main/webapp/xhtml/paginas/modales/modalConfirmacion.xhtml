@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <! ---- ESTA PAGINA NO SE UTILIZA --->
+    <p:dialog id="panelModal" widgetVar="panelModal" closable="false" resizable="false" showEffect="explode" hideEffect="explode"
+               style="text-align: justify;" draggable="false" position="center"  modal="true">
+
+        <div style="font-weight: bold;font-size: 12pt;">
+            <ui:insert name="dialogoHeader"/>
+        </div>
+        <div style="margin-top: 10px;margin-bottom: 10px;text-align: justify;">
+            <ui:insert name="dialogoMensaje" />
+        </div>
+        <div style="text-align: center;">
+            <ui:insert name="dialogoBotones" /> 
+        </div>
+    </p:dialog>
+    
+    <p:dialog id="panelAviso" widgetVar="panelAviso" closable="false" resizable="false" showEffect="explode" hideEffect="explode"
+              width="550" style="text-align: justify;" draggable="false" position="center"  modal="true">
+
+        <div style="font-weight: bold;font-size: 12pt;">
+            <ui:insert name="panelAvisoHeader"/>
+        </div>
+        <div style="margin-top: 10px;margin-bottom: 10px;text-align: justify;">
+            <ui:insert name="panelAvisoMensaje" />
+        </div>
+        <div style="text-align: center;">
+            <ui:insert name="panelAvisoBotones" /> 
+        </div>
+    </p:dialog>
+    
+    <p:dialog id="panelEliminacion" widgetVar="panelEliminacion" closable="false" resizable="false" showEffect="explode" hideEffect="explode"
+               style="text-align: justify;" draggable="false" position="center"  modal="true">
+
+        <div style="font-weight: bold;font-size: 12pt;">
+            <ui:insert name="eliminacionHeader"/>
+        </div>
+        <div style="margin-top: 10px;margin-bottom: 10px;text-align: justify;">
+            <ui:insert name="eliminacionMensaje" />
+        </div>
+        <div style="text-align: center;">
+            <ui:insert name="eliminacionBotones" /> 
+        </div>
+    </p:dialog>
+</ui:composition>

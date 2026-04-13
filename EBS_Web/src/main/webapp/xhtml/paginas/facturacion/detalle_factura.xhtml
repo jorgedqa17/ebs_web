@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <p:panelGrid  id="panelBuscarProductos" columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >        
+        <p:outputLabel id="lblCodigoBarras" value="#{label['detalle.factura.codigo.barras']}"/>        
+        <p:inputText id="txtCodigoBarras" disabled="#{beanFactura.inhabilitarComponentes}" value="#{beanFactura.busquedaCodigoBarras}">
+            <p:ajax event="blur" listener="#{beanFactura.buscarProducto}" update="form_sisadmin"></p:ajax>
+        </p:inputText>
+        <!-- <p:commandButton id="btnConsultaProductos"    
+                          disabled="#{beanFactura.inhabilitarComponentes}"
+                          oncomplete="PF('buscarProductoDialog').show();"                         
+                          value="#{label['boton.buscar']}">
+         </p:commandButton>-->
+
+        <p:commandButton      
+            update="panelBuscarProductoDetalle"
+            icon="fa fa-search"           
+            disabled="#{beanFactura.inhabilitarComponentes}" 
+            id="buscarProductosPanel"             
+            value="Buscar Producto">
+            <f:ajax listener="#{beanFactura.mostrarPanelBuscarProducto}" render="panelBuscarProductoDetalle" />
+        </p:commandButton> 
+
+    </p:panelGrid>
+    <p:outputPanel  id="panelBuscarProductoDetalle">
+        <p:panelGrid   columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+            <p:inputText rendered="#{beanFactura.verPanelBuscarProducto}" id="txtDescripcionProductoBusqueda" value="#{beanFactura.nombreProducto}" >
+                <p:ajax event="keyup" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+            </p:inputText>
+            <p:dataTable rendered="#{beanFactura.verPanelBuscarProducto}" id="tablaProductoDescripcion"
+                         value="#{beanFactura.listaProductosBusqueda}"                   
+                         var="productoBusqueda"
+                         reflow="true"
+                         paginator="true" 
+                         paginatorPosition="bottom" 
+                         rowKey="#{productoBusqueda}"
+                         selectionMode="single"
+                         rows="10"                     
+                         emptyMessage="#{label['tabla.vacia']}">
+                <p:ajax event="rowSelect" update=":form_sisadmin:idTablaProductos :form_sisadmin :form_sisadmin:mensajes :form_sisadmin:txtDescripcionProductoBusqueda "   
+                        listener="#{beanFactura.onRowSelectBusquedaProductosDescripcion}"  />
+                <p:column style="text-align: left;" headerText="#{label['producto.descripcion']}">
+                    <p:outputLabel id="descripcionProductoBusqueda" value="#{productoBusqueda.descripcion}"></p:outputLabel>
+
+                </p:column>
+
+                <p:column headerText="Acciones">
+                    <p:commandButton      
+                        oncomplete="PF('precioDialog').show()" 
+                        icon="fa fa-search"           
+                        id="buscarDetalleProducto" 
+                        update=":form_sisadmin:tablaExistenciasDet :form_sisadmin:tablaListaTiposPrecios :form_sisadmin:tiposPreciosDialog"
+                        actionListener="#{beanFactura.buscarDetalleProducto(productoBusqueda)}"
+                        value="Ver Detalle">
+                    </p:commandButton> 
+                </p:column>
+            </p:dataTable>
+
+
+        </p:panelGrid>
+
+    </p:outputPanel>
+
+    <div class="card">
+
+        <p:dataTable id="idTablaProductos"
+                     var="producto"      
+                     reflow="true"
+                     editable="true"
+                     editMode="cell"
+                     paginator="true" 
+                     rowKey="#{listaProductoFacturar}"
+                     paginatorPosition="bottom" 
+                     rows="7"
+                     value="#{beanFactura.listaProductoPorFacturar}"
+                     rowStyleClass="#{producto.presentarProblemaInventario eq 1?'filaRoja':''}"
+                     emptyMessage="#{label['tabla.vacia']}">
+            <p:ajax event="cellEdit" listener="#{beanFactura.editarFila}" />
+            <p:column headerText="#{label['producto.codigo_barras']}" >
+                <p:commandLink oncomplete="PF('productoDialog').show()"  id="codigoBarras" value="#{producto.codigo_barras}" 
+                               actionListener="#{beanFactura.calcularMontos(producto)}" 
+                               update=":form_sisadmin:idTablaProductos :form_sisadmin:dialogProductoDetalle">
+                    <f:setPropertyActionListener value="#{producto}" target="#{beanFactura.productoSeleccionado}" />
+                </p:commandLink>                
+            </p:column>
+            <p:column headerText="#{label['producto.descripcion']}" >
+                <h:outputText id="descripcion" value="#{producto.descripcion}" />  
+            </p:column>
+            <p:column headerText="Tipo Tarifa">
+                <p:selectOneMenu  converter="ConvertidorListaDesplegables"                                   
+                                  value="#{producto.idTipoTarifaSeleccionada}" 
+                                  id="listaTiposTarifa"   
+                                  disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar or producto.producto.ind_exento eq 1}"
+                                  effect="fold" > 
+                    <p:ajax event="change" update=":form_sisadmin" listener="#{beanFactura.seleccionarTipoTarifa(producto)}" />
+                    <f:selectItems value="#{beanFactura.listaTiposTarifa}"
+                                   var="tarifa"
+                                   itemLabel="#{tarifa.descripcion}"
+                                   itemValue="#{tarifa.id_tipo_tarifa_impuesto}"/>
+                </p:selectOneMenu> 
+            </p:column>
+            <p:column headerText="Tipo Precio">
+                <p:selectOneMenu 
+                    converter="ConvertidorListaDesplegables"                                   
+                    value="#{producto.idTipPrecioSeleccionado}" 
+                    id="listaTiposPrecioDetalleFactura"   
+                    disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar}"
+                    effect="fold" > 
+                    <p:ajax event="change" update=":form_sisadmin" listener="#{beanFactura.seleccionarTipoPrecioProducto(producto)}" />
+                    <f:selectItems value="#{beanFactura.listaPrecios}"
+                                   var="TipoPrecio"
+                                   itemLabel="#{TipoPrecio.descripcion.toString().trim()}"
+                                   itemValue="#{TipoPrecio.id_tipo}"/>
+
+                </p:selectOneMenu>       
+
+            </p:column>
+
+
+            <p:column headerText="#{label['producto.precio.unitario']}" >
+
+                <p:cellEditor >
+                    <f:facet name="output">
+                        <h:outputText value="#{producto.precio}"></h:outputText> 
+                    </f:facet>
+                    <f:facet name="input" >
+                        <p:inputNumber disabled="#{beanFactura.inhabilitarModificacionPrecio or !producto.permiteEliminar}" value="#{producto.precio}"  decimalPlaces="8">
+                            <p:ajax event="change" listener="#{beanFactura.calcularMontos(producto)}" 
+                                    update="idTablaProductos :form_sisadmin:panelSummay" />                            
+
+                        </p:inputNumber>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+            <!--<p:column width="5%" headerText="#{label['producto.moneda']}">
+                <h:outputText id="moneda" value="#{producto.moneda}" />  
+            </p:column>-->
+            <p:column  headerText="#{label['producto.cantidad']}" >
+                <p:cellEditor>
+                    <f:facet name="output">
+                        <h:outputText id="cantidad" value="#{producto.cantidad}" />  
+                    </f:facet>
+                    <f:facet name="input">
+                        <p:inputNumber minValue="1"  disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar}"   value="#{producto.cantidadAAgregar}" label="Cantidad">
+                            <p:ajax event="change" listener="#{beanFactura.generarLineaDetalleCantidadProducto(producto)}" update="idTablaProductos :form_sisadmin:panelSummay, :form_sisadmin:mensajes" />     
+
+                        </p:inputNumber>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>
+
+            <p:column headerText="#{label['producto.descuentos']}">
+                <p:cellEditor>
+                    <f:facet name="output">
+                        <h:outputText id="descuentoLineaFactura" value="#{producto.descuento}" />  
+                    </f:facet>
+                    <f:facet name="input" >
+                        <p:inputText   value="#{producto.descuento}" 
+                                       disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar}"
+                                       label="descuento" >
+                            <p:ajax event="change" listener="#{beanFactura.calcularMontos(producto)}" 
+                                    update="idTablaProductos :form_sisadmin:panelSummay" />                             
+                            <f:validator validatorId="ValidadorDescuentoLineaFactura" />                          
+                        </p:inputText>
+                    </f:facet>
+                </p:cellEditor>
+            </p:column>  
+            <p:column headerText="Total Exonerado">
+                <h:outputText id="montoExo" value="#{producto.totalExoneracion}" />  
+            </p:column>
+            <p:column headerText="#{label['facturacion.impuesto']}">
+                <h:outputText id="totalImpuesto" value="#{(producto.totalImpuesto-producto.totalExoneracion)}" />  
+            </p:column>
+            <!--
+            <p:column headerText="#{label['producto.monto.descuento']}">
+                <h:outputText id="montoDescuento" value="#{producto.montoDescuento}" />  
+            </p:column>
+            
+            <p:column headerText="Num.Lote / Fec.Venc">
+                <h:outputText id="numLote" value="#{producto.numeroLote} - #{producto.fechaVencimientoLote}" />  
+            </p:column>-->
+            <p:column headerText="#{label['producto.total.linea']}">
+                <h:outputText id="montoTotalLinea" value="#{producto.montoTotalLinea}" />  
+            </p:column>
+            <p:column  headerText="Exoneración">
+                <p:commandButton id="btnExoneracion" 
+                                 icon="fa fa-plus"                      
+                                 disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar  or (producto.personaAsociada==null or (producto.personaAsociada.es_exonerado eq 0))}"
+                                 update=":form_sisadmin:idTablaProductos :form_sisadmin:idDialogoExoneracion :form_sisadmin"                                   
+                                 oncomplete="PF('idDialogoExoneracion').show()">
+                    <f:setPropertyActionListener value="#{producto}" target="#{beanFactura.productoSeleccionadoExoneracion}" />                    
+                </p:commandButton>                
+            </p:column>
+            <p:column  headerText="#{label['facturacion.descripcion.linea']}">
+                <p:commandButton id="btnDescripcionLinea" 
+                                 icon="fa fa-plus"
+                                 disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar}"
+                                 update=":form_sisadmin:idTablaProductos :form_sisadmin:dialogProductoDetalle"                                   
+                                 oncomplete="PF('descripcionLineaDialog').show()">
+                    <f:setPropertyActionListener value="#{producto}" target="#{beanFactura.productoSeleccionado}" />                    
+                </p:commandButton>
+                <p:tooltip for="btnDescripcionLinea" value="#{producto.descripcionLineaProducto}"></p:tooltip>
+            </p:column>
+            <p:column>
+                <p:commandButton id="btnElmiinarRegistro" 
+                                 disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar}"
+                                 icon="ui-icon-trash" 
+                                 actionListener="#{beanFactura.eliminarRegistroTablaProducto(producto)}" 
+                                 update="idTablaProductos  :form_sisadmin:panelSummay :form_sisadmin">                    
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+
+        <p:dialog id="tiposPreciosDialog"
+                  minWidth="50"
+                  header="Detalle del Producto - #{beanFactura.nombreProductoDetalle}"
+                  modal="true"
+                  widgetVar="precioDialog" 
+                  showEffect="fade" 
+                  hideEffect="fade">
+
+            <p:panelGrid  columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >  
+                <h1>Listado de Precios</h1>
+                <p:dataTable
+                    id="tablaListaTiposPrecios"
+                    paginator="true"
+                    rows="5"
+                    rowKey="#{tipoPrecio}"
+                    value="#{beanFactura.listaPreciosProductoSeleccionado}"
+                    filteredValue="#{beanFactura.listaPreciosProductoSeleccionadoFiltro}"
+                    var="tipoPrecio">
+                    <p:ajax event="rowSelect" update=":form_sisadmin"   
+                            listener="#{beanFactura.onRowSelect}"  />
+                    <p:column headerText="#{label['producto.tipo.precio.descripcion']}">
+                        <p:outputLabel value="#{tipoPrecio.descripcion}"></p:outputLabel>
+                    </p:column>
+                    <p:column headerText="#{label['producto.tipo.precio.precio']}">
+                        <p:outputLabel value="#{tipoPrecio.productoPrecio.precio}"></p:outputLabel>
+                    </p:column>
+                    <p:column headerText="Impuesto">
+                        <p:outputLabel value="#{tipoPrecio.costoImpuesto}">
+                            <f:convertNumber pattern="#0.000" type="currency" currencySymbol="CRC" locale="en_US" />
+                        </p:outputLabel>
+                    </p:column>
+                    <p:column headerText="Total">
+                        <p:outputLabel value="#{tipoPrecio.precioConImpuesto}">
+                            <f:convertNumber pattern="#0.000" type="currency" currencySymbol="CRC" locale="en_US" />
+                        </p:outputLabel>
+                    </p:column>
+                </p:dataTable>
+                <br/>
+                <br/>
+                <h1>Listado de Existencias</h1>
+                <p:dataTable id="tablaExistenciasDet" 
+                             rows="5"
+                             paginator="true"
+                             filteredValue="#{beanFactura.listaExistenciasProductoSeleccionadoFiltro}"
+                             value="#{beanFactura.listaExistenciasProductoSeleccionado}"
+                             var="existencia">
+                    <p:column filterMatchMode="contains" filterBy="#{existencia.descripcion_bodega}" headerText="#{label['producto.existencia.bodega']}">
+                        <p:outputLabel value="#{existencia.descripcion_bodega}"></p:outputLabel>
+                    </p:column>
+                    <p:column filterMatchMode="contains" filterBy="#{existencia.cantidad}" headerText="#{label['producto.existencia.cantidad']}">
+                        <p:outputLabel value="#{existencia.cantidad}"></p:outputLabel>
+                    </p:column>
+                </p:dataTable>
+            </p:panelGrid>
+
+        </p:dialog>
+        <p:dialog id="idDialogDescripcionLinea"
+                  minWidth="50"
+                  header="#{label['facturacion.descripcion.linea']}"
+                  modal="true"
+                  widgetVar="descripcionLineaDialog" 
+                  showEffect="fade" 
+                  hideEffect="fade">
+
+            <p:panelGrid columns="1">
+                <p:inputTextarea rows="10" cols="1500" counterTemplate="{0} caracteres restantes" counter="display" 
+                                 id="txtDescripcionLinea" value="#{beanFactura.productoSeleccionado.descripcionLineaProducto}" maxlength="700">
+                </p:inputTextarea >
+                <h:outputText id="display" />
+            </p:panelGrid>
+            <p:panelGrid columns="1">
+                <p:commandButton  oncomplete="PF('descripcionLineaDialog').hide()" 
+                                  update=":form_sisadmin:idTablaProductos" 
+                                  icon="fa fa-save"
+                                  id="btnGuardarDescripcionLinea" value="#{label['anulacion.guardar']}" 
+                                  actionListener="#{beanFactura.agregarDescripcionLinea}">
+                </p:commandButton>                
+            </p:panelGrid>
+
+        </p:dialog>
+
+        <p:dialog   header="Exoneración" 
+                    widgetVar="idDialogoExoneracion" 
+                    modal="true"    
+                    minWidth="1000"
+                    id="idDialogoExoneracion"
+                    showEffect="fade" 
+                    hideEffect="fade" 
+                    resizable="true">
+            <div class="card">   
+                <p:panelGrid   columnClasses="ui-grid-col-4 ui-grid-col-6" columns="2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                    <p:outputLabel value="#{label['producto.exoneracion.relacionada']}" />
+                    <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                      filter="true" filterMatchMode="startsWith"
+                                      value="#{beanFactura.exoneracionLinea.id_exoneracion}" 
+                                      id="listaExoneraciones"                         
+                                      effect="fold"  >                         
+                        <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                        <f:selectItems value="#{beanFactura.listaExoneraciones}"
+                                       var="exoneracion"
+                                       itemLabel="#{exoneracion.descripcion}"
+                                       itemValue="#{exoneracion.id_exoneracion}"/>
+                    </p:selectOneMenu> 
+                    <p:outputLabel value="Número de Documento" />
+                    <p:inputText id="txtNumDoc" maxlength="17" 
+                                 value="#{beanFactura.exoneracionLinea.numero_documento}" >
+
+                    </p:inputText>
+
+                    <p:outputLabel value="Nombre Institución" />
+                    <p:inputText id="txtNombInst"  maxlength="100" value="#{beanFactura.exoneracionLinea.nombre_institucion}" />
+
+                    <p:outputLabel value="Fecha Emisión" />
+                    <p:calendar id="fechaEmisionExoneracionLinea"  value="#{beanFactura.exoneracionLinea.fecha_emision}" 
+                                pattern="dd/MM/yyyy HH:mm:ss" />
+
+                    <p:outputLabel value="Porcentaje Exoneración" />
+                    <p:inputNumber id="porcentaje"  value="#{beanFactura.exoneracionLinea.porcentaje_exonerado}" decimalPlaces="0" maxValue="#{beanFactura.productoSeleccionadoExoneracion.tipoTarifaImpuesto.valor}" minValue="0"/>
+                    <p:outputLabel style="color: red;" value="Permite un #{beanFactura.productoSeleccionadoExoneracion.tipoTarifaImpuesto.valor} % de exoneración máximo" />
+                    <p:outputLabel value="" />
+
+                    <p:outputLabel value="Aplica para toda la factura" />
+
+                    <p:selectBooleanCheckbox value="#{beanFactura.exoneracionLinea.aplicar_para_toda_factura}" itemLabel="">
+
+                    </p:selectBooleanCheckbox>
+                    <p:commandButton  
+                        update=":form_sisadmin:idTablaProductos mensajes" 
+                        icon="fa fa-save"
+                        id="btnGuardarExoneracion" 
+                        actionListener="#{beanFactura.agregarExoneracionLinea}"
+                        value="#{label['anulacion.guardar']}" >
+                    </p:commandButton>      
+                    <p:outputLabel value="" />
+                </p:panelGrid>
+            </div>
+        </p:dialog>
+        <p:dialog header="#{label['producto.listaExistencia']}" 
+                  widgetVar="productoDialog" 
+                  modal="true"    
+                  minWidth="50"
+                  id="dialogProductoDetalle"
+                  showEffect="fade" 
+                  hideEffect="fade" 
+                  resizable="true">          
+            <div class="card">                
+                <p:panelGrid  columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >                  
+                    <p:dataTable id="listaExistencias" 
+                                 rows="5"
+
+                                 paginator="true"
+                                 filteredValue="#{beanFactura.productoSeleccionado.listaExistenciasFiltro}"
+                                 value="#{beanFactura.productoSeleccionado.listaExistencias}"
+                                 var="existencia">
+                        <p:column filterMatchMode="contains" filterBy="#{existencia.descripcion_bodega}" headerText="#{label['producto.existencia.bodega']}">
+                            <p:outputLabel value="#{existencia.descripcion_bodega}"></p:outputLabel>
+                        </p:column>
+                        <p:column filterMatchMode="contains" filterBy="#{existencia.cantidad}" headerText="#{label['producto.existencia.cantidad']}">
+                            <p:outputLabel value="#{existencia.cantidad}"></p:outputLabel>
+                        </p:column>
+                    </p:dataTable>
+                </p:panelGrid>
+            </div>
+
+        </p:dialog>
+
+        <p:dialog
+            header="#{label['producto.detalle.factura']}" 
+            widgetVar="buscarProductoDialog" 
+            modal="true"    
+            position="center"
+            width="35%"
+            id="dialogBuscarProducto"
+            showEffect="fade" 
+            hideEffect="fade" 
+            resizable="true"   >
+
+            <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                <p:outputLabel id="lblDescripcionProductoModal" value="#{label['producto.nombre.producto.busqueda']}"/>
+                <p:inputText id="txtDescripcionProductoBusquedaMOdal" value="#{beanFactura.nombreProducto}" style="width: 97%;">
+                    <p:ajax event="keyup" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+                </p:inputText>
+
+                <p:dataTable id="tablaProductoDescripcionModal"
+                             value="#{beanFactura.listaProductosBusqueda}"                   
+                             var="productoBusqueda"      
+                             reflow="true"
+                             paginator="true" 
+                             style="width: 100%;"
+                             paginatorPosition="bottom" 
+                             rowKey="#{productoBusqueda}"
+                             selectionMode="single"
+                             rows="10"                     
+                             emptyMessage="#{label['tabla.vacia']}">
+                    <p:ajax event="rowSelect" update=":form_sisadmin:idTablaProductos :form_sisadmin :form_sisadmin:txtDescripcionProductoBusquedaMOdal"   
+                            listener="#{beanFactura.onRowSelectBusquedaProductosDescripcion}"  />
+                    <p:column headerText="#{label['producto.descripcion']}">
+                        <p:outputLabel id="descripcionProductoBusqueda" value="#{productoBusqueda.descripcion}"></p:outputLabel>
+                    </p:column>
+                </p:dataTable>
+            </p:panelGrid>
+        </p:dialog>
+    </div>
+</ui:composition>

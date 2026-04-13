@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Consulta de Ventas de Productos</ui:define>
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content" >      
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+
+                        <h1>Parámetros</h1>
+                        <p:panelGrid columns="4"  columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="Fecha de Inicio:"/>
+                            <p:calendar autocomplete="false" value="#{beanVentasDiariasSucursales.fechaEnvio}"></p:calendar>
+                            <p:outputLabel value="Fecha de Final"/>
+                            <p:calendar autocomplete="false" value="#{beanVentasDiariasSucursales.fechaEnvio2}"></p:calendar>
+                            <p:outputLabel value="Tienda/Bodega:"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                              value="#{beanVentasDiariasSucursales.idBodegaSeleccionada}" 
+                                              id="listaUsuarios"
+                                              effect="fold" >        
+                                <f:selectItems value="#{beanVentasDiariasSucursales.listaBodegas}"
+                                               var="bodega"
+                                               itemLabel="#{bodega.descripcion}"
+                                               itemValue="#{bodega.bodegaPK.id_bodega}"/>
+                            </p:selectOneMenu> 
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value=""/>
+
+                        </p:panelGrid>
+                    </div>
+                    <p:panelGrid columns="1"  columnClasses="ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnBuscarEnvios" icon="fa fa-search" actionListener="#{beanVentasDiariasSucursales.buscarEnvios}" value="Buscar Envios Diarios" update="form_sisadmin"></p:commandButton>
+
+                    </p:panelGrid>
+                    <div class="card">
+                        <h1>Lista de Resultados</h1>
+
+                        <p:dataTable 
+                            reflow="true"
+                            paginator="true" 
+                            rows="20"  
+                            id="tablaEnvios" 
+                            var="envio"                            
+                            value="#{beanVentasDiariasSucursales.listaEnvios}" 
+                            sortBy="#{envio.login}">
+                            <p:column  headerText="Tienda" groupRow="true">
+                                <h:outputText value="#{envio.login}" ></h:outputText>
+                            </p:column>
+                            <p:column  headerText="Producto">
+                                <h:outputText value="#{envio.producto}" ></h:outputText>
+                            </p:column>
+                            <p:column  headerText="Cantidad">
+                                <h:outputText value="#{envio.cantidad}" ></h:outputText>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                    <p:panelGrid columns="1"  columnClasses="ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnImprirReporte" actionListener="#{beanVentasDiariasSucursales.generarReporte}" value="Generar" icon="ui-icon-arrowthick-1-s" ajax="false" >
+                            <p:fileDownload value="#{beanVentasDiariasSucursales.reporteDesplegar}"/>     
+                        </p:commandButton>
+                    </p:panelGrid>
+                </div>
+            </div>
+        </div>
+
+    </ui:define>
+</ui:composition>

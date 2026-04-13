@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporte_ventas_mensuales" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="9816d56c-93d0-411b-92ae-ac0a01238a7c">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="postgres"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="322"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="667"/>
+	<parameter name="fechaInicio" class="java.lang.String"/>
+	<parameter name="fechaFinal" class="java.lang.String"/>
+	<parameter name="rutaSubReportes" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT TB.* FROM (
+SELECT  t1.login  AS LOGIN, T1.NUMERO_CONSECUTIVO,T2.DESCRIPCION, T1.TOTAL_COMPROBANTE,
+	T1.NOMBRE_CLIENTE_FANTASIA,
+	coalesce(t5.nombre,'') ||' '||coalesce(t5.primer_apellido,'')||' '||coalesce(t5.segundo_apellido,'') as nombre
+	FROM SEARMEDICA.FACTURA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 
+ON T1.ESTADO_FACTURA = T2.ID_ESTADO LEFT JOIN SEARMEDICA.CLIENTE T3
+	ON T1.ID_CLIENTE = T3.ID_CLIENTE LEFT JOIN SEARMEDICA.PERSONA T5
+	ON T3.NUMERO_CEDULA = T5.NUMERO_CEDULA
+	where to_date(to_char(t1.fecha_factura, 'DD/MM/YYYY'),'DD/MM/YYYY') between to_date($P{fechaInicio},'DD/MM/YYYY')  and to_date($P{fechaFinal} ,'DD/MM/YYY')
+AND T1.NUMERO_CONSECUTIVO IS NOT NULL
+AND T1.ID_ANULACION IS NULL
+GROUP BY T1.LOGIN, T1.NUMERO_CONSECUTIVO,T1.ID_CLIENTE, T5.NUMERO_CEDULA,T1.NOMBRE_CLIENTE_FANTASIA,T5.NOMBRE,t5.primer_apellido,t5.segundo_apellido,T2.DESCRIPCION, T1.TOTAL_COMPROBANTE
+ORDER BY T1.LOGIN,T1.NUMERO_CONSECUTIVO,T1.ID_CLIENTE, T5.NUMERO_CEDULA,T2.DESCRIPCION ASC) TB
+GROUP BY TB.LOGIN, TB.NUMERO_CONSECUTIVO,TB.NOMBRE_CLIENTE_FANTASIA,TB.NOMBRE,TB.DESCRIPCION, TB.TOTAL_COMPROBANTE]]>
+	</queryString>
+	<field name="login" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="login"/>
+	</field>
+	<field name="numero_consecutivo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="numero_consecutivo"/>
+	</field>
+	<field name="descripcion" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="descripcion"/>
+	</field>
+	<field name="total_comprobante" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="total_comprobante"/>
+	</field>
+	<field name="nombre_cliente_fantasia" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="nombre_cliente_fantasia"/>
+	</field>
+	<field name="nombre" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="nombre"/>
+	</field>
+	<group name="Sucursal">
+		<groupExpression><![CDATA[$F{login}]]></groupExpression>
+		<groupHeader>
+			<band height="39">
+				<staticText>
+					<reportElement x="0" y="0" width="100" height="18" uuid="a1e5a2f0-6a7b-4b87-9793-f7cc90be77cd">
+						<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="3ea060ab-fa9c-4eab-88bd-f1f48ba1c143"/>
+					</reportElement>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Sucursal]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="100" y="0" width="100" height="18" uuid="f76202d6-34bb-4dc5-8e8c-1be1c46c06af">
+						<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="3ea060ab-fa9c-4eab-88bd-f1f48ba1c143"/>
+					</reportElement>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{login}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="50" y="22" width="150" height="16" uuid="497cb26e-da58-4a13-957a-568f1736c9f5">
+						<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="1c35705f-7ba3-45cc-b5b3-d3cc8c6b09ab"/>
+					</reportElement>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Número de Consecutivo]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="390" y="22" width="160" height="16" uuid="6329a04e-8262-42fb-b52c-7cfccd4ff695">
+						<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="8aa4a999-5f7e-4348-aaaf-9921fc9bddd1"/>
+					</reportElement>
+					<textElement textAlignment="Right">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total Comprobante]]></text>
+				</staticText>
+				<line>
+					<reportElement x="-3" y="38" width="560" height="1" uuid="84aab5d1-a05b-44df-8187-8d34c8ecf708"/>
+				</line>
+				<staticText>
+					<reportElement x="200" y="22" width="100" height="16" uuid="3308eeac-943a-4487-a2f4-5301b8c7c693">
+						<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="1c35705f-7ba3-45cc-b5b3-d3cc8c6b09ab"/>
+					</reportElement>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Nombre Fantasia]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="300" y="22" width="90" height="17" uuid="886e59ab-b64b-4a9b-b363-a36a99106269">
+						<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="1c35705f-7ba3-45cc-b5b3-d3cc8c6b09ab"/>
+					</reportElement>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Nombre Cliente]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="160" splitType="Stretch">
+			<staticText>
+				<reportElement x="210" y="7" width="157" height="30" uuid="5d253e3c-43f9-4c00-8d71-180004968b1b"/>
+				<textElement>
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[Ventas Mensuales]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="150" y="38" width="50" height="20" uuid="6e6eda0f-23a2-4932-a628-ce4f2a342b28"/>
+				<textElement>
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Desde: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="38" width="50" height="20" uuid="cad16483-1c55-4ad2-8ba2-b8c0b27890b8"/>
+				<textElement>
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Hasta:]]></text>
+			</staticText>
+			<textField pattern="dd/MM/YYYY">
+				<reportElement x="200" y="38" width="100" height="20" uuid="a37a2f47-e9a1-4438-a75f-2cf92eb0b5d8"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$P{fechaInicio}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/YYYY">
+				<reportElement x="350" y="38" width="100" height="20" uuid="87d28b23-1417-4c30-a4e1-f4e89b381529"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$P{fechaFinal}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement x="0" y="58" width="550" height="102" uuid="456dd856-79dd-47bf-b544-6c23cdfd5dfc"/>
+				<subreportParameter name="fechaInicio">
+					<subreportParameterExpression><![CDATA[$P{fechaInicio}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="fechaFinal">
+					<subreportParameterExpression><![CDATA[$P{fechaFinal}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{rutaSubReportes}+"subReporteVentasMensualesSucursalesPorUsuario.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</title>
+	<detail>
+		<band height="11" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="50" y="0" width="150" height="10" uuid="4ed68380-ad92-45c8-bba0-3d07602680fe">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="1c35705f-7ba3-45cc-b5b3-d3cc8c6b09ab"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{numero_consecutivo}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="390" y="0" width="160" height="10" uuid="6cc235c9-243c-401a-af31-54da6ba90973">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="8aa4a999-5f7e-4348-aaaf-9921fc9bddd1"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{total_comprobante}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="200" y="0" width="100" height="10" uuid="6f1348e8-c9c2-4fb1-bde4-58a7bcb09542"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{nombre_cliente_fantasia}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="300" y="0" width="90" height="10" uuid="7e4ab16f-f6d4-4200-8b54-a7520a0bbdc5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{nombre}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement positionType="Float" x="50" y="10" width="500" height="1" uuid="09a56a34-3a0a-4e29-a38e-f4b9490d85b1"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+		</band>
+	</detail>
+</jasperReport>

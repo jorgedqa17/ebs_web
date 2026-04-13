@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+
+    <p:panelGrid id="panelReceptorIdentificacionNPER" columns="5" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;"
+ >
+        <p:outputLabel for="listaTipoIdentificacion" value="#{label['receptor.tipo.identificacion']}" />
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                          valueChangeListener="#{beanPersona.seleccionarTipoCedula}"
+                          value="#{beanPersona.tipoIdentificacionSeleccionadaReceptor}" 
+                          id="listaTipoIdentificacionNPER"                         
+                          effect="fold" >     
+            <p:ajax event="change" update="txtIdentificacionNPER" />         
+            <f:selectItems value="#{beanPersona.listaTiposCedulas}"
+                           var="tipoCedula"
+                           itemLabel="#{tipoCedula.descripcion}"
+                           itemValue="#{tipoCedula.id_tipo_cedula}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblIdentificacionNPER" value="#{label['receptor.identificacion']}"/>
+        <p:inputMask id="txtIdentificacionNPER" 
+                     value="#{beanPersona.identificacion}"                     
+                     maxlength="#{beanPersona.tamannoCedula}" 
+                     mask="#{beanPersona.mascaraSeleccionada}"/>      
+    </p:panelGrid>
+    <h:panelGrid id="panelReceptorNPER" columns="6" columnClasses="label, value" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+>
+        <p:outputLabel id="lblNombreReceptorNPER" value="#{label['receptor.nombre']}"/>
+        <p:inputText id="txtNombreReceptoNPER"   value="6345654" >
+        </p:inputText>
+
+        <p:outputLabel id="lblProvinciaNPER" value="#{label['receptor.provincia']}"/>
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                         valueChangeListener="#{beanPersona.seleccionarProvincias}"
+                         value="#{beanPersona.idProvinciaSeleccionadaReceptor}" 
+                         id="listaProvinciasNPER"                         
+                         effect="fold" >     
+            <p:ajax event="change" update="listaCantonesNPER" />         
+            <f:selectItems value="#{beanPersona.listaProvincias}"
+                           var="provincia"
+                           itemLabel="#{provincia.descripcion}"
+                           itemValue="#{provincia.id_provincia}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblCantonNPER" value="#{label['receptor.canton']}"/>
+        <p:selectOneMenu   converter="ConvertidorListaDesplegables" 
+                          valueChangeListener="#{beanPersona.seleccionarCantones}"
+                          value="#{beanPersona.idCantonSeleccionadaReceptor}" 
+                          id="listaCantonesNPER"                         
+                          effect="fold" >     
+            <p:ajax event="change" update="listaDistritosNPER" />         
+            <f:selectItems value="#{beanPersona.listaCantones}"
+                           var="canton"
+                           itemLabel="#{canton.descripcion}"
+                           itemValue="#{canton.id_canton}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblDistritoNPER" value="#{label['receptor.distrito']}"/>
+        <p:selectOneMenu    converter="ConvertidorListaDesplegables" 
+                         valueChangeListener="#{beanPersona.seleccionarDistritos}"
+                         value="#{beanPersona.idDistritoSeleccionadaReceptor}" 
+                         id="listaDistritosNPER"                         
+                         effect="fold" >     
+            <p:ajax event="change" update="listaBarriosNPER" />         
+            <f:selectItems value="#{beanPersona.listaDistritos}"
+                           var="distrito"
+                           itemLabel="#{distrito.descripcion}"
+                           itemValue="#{distrito.id_distrito}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblBarrioNPER" value="#{label['receptor.barrio']}"/>
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables"           
+                         valueChangeListener="#{beanPersona.seleccionarBarrios}"
+                         value="#{beanPersona.idBarioSeleccionadaReceptor}" 
+                         id="listaBarriosNPER"                         
+                         effect="fold" >     
+            <p:ajax event="change"  />         
+            <f:selectItems value="#{beanPersona.listaBarrios}"
+                           var="barrio"
+                           itemLabel="#{barrio.descripcion}"
+                           itemValue="#{barrio.id_barrio}"/>
+        </p:selectOneMenu>
+
+        <p:outputLabel id="lblOtraSennasNPER" value="#{label['receptor.otras.sennas']}"/>
+        <p:inputText id="txtOtraSennasNPER"  value="#{beanPersona.persona.direccion}"/>
+
+        <p:outputLabel id="lblCorreoElectronicoNPER" value="#{label['receptor.correo.electronico']}"/>
+        <p:inputText id="txtCorreoElectronicoNPER"   value="#{beanPersona.persona.correo_electronico}" />
+
+        <p:outputLabel id="lblTelefonoNPER" value="#{label['receptor.telefono']}"/>
+        <p:inputText id="txtTelefonoNPER"   value="#{beanPersona.persona.telefono_1}" />
+    </h:panelGrid>
+
+
+</ui:composition>

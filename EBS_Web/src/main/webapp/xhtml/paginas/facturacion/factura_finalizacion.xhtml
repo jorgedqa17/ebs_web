@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:outputLabel for="listaTiposFactura" value="#{label['facturacion.lista.tipos.factura']}" />
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables"                               
+                          value="#{beanFactura.idTipoFacturaSeleccionada}" 
+                          valueChangeListener="#{beanFactura.seleccionarTipoFactura}"
+                          id="listaTiposFactura" 
+                          disabled="#{beanFactura.inhabilitarComponentes or beanFactura.puedeAgregarLineasNotaDebito}"
+                          effect="fold" >     
+            <p:ajax event="change" update="form_sisadmin" />      
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanFactura.listaTiposFacturas}"
+                           var="tipFactura"
+                           itemLabel="#{tipFactura.descripcion}"
+                           itemValue="#{tipFactura.id_tipo_factura}"/>
+        </p:selectOneMenu> 
+
+        <p:outputLabel for="listaCondicionVenta" value="#{label['facturacion.condicion.venta']}" />
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                          valueChangeListener="#{beanFactura.selecionarCondicionVenta}"
+                          value="#{beanFactura.idCondicionVentaSeleccionado}" 
+                          id="listaCondicionVenta"          
+                          disabled="#{beanFactura.inhabilitarComponentes or beanFactura.puedeAgregarLineasNotaDebito}"
+                          effect="fold" >     
+            <p:ajax event="change" listener="#{beanFactura.seleccionarTipoCondicionVenta}" update=":form_sisadmin:lapsoTiempoLista listaMedioPago"/>      
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanFactura.listaCondicionVenta}"
+                           var="condVenta"
+                           itemLabel="#{condVenta.descripcion}"
+                           itemValue="#{condVenta.id_cond_venta}"/>
+        </p:selectOneMenu>       
+        <p:outputLabel for="lapsoTiempoLista" value="#{label['facturacion.lapso.tiempo.credito']}" />
+        <p:selectOneMenu id="lapsoTiempoLista" disabled="#{!beanFactura.verPlazoCredito || beanFactura.inhabilitarComponentes or beanFactura.puedeAgregarLineasNotaDebito}" 
+                         value="#{beanFactura.lapsoTiempoCredito}" >
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItem itemLabel="30 días" itemValue="30" />
+            <f:selectItem itemLabel="60 días" itemValue="60" />
+            <f:selectItem itemLabel="90 días" itemValue="90" />
+            <f:selectItem itemLabel="120 días" itemValue="120" />
+            <f:selectItem itemLabel="150 días" itemValue="150" />
+            <f:selectItem itemLabel="180 días" itemValue="180" />
+        </p:selectOneMenu>   
+
+        <p:outputLabel for="listaMedioPago" value="#{label['facturacion.medio.pago']}" />
+        <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                          valueChangeListener="#{beanFactura.seleccionarMedioPago}"
+                          value="#{beanFactura.idMedioPagoSeleccionado}" 
+                          disabled="#{beanFactura.inhabilitarComponentes or beanFactura.puedeAgregarLineasNotaDebito}"
+                          id="listaMedioPago"                         
+                          effect="fold" >     
+            <p:ajax event="change"  />       
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanFactura.listaMedioPago}"
+                           var="medioPago"
+                           itemLabel="#{medioPago.descripcion}"
+                           itemValue="#{medioPago.id_medio_pago}"/>
+        </p:selectOneMenu>      
+
+        <p:outputLabel for="listaAgentes" value="Agente" />
+        <p:selectOneMenu  converter="ConvertidorListasString" 
+                          value="#{beanFactura.agenteSeleccionado}" 
+                          disabled="#{beanFactura.inhabilitarComponentes or beanFactura.puedeAgregarLineasNotaDebito}"
+                          id="listaAgentes"                         
+                          effect="fold" >     
+            <p:ajax event="change"  />       
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItems value="#{beanFactura.listaUsuariosAgentes}"
+                           var="agente"
+                           itemLabel="#{agente.nombre}"
+                           itemValue="#{agente.login}"/>
+        </p:selectOneMenu>      
+
+        <!-- <h:outputText value="Reserva en Inventario: " />
+          <p:inputSwitch onLabel="Sí" offLabel="No"  value="#{beanFactura.reservarEnInventario}" disabled="#{beanFactura.idTipoFacturaSeleccionada eq '3'?false:true}" />
+        -->
+    </p:panelGrid>
+
+
+</ui:composition>

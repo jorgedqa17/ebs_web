@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Personas</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">  
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Lista de Clientes</h1>
+                        <p:dataTable id="listaPersonas" value="#{beanPersona.listaPersonas}"
+                                     var="persona"
+                                     paginator="true" 
+                                     rowKey="#{listaPersonas}"
+                                     paginatorPosition="bottom" 
+                                     rows="10"
+                                     reflow="true"
+                                     editMode="cell"
+                                     editable="true"
+                                     filteredValue="#{beanPersona.listaPersonasSeleccionadas}"
+                                     emptyMessage="#{label['tabla.vacia']}">
+
+                            <p:column filterMatchMode="contains" filterBy="#{persona.persona.personaPK.numero_cedula}" headerText="Número de Cédula:" >
+                                <h:outputText id="numeroCedula" value="#{persona.persona.personaPK.numero_cedula}" />  
+                            </p:column>                
+                            <p:column  filterMatchMode="contains" filterBy="#{persona.persona.nombreCompleto}" headerText="Nombre de Cliente:" >
+                                <h:outputText id="nombreCompleto" value="#{persona.persona.nombreCompleto}" />  
+                            </p:column>
+                            <p:column  filterMatchMode="contains" filterBy="#{persona.persona.nombre_fantasia}" headerText="Nombre de Cliente Fantasia:" >
+                                <h:outputText id="nombreFantasia" value="#{persona.persona.nombre_fantasia}" />  
+                            </p:column>
+
+                            <p:column>
+                                <p:commandButton id="btnSeleccionarCliente" icon="ui-icon-search" 
+                                                 value="#{label['consultacierre.verdetalle']}" update=":form_sisadmin" 
+                                                 actionListener="#{beanPersona.editarSeleccionarPersona(persona)}">                    
+                                </p:commandButton>
+                            </p:column>
+                            <p:column>
+                                <p:commandButton id="btnInactivarCliente" 
+                                                 icon="ui-icon-cancel"  
+                                                 value="Inactivar"
+                                                 rendered="#{persona.persona.es_activo ne '0'}"
+                                                 update=":form_sisadmin"
+                                                 actionListener="#{beanPersona.inactivarCliente(persona)}">                    
+                                </p:commandButton>
+
+                                <p:commandButton id="btnactivarCliente" 
+                                                 icon="ui-icon-cancel"  
+                                                 value="Activar"
+                                                 rendered="#{persona.persona.es_activo ne '1'}"
+                                                 update=":form_sisadmin"
+                                                 actionListener="#{beanPersona.activarCliente(persona)}">                    
+                                </p:commandButton>
+
+
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-16, ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnAgregarNuevoProducto" value="Nueva Persona"
+                                         icon="fa fa-plus"
+                                         update=":form_sisadmin" actionListener="#{beanPersona.crearNuevaPersona}" ></p:commandButton>
+                        <p:commandButton id="btnEditarPersona"
+                                         value="Editar Persona"
+                                         update=":form_sisadmin"
+                                         icon="fa fa-edit"
+                                         actionListener="#{beanPersona.editarPersona}" />
+                        <p:commandButton id="btnEditarPersona2"
+                                         value="Actualizar Actividad"
+                                         update=":form_sisadmin"
+                                         icon="fa fa-edit"
+                                         actionListener="#{beanPersona.buscarActividades}" />
+                    </p:panelGrid>
+                    <div class="card">
+                        <h1>Información de Cliente</h1>
+                        <ui:include src="persona.xhtml"/>  
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    </ui:define>
+
+</ui:composition>

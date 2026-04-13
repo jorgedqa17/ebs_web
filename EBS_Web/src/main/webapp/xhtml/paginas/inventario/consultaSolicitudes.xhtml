@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">
+        Ingreso de Inventario
+    </ui:define>
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Filtro de Búsqueda</h1>
+                        <p:panelGrid id="PanelFiltros" columns="5" columnClasses="ui-grid-col-2,ui-grid-col-3,ui-grid-col-2,ui-grid-col-3,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <h:outputText value="#{label['inventario.solicitud.bodegaOrigenDestino']}" />
+                            <p:selectOneMenu id="bodegasOrigenPendiente" value="#{beanConsultaSolicitudes.valorBodega}" disabled="false" >
+                                <f:selectItems value="#{beanConsultaSolicitudes.listaBodegas}" />
+                            </p:selectOneMenu>
+                            <h:outputText value="#{label['inventario.solicitud.estado']}" />
+                            <p:selectOneMenu id="listaEstados" value="#{beanConsultaSolicitudes.estadoActual}" >
+                                <f:selectItems value="#{beanConsultaSolicitudes.listaEstados}"/>
+                            </p:selectOneMenu>
+                            <p:commandButton id="btnBuscar" value="#{label['inventario.botones.buscarEstado']}" icon="ui-icon-circle-check" 
+                                             actionListener="#{beanConsultaSolicitudes.buscarEstado}" update="form_sisadmin:DTSolicitudes form_sisadmin:DTDetalles"/>
+                        </p:panelGrid>
+                    </div>
+                    <div class="card">
+                        <h1>Lista de Solicitudes</h1>
+                        <p:dataTable id="DTSolicitudes" 
+                                     widgetVar="DTSolicitudes" 
+                                     var="solicitud"
+                                     filteredValue="#{beanConsultaSolicitudes.filtroSolicitudes}"
+                                     reflow="true"
+                                     paginator="true"
+                                     rowKey="#{solicitud.inventarioSolicitud.idInventarioSolicitud}"
+                                     paginatorPosition="bottom" 
+                                     rows="10"
+                                     value="#{beanConsultaSolicitudes.listaSolicitudes}" 
+                                     selection="#{beanConsultaSolicitudes.solicitudSeleccionada}"
+                                     emptyMessage="Tabla Vacía"                                     
+                                     selectionMode="single" >
+
+                            <p:ajax event="rowSelect" />
+
+                            <p:column headerText="Solicitante"
+                                      sortBy="#{solicitud.inventarioSolicitud.login}" filterBy="#{solicitud.inventarioSolicitud.login}"
+                                      filterMatchMode="contains">                                
+                                <h:outputText value="#{solicitud.inventarioSolicitud.login}"/>                              
+                            </p:column>
+
+                            <p:column headerText="Consecutivo" 
+                                      sortBy="#{solicitud.inventarioSolicitud.consecutivo}" filterBy="#{solicitud.inventarioSolicitud.consecutivo}"
+                                      filterMatchMode="contains">                                
+                                <h:outputText value="#{solicitud.inventarioSolicitud.consecutivo}"/>                              
+                            </p:column>                           
+
+                            <p:column headerText="Fecha Registro"
+                                      sortBy="#{solicitud.fechaTexto}" filterBy="#{solicitud.fechaTexto}"
+                                      filterMatchMode="contains">                                
+                                <h:outputText value="#{solicitud.fechaTexto}"/>                              
+                            </p:column>  
+
+                            <p:column >                   
+                                <p:commandButton id="btnVerDetalle" value="Ver Detalle" 
+                                                 actionListener="#{beanConsultaSolicitudes.buscarSolicitudDetalles}" update="form_sisadmin:DTSolicitudes form_sisadmin:DTDetalles">
+                                    <f:attribute name="idSolicitud" value="#{solicitud}" />
+                                </p:commandButton>
+                            </p:column>
+
+                        </p:dataTable>
+                    </div>
+                    <div class="card">
+                        <h1>Lista de Productos</h1>
+                        <p:panelGrid id="listaBotones" columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:commandButton id="btnAnular" value="#{label['inventario.botones.anularLinea']}" 
+                                             icon="ui-icon-circle-check" actionListener="#{beanConsultaSolicitudes.anularLineasSolicitud}" update="form_sisadmin:DTSolicitudes form_sisadmin:DTDetalles form_sisadmin:mensajes"/>
+                        </p:panelGrid>
+                        <p:dataTable id="DTDetalles" 
+                                     widgetVar="DTDetalles" 
+                                     var="detalle"
+                                     filteredValue="#{beanConsultaSolicitudes.filtroDetalles}"
+                                     reflow="true"
+                                     paginator="true" 
+                                     rowKey="#{detalle.inventarioSolicitudDetalle.idInventarioSolicitudDetalle}"
+                                     paginatorPosition="top" 
+                                     rows="10"
+                                     value="#{beanConsultaSolicitudes.listaDetalles}" 
+                                     emptyMessage="Tabla Vacía"                                            
+                                     selection="#{beanConsultaSolicitudes.detalleSeleccionadas}" 
+                                     rowsPerPageTemplate="5,10,15,20,30,50">
+
+                            <p:column selectionMode="multiple" style="text-align: center;"/>
+
+                            <p:column headerText="Bodega Destino"
+                                      sortBy="#{detalle.bodegaDestino.descripcion}" filterBy="#{detalle.bodegaDestino.descripcion}"
+                                      filterMatchMode="contains" >                                
+                                <h:outputText value="#{detalle.bodegaDestino.descripcion}"/>                              
+                            </p:column>
+
+                            <p:column headerText="Producto"
+                                      sortBy="#{detalle.producto.descripcion}" filterBy="#{detalle.producto.descripcion}"
+                                      filterMatchMode="contains">                                
+                                <h:outputText value="#{detalle.producto.descripcion}"/>                              
+                            </p:column>
+
+                            <p:column headerText="Cantidad"
+                                      sortBy="#{detalle.inventarioSolicitudDetalle.cantidad}" filterBy="#{detalle.inventarioSolicitudDetalle.cantidad}"
+                                      filterMatchMode="contains">                                
+                                <h:outputText value="#{detalle.inventarioSolicitudDetalle.cantidad}">
+                                    <f:convertNumber pattern="###,###" type="currency"/>
+                                </h:outputText>                              
+                            </p:column>
+
+                            <p:column headerText="Estado"
+                                      sortBy="#{detalle.estadoSolicitudDetalle.descripcion}" filterBy="#{detalle.estadoSolicitudDetalle.descripcion}"
+                                      filterMatchMode="contains">                                
+                                <h:outputText value="#{detalle.estadoSolicitudDetalle.descripcion}"/>                              
+                            </p:column>
+
+                            <p:column>                                
+                                <p:commandButton id="btnMostrarPanel" value="#{label['inventario.botones.visualizarCaracteristicas']}" 
+                                                 actionListener="#{beanConsultaSolicitudes.abrirLote}" update="form_sisadmin:DTSolicitudes form_sisadmin:DTDetalles form_sisadmin:panelModal">                                   
+                                    <f:attribute name="idDetalle" value="#{detalle}" />
+                                </p:commandButton>
+                            </p:column>
+                            
+                        </p:dataTable> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+    
+    <!-- :::::::::::::::::::: PERSONALIZAR EL PANEL DE CONFIRMACIÓN :::::::::::::::::::-->
+    <ui:define name="dialogoHeader">
+        <h2>#{label['inventario.solicitud.panelModalEnviadas.titulo']}</h2>
+    </ui:define>
+    <ui:define name="dialogoMensaje">
+        <h3>#{beanConsultaSolicitudes.detalleModal.producto.descripcion}</h3>
+            <br/>            
+            <p:dataTable id="Elementos" 
+                         widgetVar="Elementos" 
+                         var="elemento"
+                         reflow="true"
+                         paginator="true"
+                         rows="5"
+                         paginatorPosition="bottom"
+                         value="#{beanConsultaSolicitudes.detalleModal.listaElementos}" 
+                         emptyMessage="Tabla Vacía">
+                <p:column headerText="Número de Lote" >                                
+                    <h:outputText value="#{elemento.numeroLote}"/>                
+                </p:column> 
+                <p:column headerText="Fecha de Vencimiento" >                                
+                    <h:outputText value="#{elemento.fechaTexto}"/>          
+                </p:column>
+                <p:column headerText="Cantidad" >                                
+                    <h:outputText value="#{elemento.cantidad}">
+                        <f:convertNumber pattern="###,###" type="currency"/>
+                    </h:outputText>
+                </p:column>
+            </p:dataTable>
+    </ui:define>
+    <ui:define name="dialogoBotones">        
+        <p:commandButton id="boton_dialogo_no" icon="ui-icon-circle-close" 
+                         value="#{label['sistema.boton.cerrar']}" actionListener="#{beanConsultaSolicitudes.cerrarLote}"
+                         update="Elementos"/>
+    </ui:define>
+    <!-- ::::::::::::::::::::::::::: FIN ::::::::::::::::::::::::::::::::::::::::::::--> 
+</ui:composition>

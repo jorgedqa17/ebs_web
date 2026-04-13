@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="lista_precios_producto" pageWidth="350" pageHeight="842" columnWidth="310" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="34d72e5c-d5b4-480a-a48e-cb2c6beb2f18">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Produccion"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="id_producto" class="java.lang.Long"/>
+	<queryString>
+		<![CDATA[SELECT t2.descripcion,t1.precio
+FROM searmedica.producto_precios t1 inner join searmedica.tipos_precios t2 
+on t1.id_tipo = t2.id_tipo
+where id_producto =  $P{id_producto}]]>
+	</queryString>
+	<field name="descripcion" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="descripcion"/>
+	</field>
+	<field name="precio" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="precio"/>
+	</field>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="150" height="20" uuid="6df5aa92-a9df-46ce-92f8-0e7c940005cc">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6c7015b2-f750-4c6d-a564-ee9e3154bfdf"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Tipo de Precio]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="150" y="0" width="160" height="20" uuid="70bee211-1f34-4657-9e6e-20a92f8b9646">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c0197d03-fea4-472c-965a-a829e8f5eb72"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Precio]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="150" height="20" uuid="67040d91-2845-45ed-9662-9092d02dcc2c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6c7015b2-f750-4c6d-a564-ee9e3154bfdf"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="¤#,##0.##;¤-#,##0.##" isBlankWhenNull="true">
+				<reportElement x="150" y="0" width="160" height="20" uuid="1633ffad-c04f-4532-9196-0ef2d90e5df4">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="c0197d03-fea4-472c-965a-a829e8f5eb72"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{precio}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

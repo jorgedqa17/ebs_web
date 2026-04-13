@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="listado_productos" pageWidth="1050" pageHeight="842" orientation="Landscape" columnWidth="1010" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="de884568-4598-4693-a8f0-9075fbc32806">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Desarrollo"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="312"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="683"/>
+	<queryString>
+		<![CDATA[SELECT t1.id_producto,t1.descripcion,t1.codigo_barras, t2.descripcion as unidad_medida, t3.descripcion as tipo_producto, 
+       (CASE WHEN t1.ind_exonerado=1 THEN 'Producto Exonerado'
+            WHEN t1.ind_exonerado=0 THEN 'Producto No Exonerado'
+       END) as producto_exonerado, t4.descripcion as impuesto_asociado, 
+	   (CASE WHEN t1.activo=1 THEN 'Producto Activo'
+            WHEN t1.activo=0 THEN 'Producto Inactivo'
+       END) as estado_producto, t5.nombre as proveedor, 
+	   (CASE WHEN t1.ind_exento=1 THEN 'Producto Exento'
+            WHEN t1.ind_exento=0 THEN 'Producto Gravado'
+       END) as producto_gravado, t6.descripcion as tipo_tarifa_impuesto--,
+	  -- t8.descripcion as tipo_precio,t7.precio
+	FROM searmedica.producto t1 left join searmedica.unidad_medida t2
+	on t1.id_unidad_medida = t2.id_unidad_medida
+	left join searmedica.tipo_producto t3
+	on t1.id_tipo_producto = t3.id_tipo_producto
+	left join searmedica.impuesto t4 on t1.id_impuesto = t4.id_impuesto
+	left join searmedica.proovedor t5 on t1.id_proovedor = t5.id_proveedor
+	left join searmedica.tipo_tarifa_impuesto t6 on t1.id_tipo_tarifa_impuesto = t6.id_tipo_tarifa_impuesto
+	--left join searmedica.producto_precios t7 on t1.id_producto = t7.id_producto 
+	--left join searmedica.tipos_precios t8 on t7.id_tipo = t8.id_tipo
+	order by t1.activo desc, t1.descripcion asc]]>
+	</queryString>
+	<field name="id_producto" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_producto"/>
+	</field>
+	<field name="descripcion" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="descripcion"/>
+	</field>
+	<field name="codigo_barras" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="codigo_barras"/>
+	</field>
+	<field name="unidad_medida" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="unidad_medida"/>
+	</field>
+	<field name="tipo_producto" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="tipo_producto"/>
+	</field>
+	<field name="producto_exonerado" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="producto_exonerado"/>
+	</field>
+	<field name="impuesto_asociado" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="impuesto_asociado"/>
+	</field>
+	<field name="estado_producto" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="estado_producto"/>
+	</field>
+	<field name="proveedor" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="proveedor"/>
+	</field>
+	<field name="producto_gravado" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="producto_gravado"/>
+	</field>
+	<field name="tipo_tarifa_impuesto" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="tipo_tarifa_impuesto"/>
+	</field>
+	<title>
+		<band height="40" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="1010" height="40" uuid="50e4c3c6-1fea-44e9-853a-4307827940d1"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="19" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Listado de Productos]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="31">
+			<staticText>
+				<reportElement x="0" y="0" width="70" height="30" uuid="21c23300-e649-43ca-b0f2-5ecf0a802b8c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="222b2f5d-a3e4-46ce-9e33-72a9a49d08ab"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Id Producto]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="149" y="0" width="151" height="30" uuid="bb4d3f73-a540-48df-8070-b5b85a308a1d">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="8704b094-20e4-4a20-91d9-6ddba21bfaac"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Descripción]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="70" y="0" width="79" height="30" uuid="540a607a-b9b5-4fac-b9ec-646a1e2d6278">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6871ed95-7b10-4e0e-b88e-954c78770cd1"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Código Barras]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="0" width="100" height="30" uuid="1a8ccc3d-8f14-4b63-b269-e910a83e1613">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="990044ac-752d-48fa-8f66-8a5ee73e2f20"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Unidad Medida]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="400" y="0" width="100" height="30" uuid="e6b18f38-33ca-4b62-89e0-7e33390dc099">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d13485b8-a92b-447d-9414-aa96a86002a9"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Tipo Producto]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="500" y="0" width="100" height="30" uuid="be2dc8a4-fc90-4335-8b3c-864fcdd991b6">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="57d442f3-e14c-4a73-b5e6-b5230bb0ebf3"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Producto Exonerado]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="700" y="0" width="100" height="30" uuid="8dd9f5e7-a0ae-4c10-9a16-c746bf44aa57">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="75da79c3-e862-4e09-93e0-389fe78e2fc1"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Impuesto Asociado]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="900" y="0" width="110" height="30" uuid="43e28399-898c-4645-8261-dcfd9012652d">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="9ec75bfa-db71-428a-a810-64b4ecfad3dd"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Proveedor]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="600" y="0" width="100" height="30" uuid="4558df1c-e0ec-4a7d-bf6f-6e8dc9298ea9">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="9cbbd7c5-008d-40f1-a612-5772cafee424"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Producto Gravado]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="800" y="0" width="100" height="30" uuid="4f52d8fc-a597-4cfb-a6bf-82d9eb054a4d">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6c001fdc-d7e3-46bc-8e85-d6c5e8dc5cc6"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Tarifa Asociada]]></text>
+			</staticText>
+			<line>
+				<reportElement x="1" y="30" width="1009" height="1" uuid="d4451038-5a59-484a-911b-e0cf40bcc225"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="50" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="70" height="30" uuid="ee680889-bb19-4880-960a-52f701f42d48">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="222b2f5d-a3e4-46ce-9e33-72a9a49d08ab"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{id_producto}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="70" y="0" width="79" height="30" uuid="da6dc4ec-c0c8-4957-a38c-c216b1e5d4c0">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6871ed95-7b10-4e0e-b88e-954c78770cd1"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{codigo_barras}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="149" y="0" width="151" height="30" uuid="cd75cdf9-3b51-4069-9e1e-e8cfa0727074">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="8704b094-20e4-4a20-91d9-6ddba21bfaac"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="300" y="0" width="100" height="30" uuid="64e91407-ed0f-49fb-b820-05fc9092dae3">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="990044ac-752d-48fa-8f66-8a5ee73e2f20"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{unidad_medida}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="400" y="0" width="100" height="30" uuid="70a05e75-d5a7-4872-a716-86bdfd723a8c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d13485b8-a92b-447d-9414-aa96a86002a9"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{tipo_producto}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="500" y="0" width="100" height="30" uuid="17c1079b-a6e5-4eef-a755-508f660f6156">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="57d442f3-e14c-4a73-b5e6-b5230bb0ebf3"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{producto_exonerado}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="900" y="0" width="110" height="30" uuid="4b95c10d-1c27-4830-bf95-242f850354a2">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="9ec75bfa-db71-428a-a810-64b4ecfad3dd"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{proveedor}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="600" y="0" width="100" height="30" uuid="631eb30f-8eee-49b1-8d46-f3c85b910426">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="9cbbd7c5-008d-40f1-a612-5772cafee424"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{producto_gravado}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="700" y="0" width="100" height="30" uuid="6d57709a-3b4d-4be8-b7ff-ae842ee7664c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="75da79c3-e862-4e09-93e0-389fe78e2fc1"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{impuesto_asociado}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="800" y="0" width="100" height="30" uuid="ecba692d-fe45-4ef8-8bca-56ec5f121938">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="6c001fdc-d7e3-46bc-8e85-d6c5e8dc5cc6"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{tipo_tarifa_impuesto}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement x="70" y="30" width="940" height="20" uuid="43743946-681d-4cb9-b149-60a905d4f997"/>
+				<subreportParameter name="id_producto">
+					<subreportParameterExpression><![CDATA[$F{id_producto}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA["C:\\EBS\\EBS\\EBS\\EBS_Web\\src\\main\\webapp\\WEB-INF\\reportes\\lista_precios_producto.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+</jasperReport>

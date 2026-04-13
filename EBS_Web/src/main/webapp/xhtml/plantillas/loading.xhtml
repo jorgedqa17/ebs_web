@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets" >
+    <div>
+        <ui:insert name="loading">
+
+        </ui:insert>
+        <h:panelGroup rendered="#{rendered}">
+            <p:ajaxStatus widgetVar="ajaxStatusPanel2" 
+                          onstart="statusDialog.show();" 
+                          onsuccess="statusDialog.hide();"/> 
+
+            <p:dialog modal="true" widgetVar="statusDialog" header="#{label['ejecutando']} "   
+                      draggable="false" closable="false" style="z-index: 1000; text-align: center;" 
+                      height="50" width="250" resizable="false"> 
+                <br/>
+                <p:graphicImage value="/resources/imagenes/ajaxloadingbar.gif" />  
+            </p:dialog>
+        </h:panelGroup>
+
+        <h:panelGroup rendered="#{not rendered}">
+            <p:ajaxStatus id="ajaxStatusPanel">
+                <f:facet  name="start">
+                    <div id="ajaxStatusPanelDiv">
+                        <table>
+                            <tr>
+                                <td align="right" width="70%">
+                                    <img src="#{request.contextPath}/resources/imagenes/ajax-loader_cuadrado.gif" width="16" height="16"/>
+                                </td>
+                                <td>
+                                    <span style="margin-top: 5px;">#{label['cargando']}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </f:facet>
+
+                <f:facet name="complete">  
+                    <h:outputText value="" />
+                </f:facet>  
+            </p:ajaxStatus>
+        </h:panelGroup>
+    </div>
+</ui:composition>

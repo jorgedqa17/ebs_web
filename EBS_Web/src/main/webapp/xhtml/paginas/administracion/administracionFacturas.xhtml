@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+    
+    
+        <ui:define name="title">Administración de Facturas</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    
+    <ui:define name="content"> 
+        <p:panelGrid id="panelFechas" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:outputLabel value="#{label['cierre.fecha.desde']}"/>
+            <p:calendar value="#{beanReimpresionFactura.fechaInicio}" showOn="button" pattern="dd-MM-yyyy" mask="true" />
+
+            <p:outputLabel value="#{label['cierre.fecha.hasta']}"/>
+            <p:calendar  value="#{beanReimpresionFactura.fechaFin}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+        </p:panelGrid>
+
+
+        <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+            <h:outputLabel value="Condición de Venta"/>            
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              value="#{beanReimpresionFactura.idCondicionVentaSeleccionado}" 
+                              id="listaCondicionVenta"
+                              effect="fold" >        
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanReimpresionFactura.listaCondicionVenta}"
+                               var="condVenta"
+                               itemLabel="#{condVenta.descripcion}"
+                               itemValue="#{condVenta.id_cond_venta}"/>
+            </p:selectOneMenu> 
+
+            <h:outputLabel value="Medio Pago"/>            
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              value="#{beanReimpresionFactura.idMedioPagoSeleccionado}" 
+                              id="listaMedioPago"
+                              effect="fold" >        
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanReimpresionFactura.listaMedioPago}"
+                               var="medioPago"
+                               itemLabel="#{medioPago.descripcion}"
+                               itemValue="#{medioPago.id_medio_pago}"/>
+            </p:selectOneMenu> 
+
+            <h:outputLabel value="Tipo de Factura"/>            
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              value="#{beanReimpresionFactura.idTipoFacturaSeleccionada}" 
+                              id="listaTipoFactura"
+                              effect="fold" >        
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanReimpresionFactura.listaTiposFacturas}"
+                               var="tipoFactura"
+                               itemLabel="#{tipoFactura.descripcion}"
+                               itemValue="#{tipoFactura.id_tipo_factura}"/>
+            </p:selectOneMenu> 
+            <h:outputLabel value="Usuario"/>            
+            <p:selectOneMenu  converter="ConvertidorListasString" 
+                              value="#{beanReimpresionFactura.usuarioSeleccionado}"
+                              id="listaBodegas"
+                              effect="fold" >        
+                <f:selectItem itemLabel="Seleccione" itemValue="" />
+                <f:selectItems value="#{beanReimpresionFactura.listaUsuarios}"
+                               var="usuario"
+                               itemLabel="#{usuario.login}"
+                               itemValue="#{usuario.login}"/>
+            </p:selectOneMenu> 
+            <h:outputLabel value="Tienda"/>            
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              value="#{beanReimpresionFactura.idBodegaSeleccionada}" 
+                              id="listaUsuarios"
+                              effect="fold" >        
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanReimpresionFactura.listaBodegas}"
+                               var="bodega"
+                               itemLabel="#{bodega.descripcion}"
+                               itemValue="#{bodega.bodegaPK.id_bodega}"/>
+            </p:selectOneMenu> 
+
+        </p:panelGrid>
+
+        <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:commandButton id="btnBuscarFacturas" update=":form_sisadmin:idTablaFacturasAnulacion" 
+                             value="#{label['cierre.buscar']}"
+                             oncomplete="PF('idTablaFacturasAnulacion').clearFilters()"
+
+                             actionListener="#{beanReimpresionFactura.buscarFacturas}"></p:commandButton>
+        </p:panelGrid>
+        <p:panelGrid columns="1" id="panelAnulacion">
+            <p:dataTable id="idTablaFacturasAnulacion"
+                         widgetVar="idTablaFacturasAnulacion"
+                         var="factura"
+                         editable="true"
+                         filteredValue="#{beanReimpresionFactura.listaFacturasSeleccionadas}"
+                         editMode="cell"
+                         paginator="true" 
+                         rowKey="#{listaFacturas}"
+                         paginatorPosition="bottom" 
+                         rows="7"
+                         value="#{beanReimpresionFactura.listaFacturas}"
+                         emptyMessage="#{label['tabla.vacia']}">
+                <p:column style="width: 5%;"  filterMatchMode="contains" filterBy="#{factura.idFactura}" headerText="Id" >
+                    <h:outputText id="idFactura" value="#{factura.idFactura}" />  
+                </p:column>
+                <p:column style="width: 15%;" filterMatchMode="contains" filterBy="#{factura.numeroConsecutivo}" headerText="#{label['anulacion.numero.consecutivo']}" >
+                    <h:outputText id="numeroConsecutivo" value="#{factura.numeroConsecutivo}" />  
+                </p:column>
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.numeroConsecutivo}" 
+                          headerText="Tipo de Factura" >
+                    <h:outputText id="descTipoFactura" value="#{factura.descripcionTipoFactura}" />  
+                </p:column>
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.estadoFactura}" headerText="#{label['anulacion.estado']}" >
+                    <h:outputText id="estado" value="#{factura.estadoFactura}" />  
+                </p:column>
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.montoTotalComprobante}" 
+                          headerText="#{label['anulacion.monto']}" >
+                    <h:outputText id="monto" value="#{factura.montoTotalComprobante}" />  
+                </p:column>
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.nombreClienteFantasia}" 
+                          headerText="Nombre Cliente Fantasia" >
+                    <h:outputText id="clienteFantasia" value="#{factura.nombreClienteFantasia}" />  
+                </p:column>
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.nombreCliente}" 
+                          headerText="Nombre Cliente" >
+                    <h:outputText id="cliente" value="#{factura.nombreCliente}" />  
+                </p:column>
+             <!--   <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.descripcionCondicionVenta}" 
+                          headerText="Condición de la Venta" >
+                    <h:outputText id="condVenta" value="#{factura.descripcionCondicionVenta} #{factura.plazoCredito}" />  
+                </p:column>   
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.descripcionMedioPago}" 
+                          headerText="Medio de Pago" >
+                    <h:outputText id="medioPago" value="#{factura.descripcionMedioPago}" />  
+                </p:column>  --> 
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.motivoAnulacion}" 
+                          headerText="Motivo Nota Crédito" >
+                    <h:outputText id="notaCredito" value="#{factura.motivoAnulacion}" />  
+                </p:column>            
+              <!--  <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.descripcionBodega}" 
+                          headerText="Descripción de la Bodega" >
+                    <h:outputText id="bodega" value="#{factura.descripcionBodega}" />  
+                </p:column>   
+                <p:column style="width: 10%;" filterMatchMode="contains" filterBy="#{factura.usuario}" 
+                          headerText="Usuario" >
+                    <h:outputText id="usuario" value="#{factura.usuario}" />  
+                </p:column>   -->
+                <p:column style="width: 10%;">
+                    <p:commandButton id="btnImprirReporte" actionListener="#{beanReimpresionFactura.seleccionarFactura(factura)}" value="Reimprimir Factura" icon="ui-icon-arrowthick-1-s" ajax="false" >
+                        <p:fileDownload value="#{beanReimpresionFactura.reporteDesplegar}"/>     
+                    </p:commandButton>  
+                </p:column>
+            </p:dataTable>
+
+        </p:panelGrid>
+
+
+
+        <p:panelGrid columns="2">
+            <p:outputLabel value="Generar Listado de Facturas - Excel"/>
+            <p:commandButton id="btnImprirReporte" value="Imprimir Listado Facturas Excel" icon="ui-icon-arrowthick-1-s" ajax="false" >
+                <p:fileDownload value="#{beanReimpresionFactura.reporteDesplegarListadoFacturas}"/>     
+            </p:commandButton> 
+        </p:panelGrid>
+
+
+    </ui:define>
+</ui:composition>

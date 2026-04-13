@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subReporte_TotalesEstadoCuenta" pageWidth="250" pageHeight="842" columnWidth="250" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="414850bb-969c-4168-bd12-4f9e2e2f61dd">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Desarrollo"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="142"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="853"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="818"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="172"/>
+	<parameter name="idCliente" class="java.lang.Long"/>
+	<queryString>
+		<![CDATA[SELECT
+     SUM(t1.total_comprobante) AS total,
+     'TOTAL FACTURADO' as resultado
+ FROM
+     searmedica.factura t1
+ WHERE
+     t1.id_cliente =   $P{idCliente} 
+     AND t1.id_cond_venta = 2
+     AND t1.clave IS NOT NULL
+     --AND t1.factura_cancelada = 0
+ UNION ALL
+ SELECT
+     SUM(t5.monto_pago) AS total,
+     'TOTAL CANCELADO' as resultado
+ FROM
+     searmedica.factura t1  LEFT JOIN SEARMEDICA.REcibo t5
+     on t1.id_factura = t5.id_factura
+     and t1.id_cliente = $P{idCliente} 
+     AND t1.id_cond_venta = 2
+     AND t1.clave IS NOT NULL
+     AND t5.id_estado <> 29
+     --AND t1.factura_cancelada = 0
+ UNION ALL
+ SELECT
+     SUM(t1.monto_restante) AS total_adeudado,
+     'TOTAL ADEUDADO' as resultado
+ FROM
+     searmedica.factura t1
+ WHERE
+     t1.id_cliente =   $P{idCliente} 
+     AND t1.id_cond_venta = 2
+     AND t1.clave IS NOT NULL
+	 and t1.id_anulacion is null
+     --AND t1.factura_cancelada = 0
+      UNION ALL
+ SELECT
+     SUM(T1.MONTO_RESTANTE),
+     'TOTAL VENCIDO' as resultado
+ FROM
+     searmedica.factura t1
+ WHERE
+     t1.id_cliente = $P{idCliente} 
+     AND t1.id_cond_venta = 2
+     AND t1.clave IS NOT NULL
+     --AND t1.factura_cancelada = 0
+     AND T1.ID_ANULACION IS NULL
+     AND t1.fecha_factura + CAST(t1.plazo_credito || 'days' AS interval) <= now()]]>
+	</queryString>
+	<field name="total" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="total"/>
+	</field>
+	<field name="resultado" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="resultado"/>
+	</field>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="#,##0.000" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="140" y="0" width="110" height="20" uuid="c6e196f6-2c50-41f1-9940-1f516e4289ce">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="f7425993-6645-4f66-b81b-8aa6d5c5d73b"/>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="0" y="0" width="140" height="20" uuid="0d15dadb-263d-4f8f-a656-638795688e0f"/>
+				<textElement textAlignment="Right">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{resultado}+": "]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

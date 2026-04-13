@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporte_confirmacion_comprobantes_electronicos" pageWidth="595" pageHeight="300" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e10c26b9-b93b-43bf-b9ce-fbe3a86914a5">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Desarrollo"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="rutaImagen" class="java.lang.String">
+		<defaultValueExpression><![CDATA["C://SearMedica//PowerSystem//PowerSystem-web//src//main//webapp//resources//imagenes//"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="idPago" class="java.lang.Long"/>
+	<queryString>
+		<![CDATA[SELECT id_pago, numero_consecutivo, fecha_emision, mensaje, clave_comprobante_pago, 
+identificacion_proveedor, monto_impuestos, TO_CHAR(monto_total_comprobante, '99G999D99') AS monto_total_comprobante, id_estado, respuesta_hacienda, 
+comprobante_enviado, correo_electronico, fecha_pago, 
+ CASE
+  WHEN (tipo_mensaje_respuesta = '05') THEN 'ACEPTADO'
+  WHEN (tipo_mensaje_respuesta = '06')  THEN 'PARCIALMENTE ACEPTADO'
+  WHEN (tipo_mensaje_respuesta = '07')  THEN 'RECHAZADO'
+ END AS tipo_mensaje_respuesta
+, documento_xml_firmado, detalle_respuesta_hacienda, tipo_identificacion_proveedor, mensaje_detalle, url_consulta_estado
+	FROM searmedica.pago
+where id_pago =  $P{idPago}]]>
+	</queryString>
+	<field name="id_pago" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_pago"/>
+	</field>
+	<field name="numero_consecutivo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="numero_consecutivo"/>
+	</field>
+	<field name="fecha_emision" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_emision"/>
+	</field>
+	<field name="mensaje" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="mensaje"/>
+	</field>
+	<field name="clave_comprobante_pago" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="clave_comprobante_pago"/>
+	</field>
+	<field name="identificacion_proveedor" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="identificacion_proveedor"/>
+	</field>
+	<field name="monto_impuestos" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_impuestos"/>
+	</field>
+	<field name="monto_total_comprobante" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="monto_total_comprobante"/>
+	</field>
+	<field name="id_estado" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="id_estado"/>
+	</field>
+	<field name="respuesta_hacienda" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="respuesta_hacienda"/>
+	</field>
+	<field name="comprobante_enviado" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="comprobante_enviado"/>
+	</field>
+	<field name="correo_electronico" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="correo_electronico"/>
+	</field>
+	<field name="fecha_pago" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_pago"/>
+	</field>
+	<field name="tipo_mensaje_respuesta" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="tipo_mensaje_respuesta"/>
+	</field>
+	<field name="documento_xml_firmado" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="documento_xml_firmado"/>
+	</field>
+	<field name="detalle_respuesta_hacienda" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="detalle_respuesta_hacienda"/>
+	</field>
+	<field name="tipo_identificacion_proveedor" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="tipo_identificacion_proveedor"/>
+	</field>
+	<field name="mensaje_detalle" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="mensaje_detalle"/>
+	</field>
+	<field name="url_consulta_estado" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="url_consulta_estado"/>
+	</field>
+	<title>
+		<band height="146" splitType="Stretch">
+			<image>
+				<reportElement x="0" y="0" width="89" height="80" uuid="6d663b81-a0ff-4984-8c96-4617ef74a78a"/>
+				<imageExpression><![CDATA[$P{rutaImagen}+"Logo.jpeg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="89" y="0" width="342" height="20" uuid="f25a931b-31de-48e5-8732-372833077d84"/>
+				<textElement>
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Inversiones Reales SEAR SRL.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="89" y="20" width="342" height="20" uuid="ca5736c6-1107-42a3-8d01-e8dac7da04a7"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Cédula: 3102229216  ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="89" y="40" width="342" height="20" uuid="4c4ca0b5-d064-4b0d-bef8-6e6f92dc2f29"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[searmedicacartago@hotmail.com]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="90" y="60" width="341" height="20" uuid="72f546e0-65d9-4f86-af36-5386025a7dfb"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[200 metros sur de los Padres Salesianos a mano izquierda.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="2" y="90" width="550" height="30" uuid="ffe29b60-d462-4ca4-b29a-39c40d6f0499"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="19"/>
+				</textElement>
+				<text><![CDATA[Informe de Confirmación de Comprobantes Electrónicos]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="182" y="120" width="370" height="26" uuid="ea211d18-8bb0-4391-99b9-581fd827ed8c"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{numero_consecutivo}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="2" y="120" width="180" height="26" uuid="93d29add-b890-4ad8-812b-5d9624e7e6aa"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[Número de Consecutivo de la Confirmación:]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="90" splitType="Stretch">
+			<staticText>
+				<reportElement x="2" y="0" width="180" height="25" uuid="d8e03906-456f-4c4a-9b3b-64e22951c331"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sear Médica le informa lo siguiente:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="2" y="25" width="550" height="35" uuid="86323349-4981-47b2-a98e-8c8d119769d7"/>
+				<textFieldExpression><![CDATA["El comprobante electrónico "+$F{clave_comprobante_pago}+" por un monto total de "+$F{monto_total_comprobante} +" ha sido "+$F{tipo_mensaje_respuesta}+"."]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="2" y="60" width="550" height="30" uuid="f001062d-b4ec-492e-aba6-dbe103af21df"/>
+				<textFieldExpression><![CDATA[$F{mensaje_detalle}==null?"":"Información Adicional: "+$F{mensaje_detalle}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+</jasperReport>

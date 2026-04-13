@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Reporte_cierre" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isSummaryNewPage="true" uuid="1dc81b79-0dc4-474b-8b84-1c6ac9c9bb70">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Produccion"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="rutaImagen" class="java.lang.String">
+		<defaultValueExpression><![CDATA["C://Users//Jorge GBSYS//Desktop//Sear Medica//PowerSystem//PowerSystem-web//src//main//webapp//resources//imagenes//"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="idCierre" class="java.lang.Long"/>
+	<parameter name="rutaSubReportes" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT id_cierre, fecha_inicio, fecha_fin, login, id_tipo_cierre, fecha_generacion_cierre, monto_entradas, monto_saludas, monto_anulaciones, monto_total, monto_facturas_credito, monto_facturas_tarjeta, monto_efectivo, monto_cheque
+	FROM searmedica.cierre
+	WHERE ID_CIERRE =  $P{idCierre}]]>
+	</queryString>
+	<field name="id_cierre" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_cierre"/>
+	</field>
+	<field name="fecha_inicio" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_inicio"/>
+	</field>
+	<field name="fecha_fin" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_fin"/>
+	</field>
+	<field name="login" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="login"/>
+	</field>
+	<field name="id_tipo_cierre" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_tipo_cierre"/>
+	</field>
+	<field name="fecha_generacion_cierre" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_generacion_cierre"/>
+	</field>
+	<field name="monto_entradas" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_entradas"/>
+	</field>
+	<field name="monto_saludas" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_saludas"/>
+	</field>
+	<field name="monto_anulaciones" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_anulaciones"/>
+	</field>
+	<field name="monto_total" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_total"/>
+	</field>
+	<field name="monto_facturas_credito" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_facturas_credito"/>
+	</field>
+	<field name="monto_facturas_tarjeta" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_facturas_tarjeta"/>
+	</field>
+	<field name="monto_efectivo" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_efectivo"/>
+	</field>
+	<field name="monto_cheque" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_cheque"/>
+	</field>
+	<title>
+		<band height="268" splitType="Stretch">
+			<staticText>
+				<reportElement x="159" y="0" width="240" height="40" uuid="e52e2b0a-7841-447f-b8ab-00a96f880d3a"/>
+				<textElement>
+					<font size="25"/>
+				</textElement>
+				<text><![CDATA[Cierre de facturación ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="40" width="554" height="21" uuid="74e12c17-e29a-424e-8a97-9d82a01ac7f8"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Información]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="132" y="61" width="48" height="19" uuid="c7fb9632-78e7-4644-b18d-8e6c392f25c1"/>
+				<text><![CDATA[Usuario:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="180" y="61" width="100" height="19" uuid="a84d8ceb-708a-469f-9219-f92d292cde8b"/>
+				<textFieldExpression><![CDATA[$F{login}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="289" y="80" width="30" height="18" uuid="c803de88-b6d5-434e-8828-16d8ef8f05a7"/>
+				<text><![CDATA[Del:]]></text>
+			</staticText>
+			<textField pattern="M/d/yy h:mm a" isBlankWhenNull="true">
+				<reportElement x="319" y="80" width="91" height="18" uuid="f00d3859-502c-423f-a2ad-514c7183e40f"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{fecha_inicio}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="410" y="80" width="20" height="18" uuid="8ce19a63-2383-43f4-b1e0-b623407eaf28"/>
+				<text><![CDATA[Al:]]></text>
+			</staticText>
+			<textField pattern="M/d/yy h:mm a" isBlankWhenNull="true">
+				<reportElement x="430" y="80" width="124" height="18" uuid="7861ceeb-6493-4b9c-ac52-35b0c3f01fb6"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{fecha_fin}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="289" y="60" width="121" height="20" uuid="04135401-6eb2-4909-988a-b00bb837cfff"/>
+				<textElement textAlignment="Left"/>
+				<text><![CDATA[Fecha Generación Cierre:]]></text>
+			</staticText>
+			<textField pattern="M/d/yy h:mm a">
+				<reportElement x="410" y="60" width="144" height="20" uuid="be41c233-b060-4288-998e-c90d717a63a3"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{fecha_generacion_cierre}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="100" width="554" height="20" uuid="6f1af670-6e38-4fef-a4a9-a94ab2786b8e"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Montos]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="137" width="128" height="19" uuid="c4a9fbb5-b622-4d4d-9191-b273a8b53799"/>
+				<text><![CDATA[Monto Facturas a Crédito:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="214" width="128" height="18" uuid="32321207-5fa6-422b-9799-e22e394f7472"/>
+				<text><![CDATA[Monto Salidas:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="232" width="128" height="18" uuid="4ffda7e1-58fb-47bd-b237-d812bab3eca3"/>
+				<text><![CDATA[Monto Anulaciones:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="250" width="128" height="18" uuid="d3e76bce-4f43-4519-988f-81474c691823"/>
+				<text><![CDATA[Monto Total a Entregar:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="120" width="425" height="17" uuid="5de7414f-8fc7-4804-810c-ef1de3bb4ac0"/>
+				<textFieldExpression><![CDATA[$F{monto_entradas}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="214" width="425" height="18" uuid="525c911e-8a25-44b6-aca0-35fbd4c522e5"/>
+				<textFieldExpression><![CDATA[$F{monto_saludas}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="232" width="425" height="18" uuid="e0d5683c-65b5-4744-bc26-ca93d962419a"/>
+				<textFieldExpression><![CDATA[$F{monto_anulaciones}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="250" width="425" height="18" uuid="e787e122-12dc-40dd-9c46-0669d8a0d937"/>
+				<textFieldExpression><![CDATA[$F{monto_total}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="120" width="128" height="17" uuid="5f7965dd-ad38-4b37-bb86-45633c0410b2"/>
+				<text><![CDATA[Monto Entradas:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="156" width="128" height="19" uuid="61dc7e36-522a-442e-a273-07f8526e3ac5"/>
+				<text><![CDATA[Monto en Efectivo:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="175" width="128" height="19" uuid="160c70d0-c0f7-4d61-8d44-67dcabfa8810"/>
+				<text><![CDATA[Monto en Tarjetas:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="194" width="128" height="20" uuid="fdc28db9-4b05-45d9-a7a9-0463a0ea6f04"/>
+				<text><![CDATA[Monto en Cheque:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="194" width="425" height="20" uuid="101b3a0a-53ca-4ac1-993b-4a7ec29ae45f"/>
+				<textFieldExpression><![CDATA[$F{monto_cheque}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="137" width="425" height="18" uuid="adab56f4-cbee-488e-a408-15becd74b574"/>
+				<textFieldExpression><![CDATA[$F{monto_facturas_credito}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="175" width="425" height="18" uuid="d20849fc-9595-48b4-9213-85bd1e7d386d"/>
+				<textFieldExpression><![CDATA[$F{monto_facturas_tarjeta}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
+				<reportElement x="129" y="156" width="425" height="18" uuid="f28bec4f-1afe-46f4-872d-65e68ce3266a"/>
+				<textFieldExpression><![CDATA[$F{monto_efectivo}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="61" width="60" height="19" uuid="b6331671-ddb9-41b1-aa33-e798cd43c7d5"/>
+				<text><![CDATA[Consecutivo:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="60" y="61" width="72" height="19" uuid="90a67e94-4bd2-46ad-beee-4d0b1c7cbdc3"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{id_cierre}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<detail>
+		<band height="45">
+			<staticText>
+				<reportElement x="0" y="0" width="554" height="20" uuid="ed60f1a6-59b8-4d62-9999-4262c1d475cb"/>
+				<textElement textAlignment="Left">
+					<font size="10" isBold="true" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Lista de Facturas del Cierre]]></text>
+			</staticText>
+			<subreport>
+				<reportElement positionType="Float" x="0" y="20" width="540" height="25" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="802f3eb6-7100-4121-a398-7a0e9aa670a7"/>
+				<subreportParameter name="idCierre">
+					<subreportParameterExpression><![CDATA[$P{idCierre}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{rutaSubReportes}+"subReporteListaFacturasCierre.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="52">
+			<staticText>
+				<reportElement x="0" y="1" width="554" height="20" uuid="577b978c-086f-4d85-a2a9-ecbae9fbc5d1"/>
+				<textElement textAlignment="Left">
+					<font size="10" isBold="true" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Lista de Facturas Anuladas]]></text>
+			</staticText>
+			<subreport>
+				<reportElement x="0" y="22" width="554" height="30" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="9f1ddb14-ff4a-4bd2-bdb5-94e06813cac0"/>
+				<subreportParameter name="idCierre">
+					<subreportParameterExpression><![CDATA[$P{idCierre}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{rutaSubReportes}+"subReporteListaFacturasAnuladas.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="50">
+			<staticText>
+				<reportElement x="0" y="0" width="554" height="20" uuid="a74d56cf-39a0-4642-adf6-98333b05c045"/>
+				<textElement textAlignment="Left">
+					<font size="10" isBold="true" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Lista de Facturas Salidas]]></text>
+			</staticText>
+			<subreport>
+				<reportElement x="0" y="20" width="554" height="30" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="e6ee8ba3-f7cc-4daa-b4eb-698ec283ab5f"/>
+				<subreportParameter name="idCierre">
+					<subreportParameterExpression><![CDATA[$P{idCierre}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{rutaSubReportes}+"subReporteListaSalidas.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+</jasperReport>

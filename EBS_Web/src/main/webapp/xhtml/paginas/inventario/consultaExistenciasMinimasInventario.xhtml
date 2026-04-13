@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">
+        Consulta de Cantidad Mínimas Inventario
+    </ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">  
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Filtros de búsqueda</h1>
+                        <p:panelGrid columns="2" columnClasses="ui-grid-col-1,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <h:outputLabel value="Tienda"/>            
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                              value="#{beanConsultaInventarioExistenciasInventario.idBodegaSeleccionada}" 
+                                              id="listaUsuarios"
+                                              effect="fold" >        
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanConsultaInventarioExistenciasInventario.listaBodegas}"
+                                               var="bodega"
+                                               itemLabel="#{bodega.descripcion}"
+                                               itemValue="#{bodega.bodegaPK.id_bodega}"/>
+                            </p:selectOneMenu> 
+                        </p:panelGrid>
+                        <p:commandButton id="btnbuscar"
+                                         actionListener="#{beanConsultaInventarioExistenciasInventario.buscarInformacion}" 
+                                         update="form_sisadmin"
+                                         icon="fa fa-search"
+                                         value="Buscar">
+                        </p:commandButton>
+                    </div>
+                    <div class="card">
+                        <h1>Lista de Productos</h1>
+                        <p:dataTable id="listaProductos" 
+                                     widgetVar="listaProductos" 
+                                     var="linea"                                     reflow="true"
+                                     paginator="true"
+                                     rowKey="#{producto.inventario.idInventario}"
+                                     paginatorPosition="top"
+                                     rows="10"
+                                     value="#{beanConsultaInventarioExistenciasInventario.listaProductos}" 
+                                     emptyMessage="Tabla Vacía" 
+                                     filteredValue="#{beanConsultaInventarioExistenciasInventario.listaProductosFiltro}" 
+                                     rowsPerPageTemplate="5,10,15,20,30,50"    >
+
+                            <p:column headerText="Producto" filterMatchMode="contains" filterBy="#{linea.descripcion}"  sortBy="#{linea.descripcion}" >
+                                <p:outputLabel value="#{linea.descripcion}" />
+                            </p:column>
+
+                            <p:column headerText="Cantidad Actual" filterMatchMode="contains" filterBy="#{linea.cantidadExistenciaActual}" sortBy="#{linea.cantidadExistenciaActual}" >
+                                <p:outputLabel value="#{linea.cantidadExistenciaActual}" />
+                            </p:column>
+
+                            <p:column headerText="Cantidad Mínima Definida" filterMatchMode="contains" filterBy="#{linea.cantidadMinima}" sortBy="#{linea.cantidadMinima}" >
+                                <p:outputLabel value="#{linea.cantidadMinima}" />
+                            </p:column>
+
+
+                        </p:dataTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+
+
+</ui:composition>

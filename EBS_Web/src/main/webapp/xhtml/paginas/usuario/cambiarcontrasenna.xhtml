@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <h:head>
+        <f:facet name="first">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+        </f:facet>
+        <title>EBS</title>
+    </h:head>
+
+    <h:body styleClass="login-body">
+        <h:form id="form_sisadmin">
+            <p:growl id="mensajes"  showDetail="true" sticky="true"/>
+            <div id="login-wrapper">
+
+
+                <div id="login-container">
+                    <span class="title">Cambio Contraseña</span>
+
+                    <div class="ui-g ui-fluid">
+                        <div class="ui-g-12" >
+                            <p:inputText style="#{beanCambioContrasenna.verBotonGuardar ?'':'display: none'}" autocomplete="false" value="#{beanCambioContrasenna.usuario}" id="usuarioActual" placeholder="Usuario Actual" />
+                        </div>
+                        <div class="ui-g-12">
+
+                            <p:password style="#{beanCambioContrasenna.verBotonGuardar ?'':'display: none'}" value="#{beanCambioContrasenna.contrasennaAnterior}" id="contraActual" placeholder="Contraseña Actual" feedback="false"  />
+                        </div>
+                        <div class="ui-g-12">
+
+                            <p:password style="#{beanCambioContrasenna.verBotonGuardar ?'':'display: none'}" value="#{beanCambioContrasenna.contrasenna}" placeholder="Nueva Actual" id="contraNueva"  feedback="true"  />
+                        </div>
+
+                        <div class="ui-g-12">
+                            <p:commandButton style="#{beanCambioContrasenna.verBotonGuardar ?'':'display: none'}" id="btnCambiar" value="Guardar"
+                                             actionListener="#{beanCambioContrasenna.cambiarContrasena}" icon="fa fa-save" update="mensajes btnRegresar btnCambiar usuarioActual contraActual contraNueva" />
+                            <p:commandButton style="#{beanCambioContrasenna.verBotonGuardar ?'display: none':''}" id="btnRegresar" value="Regresar" actionListener="#{beanCambioContrasenna.regresar}" icon="fa fa-arrow-left" update="mensajes" />
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="login-footer"></div>
+            </div>
+
+
+            <h:outputStylesheet name="css/layout.css" library="omega-layout" />
+        </h:form>
+    </h:body>
+
+</html>

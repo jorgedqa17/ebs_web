@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <ui:define name="title">Notas de Débito</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">      
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">                        
+                        <h1>Listado de Notas de Crédito</h1>
+                        <p:dataTable id="tablasNotasDebito"
+                                     widgetVar="tablasNotasCredito"
+                                     var="notaCredito"
+                                     resizableColumns="true"
+                                     editable="true"
+                                     filteredValue="#{beanNotaDebito.listaNotasCreditoFiltro}"
+                                     editMode="cell"
+                                     reflow="true"
+                                     paginator="true" 
+                                     rowKey="#{notaCredito}"
+                                     paginatorPosition="bottom" 
+                                     rows="5"
+                                     value="#{beanNotaDebito.listaNotasCredito}"
+                                     emptyMessage="#{label['tabla.vacia']}">
+
+                            <p:column   filterMatchMode="contains" filterBy="#{notaCredito.id_anulacion}" headerText="Id" >
+                                <h:outputText id="id_nota_debito" value="#{notaCredito.id_anulacion}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{notaCredito.numero_consecutivo}" headerText="N° Consecutivo" >
+                                <h:outputText id="numero_consecutivo" value="#{notaCredito.numero_consecutivo}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.fecha_anulacion}" headerText="Fecha Creación" >
+                                <h:outputText id="fecha_creacion" value="#{notaCredito.fecha_anulacion}" />  
+                            </p:column> 
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.fecha_emision}" headerText="Fecha Emisión" >
+                                <h:outputText id="fecha_emision" value="#{notaCredito.fecha_emision}" />  
+                            </p:column> 
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.login}" headerText="Usuario" >
+                                <h:outputText id="creador" value="#{notaCredito.login}" />  
+                            </p:column> 
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.estadoFactura.descripcion}" headerText="Estado" >
+                                <h:outputText id="estado" value="#{notaCredito.estadoFactura.descripcion}" />  
+                            </p:column> 
+                            <p:column>
+                                <p:commandButton update="form_sisadmin" id="seleccionarNotaCredito"  
+                                                 actionListener="#{beanNotaDebito.seleccionarNotaCredito(notaCredito)}"
+                                                 value="Crear Nota Débito" icon="fa fa-plus" >
+                                </p:commandButton>  
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                    <div class="card">                        
+                        <h1>Detalle de Nota de Débito</h1>
+                        <p:panelGrid columns="2" columnClasses="ui-grid-col-3,ui-grid-col-8" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                            <p:outputLabel value="Tipo Documento Referencia"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables"                                   
+                                              value="#{beanNotaDebito.tipoDocumentoReferenciaSeleccionado}" 
+                                              id="listaTiposDocumentoReferencia" 
+                                              disabled="#{beanNotaDebito.inhabilitarComponentes or beanNotaDebito.esNotaDebitoInterna}"
+                                              effect="fold" >         
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanNotaDebito.listaTipoDocumentoReferencia}"
+                                               var="tipoDocRef"
+                                               itemLabel="#{tipoDocRef.descripcion}"
+                                               itemValue="#{tipoDocRef.id_tipo_doc_referencia}"/>
+                            </p:selectOneMenu> 
+
+                            <p:outputLabel value="Motivo de Nota de Débito"/>
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables"                                   
+                                              value="#{beanNotaDebito.motivoDebitoSeleccionado}" 
+                                              id="listaTiposMotivosAnulacion" 
+                                              disabled="#{beanNotaDebito.inhabilitarComponentes or beanNotaDebito.esNotaDebitoInterna}"
+                                              effect="fold" >         
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanNotaDebito.listaMotivoDebito}"
+                                               var="tipoMotvAnulacion"
+                                               itemLabel="#{tipoMotvAnulacion.descripcion}"
+                                               itemValue="#{tipoMotvAnulacion.id_motivo_nota_debito}"/>
+                            </p:selectOneMenu> 
+                            <p:outputLabel value="Razón"/>
+                            <p:inputTextarea rows="6"  
+                                             disabled="#{beanNotaDebito.inhabilitarComponentes or beanNotaDebito.esNotaDebitoInterna}"
+                                             cols="33" 
+                                             counterTemplate="{0} caracteres restantes" 
+                                             counter="display2"  
+                                             id="txtMotivoAnulacion" 
+                                             value="#{beanNotaDebito.motivoDebito}" 
+                                             maxlength="100">
+                            </p:inputTextarea >
+                            <p:outputLabel/>
+                            <h:outputText id="display2" />   
+                        </p:panelGrid>
+                    </div>
+                    <div class="card" style="display: none" >
+                        <h1>Información de Factura</h1>
+                        <br/>
+                        <h2>Totales</h2>
+                        <br/>
+                        <p:panelGrid id="panelSummay" columns="4" columnClasses="ui-grid-col-2 ui-grid-col-8 ui-grid-col-2 ui-grid-col-8" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                            <p:outputLabel  value="#{label['facturacion.total.venta']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanNotaDebito.totalVenta}"></p:inputNumber>  
+                            <p:outputLabel  value="#{label['facturacion.descuento.factura']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanNotaDebito.totalDescuentosLineas}"></p:inputNumber>  
+                            <p:outputLabel  value="#{label['facturacion.total.venta.neta']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanNotaDebito.totalVentaNeta}"></p:inputNumber>  
+                            <p:outputLabel  value="Total Impuestos"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanNotaDebito.totalImpuestos}"></p:inputNumber> 
+                            <p:outputLabel  value="#{label['facturacion.total.factura']}"></p:outputLabel>     
+                            <p:inputNumber readonly="true" value="#{beanNotaDebito.totalFactura}"></p:inputNumber>                            
+                            <p:outputLabel/>
+                            <p:outputLabel/>
+                        </p:panelGrid>
+                        <br/>
+                        <p:outputLabel style="color:red;" value="** Los totales presentado representan a los totales después de aplicar la nota de débito"/>
+
+                    </div>
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnBuscarFacturas" update=":form_sisadmin" 
+                                         value="Guardar"
+                                         icon="fa fa-save"
+                                         disabled="#{beanNotaDebito.inhabilitarComponentes}"
+                                         actionListener="#{beanNotaDebito.crearNotaCredito}"></p:commandButton>
+
+                    </p:panelGrid>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>

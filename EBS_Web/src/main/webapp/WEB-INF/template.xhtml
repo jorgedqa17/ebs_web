@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <h:head>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script type="text/javascript">
+            function callPrinter(id) {
+                fetch("https://localhost:5000/printer/print", {
+                    method: "POST",
+                    body: #{guestPreferences.menuLayout},
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                }).then(response => {
+                    console.log(response);
+                }).catch(error => {
+                    console.log(error);
+                });
+
+                fetch("https://localhost:5000/printer/print/" + id)
+                        .then(response => {
+                            console.log(response);
+                        })
+                        .catch(error => {
+                            console.log(error);
+                        });
+            }
+        </script>
+
+        <f:loadBundle basename="com.powersystem.base.etiquetas" var="label" />
+        <f:facet name="first">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+        </f:facet>
+        <title>Sear Médica</title>
+        <h:outputScript name="js/nanoscroller.js" library="omega-layout" />
+        <h:outputScript name="js/layout.js" library="omega-layout" />
+
+        <ui:insert name="head"/>
+    </h:head>
+
+    <h:body styleClass="main-body #{guestPreferences.menuLayout}">
+
+        <div class="wrapper">
+            <ui:include src="topbar.xhtml" />
+
+            <ui:include src="sidebar.xhtml" />
+
+            <div class="main">
+                <h:form id="form_sisadmin">
+
+                    <h:panelGroup id="cuerpo">
+
+                        <p:idleMonitor onactive="PF('sessionTimeOutDialog').show()" timeout="#{session.maxInactiveInterval * 1000}"/>
+                        <p:dialog header="Ha caducado la sesión" widgetVar="sessionTimeOutDialog"
+                                  modal="true" closable="false" draggable="false" closeOnEscape="false" resizable="false" 
+                                  visible="false" position="center" appendTo="@(body)">
+                            <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                <h:outputText value="Ha caducado la sesión por favor ingrese de nuevo."/>
+                                <p:spacer height="5"/>
+                                <f:facet name="footer">
+                                    <center>
+                                        <p:button id="confirmBackToLogin" value="#{label['logout.reingreso.boton']}"
+                                                  href="#{pageContext.request.contextPath}/login.xhtml"/>
+
+                                    </center>
+                                </f:facet>
+                            </p:panelGrid>
+                        </p:dialog>
+
+                    </h:panelGroup>
+
+                    <p:growl id="mensajes"  showDetail="true" sticky="true"/>
+                    <ui:insert name="content"/>
+
+                    <p:dialog id="panelModal" widgetVar="panelModal" closable="false" resizable="false" showEffect="explode" hideEffect="explode"
+                              style="text-align: justify;" draggable="false" position="center"  modal="true" responsive="true">
+
+                        <div style="font-weight: bold !important;">
+                            <ui:insert name="dialogoHeader"/>
+                        </div>
+                        <div style="text-align: justify;">
+                            <ui:insert name="dialogoMensaje" />
+                        </div>
+                        <div style="text-align: center;">
+                            <ui:insert name="dialogoBotones" /> 
+                        </div>
+                    </p:dialog>
+
+                    <p:dialog id="panelAviso"  widgetVar="panelAviso" closable="false" resizable="false" showEffect="explode" hideEffect="explode"
+                              style="text-align: justify;" draggable="false" position="center"  modal="true" responsive="true">
+
+                        <div style="font-weight: bold;">
+                            <ui:insert name="panelAvisoHeader"/>
+                        </div>
+                        <div style="text-align: justify;">
+                            <ui:insert name="panelAvisoMensaje" />
+                        </div>
+                        <div style="text-align: center;">
+                            <ui:insert name="panelAvisoBotones" /> 
+                        </div>
+                    </p:dialog>  
+
+                    <p:dialog id="panelEliminacion" widgetVar="panelEliminacion" closable="false" resizable="false" showEffect="explode" hideEffect="explode"
+                              style="text-align: justify;" draggable="false" position="center"  modal="true">
+
+                        <div style="font-weight: bold;">
+                            <ui:insert name="eliminacionHeader"/>
+                        </div>
+                        <div style="text-align: justify;">
+                            <ui:insert name="eliminacionMensaje" />
+                        </div>
+                        <div style="text-align: center;">
+                            <ui:insert name="eliminacionBotones" /> 
+                        </div>
+                    </p:dialog>
+
+                    <p:dialog id="panelSustitucion" widgetVar="panelSustitucion" closable="false" resizable="false" showEffect="explode" hideEffect="explode"
+                              style="text-align: justify;" draggable="false" position="center"  modal="true">
+
+                        <div style="font-weight: bold;">
+                            <ui:insert name="sustitucionHeader"/>
+                        </div>
+                        <div style="text-align: justify;">
+                            <ui:insert name="sustitucionMensaje" />
+                        </div>
+                        <div style="text-align: center;">
+                            <ui:insert name="sustitucionBotones" /> 
+                        </div>
+                    </p:dialog>
+                </h:form>
+            </div>
+
+
+
+        </div>
+
+        <p:ajaxStatus style="width:32px;height:32px;position:fixed;right:7px;bottom:7px">
+            <f:facet name="start">
+                <p:graphicImage name="images/preloader.gif" library="omega-layout" style="width: 32px;"/>
+            </f:facet>
+
+            <f:facet name="complete">
+                <h:outputText value="" />
+            </f:facet>
+        </p:ajaxStatus>
+
+        <h:outputStylesheet name="css/animate.css" library="omega-layout" />
+        <h:outputStylesheet name="css/nanoscroller.css" library="omega-layout" />
+        <h:outputStylesheet name="css/layout.css" library="omega-layout" /> 
+        <h:outputStylesheet name="css/personalizado.css" library="omega-layout" /> 
+    </h:body>
+
+</html>

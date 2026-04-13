@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+
+    <h:head>
+        <link rel="shortcut icon" href="#{request.contextPath}/resources/imagenes/favicon.ico" />
+        <f:loadBundle basename="com.powersystem.base.etiquetas" var="label" />
+        <title>
+            <ui:insert name="titulo">#{label['titulo.nombre.sistema']}</ui:insert>
+        </title>
+
+        <!--<meta http-equiv="X-UA-Compatible" content="IE=edge" />-->
+        <meta http-equiv="Content-Language" content="es" />
+        <meta http-equiv="Content-type" content="application/xhtml+xml; charset=UTF-8" />
+
+        <link href="#{request.contextPath}/resources/css/base.min.css" type="text/css" rel="stylesheet"></link>
+        <link href="#{request.contextPath}/resources/css/css_primefaces.min.css" type="text/css" rel="stylesheet"></link>
+        <link href="#{request.contextPath}/resources/css/personalizado.min.css" type="text/css" rel="stylesheet"></link>
+
+        <script type="text/javascript" src="#{request.contextPath}/resources/js/hora.min.js"></script>
+        <script type="text/javascript" src="#{request.contextPath}/resources/js/funciones.min.js"></script>
+        <script type="text/javascript" src="#{request.contextPath}/resources/js/jquery.maskedinput-1.3.min.js"></script>
+        <script type="text/javascript" src="#{request.contextPath}/resources/js/util.prime.min.js"></script>
+        <script type="text/javascript" src="#{request.contextPath}/resources/js/deployJava.min.js"/> 
+        <script type="text/javascript" src="#{request.contextPath}/resources/js/canvasjs.min.js"></script>
+        <ui:insert name="java_script">
+
+        </ui:insert>
+    </h:head>
+
+    <h:body  > 
+
+        <!-- :::::::::::::::::::::::: -->
+        <!-- :::::   Loading    ::::: -->
+        <!-- :::::::::::::::::::::::: -->
+        <ui:include src="loading.xhtml"/>
+        <p:blockUI block="form_sisadmin" widgetVar="bui"/>
+
+        <!--**************************************** 
+           SE DEFINE LA ESTRUCTURA PRINCIPAL DE LA 
+           PAGINA CON UN TABLE 
+        -->
+        <table id="tablaContenedora" width="100%" cellpadding="0" cellspacing="0" >
+
+            <tr>
+
+            </tr>
+
+            <!-- Area de Trabajo -->
+            <tr>
+                <td>
+                    <h:form id="form_sisadmin">
+                        <p:hotkey bind="f5" async="true"/>
+                        <p:hotkey bind="ctrl+r" async="true"/>
+                        <p:hotkey bind="backspace" async="true"/>
+                        <table>
+                            <tr>
+                                <td id="menu_principal">
+                                    <!--<ui:insert name="menu">
+                                        <ui:include src="menu.xhtml"/>
+                                    </ui:insert>-->
+                                </td>
+
+                                <!-- CONTENIDO -->
+                                <td valign="top" style="width: 100%">  
+                                    <h:panelGroup id="encabezado">
+                                        <table style="width: 100%">
+                                            <tr>
+                                                <td style="text-align: left;" class="titulo"> 
+                                                    <ui:insert name="titulo"></ui:insert> 
+                                                </td> 
+                                                <td style="text-align: right;" class="botonAyuda"> 
+                                                    <ui:insert name="botonAyuda"></ui:insert> 
+                                                </td>
+                                            </tr> 
+                                            <tr> 
+                                                <td style="text-align: left;" class="subtitulo">
+                                                    <ui:insert name="subtitulo"></ui:insert> 
+                                                </td> 
+
+                                            </tr>
+                                        </table>
+                                        <!--<hr id="horizontalLine"/>        -->
+                                    </h:panelGroup>
+                                    <h:panelGroup id="cuerpo">
+                                        <!-- Titulos Principales -->                                           
+                                        <ui:insert name="contenido"> </ui:insert>
+
+                                    </h:panelGroup>
+                                    <ui:insert name="mensajes">
+                                        <p:messages id="mensajes" showDetail="true"/> 
+                                    </ui:insert>
+
+                                </td>  
+
+                                <!-- MENÚ DERECHA -->
+                                <td id="menu_contextual">
+                                    <ui:insert name="menu_contextual"></ui:insert>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </h:form>
+                </td>
+            </tr>            
+            <tr>
+                <td>
+                    <ui:insert name="pie_pagina">
+                        <ui:include src="pie_pagina.xhtml"/>
+                    </ui:insert>
+                </td>
+            </tr>
+
+        </table>
+        <ui:include src="about.xhtml"/>
+    </h:body>
+</html>

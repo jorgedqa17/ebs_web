@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="estado_cuenta_cliente" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="93fcb2b0-6557-47f5-b841-f6683c6e7fc3">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Desarrollo"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="166"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="829"/>
+	<parameter name="idCliente" class="java.lang.Long"/>
+	<parameter name="rutaImagen" class="java.lang.String"/>
+	<parameter name="idCondicionVenta" class="java.lang.Long"/>
+	<parameter name="rutaSubReportes" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT DISTINCT T1.ID_FACTURA, t1.fecha_factura + CAST(t1.plazo_credito|| 'days' AS INTERVAL) AS FECHA_VENCIMIENTO, T1.PLAZO_CREDITO, T1.NUMERO_CONSECUTIVO, T1.CLAVE, T1.TOTAL_COMPROBANTE, T1.MONTO_RESTANTE, T4.NUMERO_CEDULA, COALESCE(T4.NOMBRE,'') ||' '||COALESCE(T4.PRIMER_APELLIDO,'')||' '||COALESCE(T4.SEGUNDO_APELLIDO,'') AS NOMBRE , T1.FECHA_FACTURA
+FROM SEARMEDICA.FACTURA T1  INNER JOIN SEARMEDICA.CLIENTE T3
+ON T1.ID_CLIENTE = T3.ID_CLIENTE INNER JOIN SEARMEDICA.PERSONA T4
+ON T3.NUMERO_CEDULA = T4.NUMERO_CEDULA
+WHERE T1.ID_CLIENTE =    $P{idCliente} 
+AND T1.ID_COND_VENTA =  $P{idCondicionVenta} 
+AND T1.CLAVE IS NOT NULL
+--AND T1.FACTURA_CANCELADA =0
+AND T1.ID_ANULACION IS NULL
+GROUP BY T1.ID_FACTURA,  T4.NUMERO_CEDULA]]>
+	</queryString>
+	<field name="id_factura" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_factura"/>
+	</field>
+	<field name="fecha_vencimiento" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_vencimiento"/>
+	</field>
+	<field name="plazo_credito" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="plazo_credito"/>
+	</field>
+	<field name="numero_consecutivo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="numero_consecutivo"/>
+	</field>
+	<field name="clave" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="clave"/>
+	</field>
+	<field name="total_comprobante" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="total_comprobante"/>
+	</field>
+	<field name="monto_restante" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_restante"/>
+	</field>
+	<field name="numero_cedula" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="numero_cedula"/>
+	</field>
+	<field name="nombre" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="nombre"/>
+	</field>
+	<field name="fecha_factura" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_factura"/>
+	</field>
+	<variable name="totalFacturas" class="java.math.BigDecimal" resetType="None" incrementType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{total_comprobante}]]></variableExpression>
+	</variable>
+	<variable name="totalRestante" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{monto_restante}]]></variableExpression>
+	</variable>
+	<variable name="totalPagado" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$V{totalFacturas}.subtract($V{totalRestante} )]]></variableExpression>
+	</variable>
+	<title>
+		<band height="120" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="28" uuid="df4609fa-46fe-41cb-843b-a63af20a3503"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="15" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Inversiones Reales SEAR SRL.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="28" width="555" height="21" uuid="2647022f-ad8e-444c-abe5-38b08969db5d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Cédula Jurídica: 3102229216  ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="49" width="555" height="31" uuid="db838313-95f8-4c7c-8164-e71559502a0e"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Estado de Cuenta]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="30" y="80" width="80" height="20" uuid="b9ad9c4f-238c-4eba-9c71-2e476603c9bf"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Cédula Cliente:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="30" y="100" width="80" height="20" uuid="49547b0b-1bd9-4546-9e17-dfe4d10256f5"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Nombre:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="110" y="80" width="445" height="20" uuid="a61a76ae-94fe-4386-b5d5-a11e4b301752"/>
+				<textFieldExpression><![CDATA[$F{numero_cedula}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="110" y="100" width="445" height="20" uuid="42dd973e-a5a3-4f50-ab31-f5f5e1f23ded"/>
+				<textFieldExpression><![CDATA[$F{nombre}]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement x="1" y="0" width="70" height="60" uuid="b871c911-9f0a-4d20-9e62-418039889a66"/>
+				<imageExpression><![CDATA[$P{rutaImagen}+"Logo.jpeg"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="21" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="120" height="20" uuid="e288e0e0-d313-4b9d-8e8f-dfd85d2f5de3">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="50a0f15b-eeca-48cf-92f4-21bc6d26ec0d"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Num. Consecutivo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="440" y="0" width="115" height="20" uuid="1fdc9704-4f13-4007-b45f-5687aa413072">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="50a0f15b-eeca-48cf-92f4-21bc6d26ec0d"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Adeudado]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="256" y="0" width="94" height="20" uuid="d2ab5c44-89f4-4c82-8777-34cdae4004aa">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="50a0f15b-eeca-48cf-92f4-21bc6d26ec0d"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Fecha Vencimiento]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="350" y="0" width="90" height="20" uuid="c6a4da44-4452-4f15-90da-056b5412bac3">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="50a0f15b-eeca-48cf-92f4-21bc6d26ec0d"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Factura]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="160" y="0" width="96" height="20" uuid="660b7164-db48-4a63-8291-b3226953084c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="50a0f15b-eeca-48cf-92f4-21bc6d26ec0d"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Fecha Facturación]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="120" y="0" width="40" height="20" uuid="b6f381c4-6f5a-4537-8ea5-bf861b6f9bc3">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="fc3c7030-57ff-43a5-9410-980e4fe0c52a"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Plazo]]></text>
+			</staticText>
+			<line>
+				<reportElement x="1" y="20" width="553" height="1" uuid="d9ddae64-f62d-4ad4-a825-e833e27632f2"/>
+			</line>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="37" splitType="Stretch">
+			<line>
+				<reportElement positionType="Float" x="0" y="36" width="554" height="1" uuid="346cf51a-0bd2-4e37-ae85-3cb732d82be7"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="1" y="0" width="120" height="13" uuid="ddc011e8-7e27-438f-a946-9d70f5631986">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="50a0f15b-eeca-48cf-92f4-21bc6d26ec0d"/>
+				</reportElement>
+				<textElement verticalAlignment="Top">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{numero_consecutivo}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="121" y="0" width="40" height="13" uuid="45217103-fe05-4116-8eab-bdc558cdb545">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="fc630f9b-e195-49b7-ac15-0de2a4b8b3b6"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{plazo_credito}+" días"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="161" y="0" width="96" height="13" uuid="4029341e-cb8f-4bdc-97f3-9b4bc6b9f4ab"/>
+				<textElement verticalAlignment="Top">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fecha_factura}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="257" y="0" width="94" height="13" uuid="85d19ec5-1fd8-4ff3-8263-dc0d11a7d3dc">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="5006dc7e-cff3-421f-af9a-9b4a0002ab9c"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{fecha_vencimiento}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.000" isBlankWhenNull="true">
+				<reportElement x="351" y="0" width="90" height="13" uuid="b8a82a6c-a347-45eb-99ef-486fc0757aff"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{total_comprobante}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.###" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="441" y="0" width="114" height="13" uuid="c60ed8fa-2c39-4a43-b583-6107cffc08e7"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{monto_restante}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement x="0" y="19" width="555" height="17" isRemoveLineWhenBlank="true" uuid="e750c92b-2bca-4718-a6ad-a78fd4933822"/>
+				<subreportParameter name="idFactura">
+					<subreportParameterExpression><![CDATA[$F{id_factura}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{rutaSubReportes}+"subReporte_estado_cuenta.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="20">
+			<textField pattern="d/M/yy h:mm a">
+				<reportElement x="0" y="0" width="270" height="20" uuid="31430b21-049e-43fb-b2f1-0c8878d1dd3f"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="270" y="0" width="285" height="20" uuid="83044d2d-0d90-4978-9323-c0bae786c41c"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom">
+					<font size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}+" de " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="38" splitType="Stretch">
+			<subreport>
+				<reportElement x="294" y="9" width="220" height="20" isRemoveLineWhenBlank="true" uuid="f25093b9-6d24-4d97-86c6-d557d8a53312"/>
+				<subreportParameter name="idCliente">
+					<subreportParameterExpression><![CDATA[$P{idCliente}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{rutaSubReportes}+"subReporte_TotalesEstadoCuenta.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</summary>
+</jasperReport>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Administración de Pagos</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+
+
+    <ui:define name="content">  
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+
+                    <div class="card">
+                        <h1>Parámetros de Búsqueda</h1>
+                        <p:panelGrid columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                            <p:outputLabel value="#{label['pagos.id.pago.administracion']}"/>
+                            <p:inputText value="#{beanAdministracionPagos.pago.id_pago}"/>
+
+                            <p:outputLabel value="#{label['pagos.numero.consecutivo.pago.administracion']}"/>
+                            <p:inputText value="#{beanAdministracionPagos.pago.numero_consecutivo}"/>
+
+                            <p:outputLabel value="#{label['pagos.tipo.respuesta']}"/>     
+                            <p:selectOneMenu 
+
+                                converter="ConvertidorListaDesplegables"                                   
+                                value="#{beanAdministracionPagos.pago.mensaje}" 
+                                id="listaTiposRespuesta"                           
+                                effect="fold" > 
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanAdministracionPagos.listaMensajeRecepcion}"
+                                               var="tipoRespuesta"
+                                               itemLabel="#{tipoRespuesta.nombre}"
+                                               itemValue="#{tipoRespuesta.codigo}"/>
+                            </p:selectOneMenu>  
+
+                            <p:outputLabel value="#{label['pagos.fecha']}"/>
+                            <p:calendar value="#{beanAdministracionPagos.pago.fecha_pago}"/>
+
+                            <p:outputLabel value="#{label['pagos.clave.docuemnto.confirmado']}"/>
+                            <p:inputText value="#{beanAdministracionPagos.pago.clave_comprobante_pago}"/>
+
+                            <p:outputLabel value="#{label['pagos.estados.pagos']}"/>
+                            <p:selectOneMenu 
+
+                                converter="ConvertidorListaDesplegables"                                   
+                                value="#{beanAdministracionPagos.pago.id_estado}" 
+                                id="listaEstadosPagos"                           
+                                effect="fold" > 
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanAdministracionPagos.listaEstadosPagos}"
+                                               var="estado"
+                                               itemLabel="#{estado.descripcion}"
+                                               itemValue="#{estado.idEstado}"/>
+                            </p:selectOneMenu>  
+                            <p:commandButton id="btnConsultarPagos" 
+                                             icon="fa fa-search"
+                                             actionListener="#{beanAdministracionPagos.consultarPagos}"
+                                             value="#{label['pagos.boton.consultar']}"
+                                             update="idTablaConsultaPagos"/>
+                        </p:panelGrid>
+                    </div>
+
+                    <div class="card">
+                        <h1>Resultados de la Búsqueda</h1>
+
+                        <p:dataTable id="idTablaConsultaPagos" 
+                                     value="#{beanAdministracionPagos.listaPagoResultadoBusqueda}"
+                                     filteredValue="#{beanAdministracionPagos.listaPagoResultadoBusquedaFiltro}"
+                                     var="pago"
+                                     reflow="true"
+                                     rowKey="#{pago}"
+                                     paginator="true" 
+                                     rows="7"
+                                     emptyMessage="#{label['tabla.vacia']}">
+                            <p:column  filterMatchMode="contains" filterBy="#{pago.id_pago}" headerText="Código Pago" >
+                                <h:outputText id="codigoPago" value="#{pago.id_pago}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{pago.numero_consecutivo}" headerText="Número Consecutivo Confirmación" >
+                                <h:outputText id="numeroConsecutivo" value="#{pago.numero_consecutivo}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{pago.clave_comprobante_pago}" headerText="Clave del Documento Confirmado" >
+                                <h:outputText id="claveComprobante" value="#{pago.clave_comprobante_pago}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{pago.mensaje}" headerText="Respuesta" >
+                                <h:outputText id="respuestaDad" value="#{pago.mensaje}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{pago.identificacion_proveedor}" headerText="Identificación" >
+                                <h:outputText id="identProveedor" value="#{pago.identificacion_proveedor}" />  
+                            </p:column>
+                            <p:column  filterMatchMode="contains" filterBy="#{pago.monto_total_comprobante}" headerText="Monto" >
+                                <h:outputText id="montoDocConfirmado" value="#{pago.monto_total_comprobante}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{pago.descripcionEstadoPago}" headerText="Estado" >
+                                <h:outputText id="estado" value="#{pago.descripcionEstadoPago}" />  
+                            </p:column>
+                            <p:column>   
+                                <p:commandButton icon="fa fa-search"
+                                                 update=":form_sisadmin"
+                                                 actionListener="#{beanAdministracionPagos.consultarPagoSeleccionado(pago)}"
+                                                 value="#{label['consultacierre.verdetalle']}"/>
+                            </p:column>
+
+
+                        </p:dataTable>
+                    </div>
+
+                    <div class="card">
+                        <h1>Detalle del Pago  #{beanAdministracionPagos.pagoSeleccionado.id_pago}</h1>
+                        <p:panelGrid columns="6" columnClasses="ui-grid-col-2,ui-grid-col-2,ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-6" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['pagos.id.pago.administracion']}"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionPagos.pagoSeleccionado.id_pago}"/>
+
+                            <p:outputLabel value="#{label['pagos.numero.consecutivo.pago.administracion']}"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionPagos.pagoSeleccionado.numero_consecutivo}"/>
+
+                            <p:outputLabel value="#{label['pagos.tipo.respuesta']}"/>     
+                            <p:inputText readonly="true"  value="#{beanAdministracionPagos.pagoSeleccionado.descripcionRespuesta}"/> 
+
+                            <p:outputLabel value="#{label['pagos.fecha']}"/>
+                            <p:calendar readonly="true" value="#{beanAdministracionPagos.pagoSeleccionado.fecha_pago}"/>
+
+                            <p:outputLabel value="#{label['pagos.fecha.emision']}"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionPagos.pagoSeleccionado.fecha_emision}"/>
+
+                            <p:outputLabel value="#{label['pagos.clave.docuemnto.confirmado']}"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionPagos.pagoSeleccionado.clave_comprobante_pago}"/>
+
+                            <p:outputLabel value="#{label['pagos.estados.pagos']}"/>
+                            <p:inputText readonly="true"  value="#{beanAdministracionPagos.pagoSeleccionado.descripcionEstadoPago}"/>
+
+                            <p:outputLabel value="#{label['pagos.identificacion.proveedor']}"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionPagos.pagoSeleccionado.identificacion_proveedor}"/>
+
+                            <p:outputLabel value="#{label['pagos.monto.comprobante']}"/>
+                            <p:inputNumber readonly="true" value="#{beanAdministracionPagos.pagoSeleccionado.monto_total_comprobante}"/>
+
+
+                            <p:outputLabel value="#{label['pagos.monto.impuestos']}"/>
+                            <p:inputNumber readonly="true"  value="#{beanAdministracionPagos.pagoSeleccionado.monto_impuestos}"/>
+
+                            <p:commandButton  icon="fa fa-search"  value="#{label['pagos.boton.respuesta.hacienda']}" id="btnVerDetalleRespuesaHacienda" onclick="PF('idDetalleRespuestaHaciendaModal').show()"/>
+                            <p:outputLabel value=""/>
+
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value=""/>
+
+                            <p:outputLabel value=""/>
+
+                        </p:panelGrid>
+
+                    </div>
+
+                    <div class="card">
+                        <p:panelGrid columns="6" columnClasses="ui-grid-col-3,ui-grid-col-3,ui-grid-col-3,ui-grid-col-3,ui-grid-col-3,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:commandButton ajax="false" icon="ui-icon-arrowthick-1-s" value="Imprimir PDF de la Confirmación" actionListener="#{beanAdministracionPagos.generarReporteInfoConfirmacionComprobante}">
+                                <p:fileDownload value="#{beanAdministracionPagos.reporteDesplegar}"/>      
+                            </p:commandButton>
+                            <p:commandButton ajax="false" icon="ui-icon-arrowthick-1-s" value="Descargar Comprobante Electrónico" actionListener="#{beanAdministracionPagos.generarXMLComprobanteElectronico}">
+                                <p:fileDownload value="#{beanAdministracionPagos.reporteDesplegarCompElectronico}"/>      
+                            </p:commandButton>
+                            <p:commandButton ajax="false" icon="ui-icon-arrowthick-1-s" value="Descargar Respuesta Hacienda" actionListener="#{beanAdministracionPagos.generarXMLRespuestaHacienda}">
+                                <p:fileDownload value="#{beanAdministracionPagos.reporteDesplegarRespHacienda}"/>     
+                            </p:commandButton>
+                            <p:commandButton icon="fa fa-send" value="Reenviar Correo Electrónico" actionListener="#{beanAdministracionPagos.enviarCorreosElectronicos}"/>
+                            <p:commandButton icon="fa fa-send" update="form_sisadmin" value="Reenviar Confirmación a Hacienda" actionListener="#{beanAdministracionPagos.reenviarCOnfirmacion}"/>
+                        </p:panelGrid>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+        <p:dialog id="idDetalleRespuestaHaciendaModal"
+                  height="350"
+
+                  modal="true"
+                  widgetVar="idDetalleRespuestaHaciendaModal" 
+                  showEffect="fade" 
+                  hideEffect="fade">
+            <div class="card">
+                <h1> #{label['pagos.detalle.respuesta.hacienda']}</h1>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-6" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >
+
+                    <p:inputTextarea  rows="30" cols="100" readonly="true"  
+                                      id="txtDescripcionLinea" value="#{beanAdministracionPagos.pagoSeleccionado.detalle_respuesta_hacienda}" >
+                    </p:inputTextarea >
+                </p:panelGrid>  
+            </div>
+
+        </p:dialog>
+    </ui:define>
+</ui:composition>
+

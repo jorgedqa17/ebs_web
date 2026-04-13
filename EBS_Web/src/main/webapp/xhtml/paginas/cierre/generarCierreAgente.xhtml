@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets"
+                 xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <ui:define name="title">Generación Cierre - Agente</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">  
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+
+                    <div class="card">
+                        <h1>Parámetros</h1>
+                        <p:panelGrid id="panelFechas" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['cierre.fecha.desde']}"/>
+                            <p:calendar  disabled="#{beanCierreAgente.inhabilitarFechaInicio}" value="#{beanCierreAgente.fechaInicio}" showOn="button" pattern="dd-MM-yyyy" mask="true" />
+
+                            <p:outputLabel value="#{label['cierre.fecha.hasta']}"/>
+                            <p:calendar  value="#{beanCierreAgente.fechaFin}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+
+
+                        </p:panelGrid>  
+
+
+                    </div>
+                    <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton icon="fa fa-search" id="btnBuscarFacturas"
+                                         value="#{label['cierre.buscar']}" 
+                                         update=":form_sisadmin:tabPrincipal:tablaRecibos :form_sisadmin:tabPrincipal:tablaTotales :form_sisadmin:panelSummay"
+                                         actionListener="#{beanCierreAgente.buscarFacturas}"></p:commandButton>
+                    </p:panelGrid>
+                    <p:tabView id="tabPrincipal">
+                        <p:tab title="Información para el cierre">
+                            <div class="card">
+                                <h1>Listado de Salidas del Cierre</h1>
+                                <p:panelGrid id="panelSalidasCampos" columns="5" columnClasses="ui-grid-col-1,ui-grid-col-5,ui-grid-col-1,ui-grid-col-5,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <p:outputLabel value="#{label['cierra.motivo.salida']}"></p:outputLabel>
+                                    <p:inputText value="#{beanCierreAgente.salida.motivoSalida}"></p:inputText>
+                                    <p:outputLabel value="#{label['cierra.monto.salida']}"></p:outputLabel>
+                                    <p:inputText value="#{beanCierreAgente.salida.monto}" onkeypress="javascript:return soloNumeros(event);"></p:inputText>                    
+                                    <p:commandButton icon="fa fa-plus" value="#{label['cierra.agregar.salida']}" update="tablaSalidas, panelSalidasCampos, form_sisadmin:panelSummay" actionListener="#{beanCierreAgente.agregarSalida}"></p:commandButton>
+                                </p:panelGrid>
+                                <p:dataTable reflow="true" rowKey="#{salida}" id="tablaSalidas" value="#{beanCierreAgente.listaSalidas}"  var="salida">
+                                    <p:column headerText="#{label['cierra.motivo.salida']}">
+                                        <h:outputText value="#{salida.motivoSalida}"></h:outputText>
+                                    </p:column>
+                                    <p:column headerText="#{label['cierra.monto.salida']}">
+                                        <h:outputText value="#{salida.monto}"></h:outputText>
+                                    </p:column>  
+                                    <p:column>
+                                        <p:commandButton id="btnElmiinar" 
+                                                         icon="ui-icon-trash" 
+                                                         actionListener="#{beanCierreAgente.eliminarSalida(salida)}" 
+                                                         update="tablaSalidas, form_sisadmin:tabPrincipal:panelSalidasCampos, form_sisadmin:panelSummay">                    
+                                        </p:commandButton>
+                                    </p:column>
+                                </p:dataTable> 
+                            </div> 
+                            <div class="card">
+                                <h1> Totales del Cierre</h1>
+                                <p:dataTable reflow="true" rowKey="#{total}" id="tablaTotales" value="#{beanCierreAgente.listaTotales}"  var="total">
+                                    <p:column headerText="Medio de Pago">
+                                        <h:outputText value="#{total.descripcion}"></h:outputText>
+                                    </p:column>
+                                    <p:column headerText="Monto">
+                                        <h:outputText value="#{total.monto}"></h:outputText>
+                                    </p:column>  
+                                </p:dataTable> 
+
+
+                            </div>
+                        </p:tab>
+                        <p:tab title="Detalle">
+
+                            <div class="card">
+                                <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                    <h1>Listado de Recibos</h1>
+                                    <p:dataTable  paginator="true" id="tablaRecibos" value="#{beanCierreAgente.listaReciboCierre}" 
+                                                  rows="20"
+                                                  reflow="true"
+                                                  var="recibo"  >                   
+                                        <p:column headerText="N° Recibo">
+                                            <h:outputText value="#{recibo.numeroRecibo}"/>
+                                        </p:column>
+                                        <p:column headerText="Número Consecutivo Factura">
+                                            <h:outputText value="#{recibo.numeroConsecutivoFactura}"/>
+                                        </p:column>   
+
+                                        <p:column headerText="Estado">
+                                            <h:outputText value="#{recibo.estadoRecibo}"/>
+                                        </p:column>
+                                        <p:column headerText="Nombre Cliente">
+                                            <h:outputText value="#{recibo.nombreCliente}"/>
+                                        </p:column>
+                                        <p:column headerText="Monto Recibo">
+                                            <h:outputText value="#{recibo.monto_pago}"/>
+                                        </p:column>
+                                        <p:column headerText="Medio Pago">
+                                            <h:outputText value="#{recibo.medioPago}"/>
+                                        </p:column>
+                                        <p:column headerText="N° Referencia">
+                                            <h:outputText value="#{recibo.numero_referencia}"/>
+                                        </p:column>     
+                                        <p:column headerText="Saldo">
+                                            <h:outputText value="#{recibo.monto_restante}"/>
+                                        </p:column>
+                                    </p:dataTable>   
+                                </p:panelGrid>     
+                            </div>
+
+                        </p:tab>
+                    </p:tabView>
+
+                    <div class="card">
+                        <h1>Totales</h1>
+                        <p:panelGrid columnClasses="ui-grid-col-11" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" columns="1" id="panelSummay">
+                            <div class="ui-g ui-fluid dashboard">
+                                <div class="ui-g-12 ui-md-64">
+                                    <div class="card clearfix summary">
+                                        <span style="margin-right:  100%;" class="title">Total Efectivo Entregar</span>     
+                                        <span class="detail">Total entregar</span>
+                                        <span class="count visitors">#{beanCierreAgente.montoEfectivo}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </p:panelGrid>
+                    </div>
+
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-3,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton icon="fa fa-save" id="btnGenerarCierre" update=":form_sisadmin" value="#{label['cierre.boton']}" actionListener="#{beanCierreAgente.guadarCierre}"></p:commandButton>
+                        <p:commandButton  icon="fa fa-print" id="btnImprirReporte" value="Imprimir Cierre"   ajax="false" >
+                            <p:fileDownload value="#{beanCierreAgente.reporteDesplegar}"/>     
+                        </p:commandButton>
+                    </p:panelGrid>
+
+                </div>
+            </div>
+        </div>
+
+    </ui:define>
+</ui:composition>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">
+        Consulta de Trazabilidad de Producto
+    </ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">  
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Parámetros de Búsqueda</h1>
+
+                        <p:panelGrid id="panelFechas" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['cierre.fecha.desde']}"/>
+                            <p:calendar value="#{beanConsultaTrazabilidadProducto.fechaInicio}" showOn="button" pattern="dd-MM-yyyy" mask="true" />
+
+                            <p:outputLabel value="#{label['cierre.fecha.hasta']}"/>
+                            <p:calendar  value="#{beanConsultaTrazabilidadProducto.fechaFinal}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+                            <!--    <h:outputLabel value="Lista de Bodegas"/>            
+                                <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                                  value="#{beanConsultaTrazabilidadProducto.idBodegaSeleccionada}" 
+                                                  id="listaUsuarios"
+                                                  effect="fold" >        
+                                    <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                    <f:selectItems value="#{beanConsultaTrazabilidadProducto.listaBodegas}"
+                                                   var="bodega"
+                                                   itemLabel="#{bodega.descripcion}"
+                                                   itemValue="#{bodega.bodegaPK.id_bodega}"/>
+                                </p:selectOneMenu> -->
+                        </p:panelGrid>
+                        <h2>Lista de Productos</h2>
+                        <br/>
+                        <br/>
+                        <p:outputLabel value="Nombre Producto"/>
+                        <p:inputText  id="txtDescripcionProductoBusqueda" value="#{beanConsultaTrazabilidadProducto.nombreProducto}" >
+                            <p:ajax event="keyup" listener="#{beanConsultaTrazabilidadProducto.buscarProductoPorDescripcion}" update="idTablaBusqueda"></p:ajax>
+                        </p:inputText>
+                        <br/>
+                        <br/>
+                        <h:panelGroup id="PanelTabla">
+                            <p:dataTable id="idTablaBusqueda" 
+                                         var="productoBusqueda" 
+                                         reflow="true"
+                                         widgetVar="idTablaBusqueda"
+                                         value="#{beanConsultaTrazabilidadProducto.listaProductosBusqueda}" 
+                                         selection="#{beanConsultaTrazabilidadProducto.listaProductosBusquedaSeleccionados}" 
+                                         rowKey="#{productoBusqueda.id_producto}" 
+                                         style="margin-bottom:0"
+                                         paginator="true" rows="10">
+
+                                <p:column selectionMode="multiple" style="width:16px;text-align:center"/>
+
+                                <p:column headerText="#{label['producto.descripcion']}">
+                                    <h:outputText value="#{productoBusqueda.descripcion}" />
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGroup>
+                        <p:panelGrid columns="1" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:commandButton icon="fa fa-search" id="btnBuscarFacturasEdicion" update="form_sisadmin"  actionListener="#{beanConsultaTrazabilidadProducto.buscar}" value="#{label['boton.buscar']}"></p:commandButton>
+                        </p:panelGrid>
+                    </div>
+
+                    <div class="card">
+                        <h1>Resultados</h1>
+
+                        <p:dataTable id="idTablaResultados" 
+                                     var="trazabilidad" 
+                                     reflow="true"
+                                     widgetVar="idTablaResultados"
+                                     value="#{beanConsultaTrazabilidadProducto.listaResultado}"                                          
+                                     rowKey="#{trazabilidad}" 
+                                     style="margin-bottom:0"
+                                     paginator="true" rows="10">
+                  
+                            <p:column headerText="Producto">
+                                <h:outputText value="#{trazabilidad.descripcionProducto}" />
+                            </p:column>
+                            <p:column headerText="Gestión">
+                                <h:outputText value="#{trazabilidad.tipoGestion}" />
+                            </p:column>
+                            <p:column headerText="Tipo">
+                                <h:outputText value="#{trazabilidad.tipo}" />
+                            </p:column>
+                            <p:column headerText="Num.Consect.">
+                                <h:outputText value="#{trazabilidad.numeroConsecutivoFactura}" />
+                            </p:column>
+                            <p:column headerText="Cantidad">
+                                <h:outputText value="#{trazabilidad.cantidad}" />
+                            </p:column>
+                            <p:column headerText="Usuario">
+                                <h:outputText value="#{trazabilidad.login}" />
+                            </p:column>
+                            <p:column headerText="Bodega Origen">
+                                <h:outputText value="#{trazabilidad.bodegaOrigen}" />
+                            </p:column>
+                            <p:column headerText="Bodega Destino">
+                                <h:outputText value="#{trazabilidad.bodegaDestino}" />
+                            </p:column>
+                            <p:column headerText="Fecha Registro">
+                                <h:outputText value="#{trazabilidad.fechaRegistro}" />
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+
+
+</ui:composition>

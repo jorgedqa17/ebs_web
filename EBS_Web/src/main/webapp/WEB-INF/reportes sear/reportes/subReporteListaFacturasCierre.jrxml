@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subReporteListaFacturasCierre" pageWidth="520" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="480" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="41b471f7-f7f9-47a5-be6d-ec648c540d26">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Postgres "/>
+	<parameter name="idCierre" class="java.lang.Long"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT T1.ID_FACTURA, T1.FECHA_FACTURA, T1.NUMERO_CONSECUTIVO, T5.ID_COND_VENTA,  T5.DESCRIPCION AS CONDICION_VENTA, T6.ID_MEDIO_PAGO, T6.DESCRIPCION AS MEDIO_PAGO, T1.NOMBRE_CLIENTE_FANTASIA, COALESCE(T8.NOMBRE,'') ||' '||COALESCE(T8.PRIMER_APELLIDO,'')||' '||COALESCE(T8.SEGUNDO_APELLIDO,'') AS NOMBRE,  T1.TOTAL_COMPROBANTE  
+ FROM SEARMEDICA.FACTURA T1 LEFT JOIN SEARMEDICA.CONDICION_VENTA T5   
+ ON T1.ID_COND_VENTA = T5.ID_COND_VENTA  LEFT JOIN SEARMEDICA.MEDIO_PAGO T6  
+ ON T1.ID_MEDIO_PAGO = T6.ID_MEDIO_PAGO LEFT JOIN SEARMEDICA.CLIENTE T7  
+ ON T1.ID_CLIENTE = T7.ID_CLIENTE LEFT JOIN SEARMEDICA.PERSONA T8  
+ ON T7.NUMERO_CEDULA = T8.NUMERO_CEDULA INNER JOIN SEARMEDICA.CIERRE_FACTURA T9
+ ON T1.ID_FACTURA = T9.ID_FACTURA
+ AND T1.ID_ANULACION IS NULL
+ WHERE T9.ID_CIERRE= $P{idCierre} ]]>
+	</queryString>
+	<field name="id_factura" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_factura"/>
+	</field>
+	<field name="fecha_factura" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_factura"/>
+	</field>
+	<field name="numero_consecutivo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="numero_consecutivo"/>
+	</field>
+	<field name="id_cond_venta" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_cond_venta"/>
+	</field>
+	<field name="condicion_venta" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="condicion_venta"/>
+	</field>
+	<field name="id_medio_pago" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_medio_pago"/>
+	</field>
+	<field name="medio_pago" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="medio_pago"/>
+	</field>
+	<field name="nombre_cliente_fantasia" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="nombre_cliente_fantasia"/>
+	</field>
+	<field name="nombre" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="nombre"/>
+	</field>
+	<field name="total_comprobante" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="total_comprobante"/>
+	</field>
+	<columnHeader>
+		<band height="11" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="30" height="10" uuid="e9897abe-c5f0-4253-8711-2102c298c0cc">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="620e9844-e04e-416d-8ab1-47ca22d86b3a"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[Id]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="140" y="0" width="75" height="10" uuid="c0a710a5-2682-4c0e-bf66-fa9b6a26abf5">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="a98f108f-9f35-4c46-aeba-db08a2f478b1"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[Fecha Factura]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="30" y="0" width="110" height="10" uuid="619f2f73-6b19-4b80-9eaa-275f1e89b1da">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d799ba9b-97e5-4a95-9b2b-ace86f067dc6"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[Num. Consecutivo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="215" y="0" width="65" height="10" uuid="534952dc-e1de-4a8a-827b-2a5f5e67b6c1">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d767c639-68d0-447f-8de4-d9e32a6e7ae9"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[Cond. Venta]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="0" width="100" height="10" uuid="ca8a6e83-9f98-4ae5-8690-7e62f4a532a2">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="54e8ed11-c503-4051-ae3e-c2a773b4477e"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[ Medio Pago]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="380" y="0" width="100" height="10" uuid="c682df43-5352-4054-abf5-54275b8e8f95">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7799b80c-a3a6-4b9d-a452-1481bf6717fa"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font size="7"/>
+				</textElement>
+				<text><![CDATA[Total Comprobante]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="10" width="480" height="1" uuid="19f866c4-ae75-4f11-91e7-eab87d51dd45"/>
+			</line>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="14" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="3" width="30" height="10" uuid="7c3c6c9e-211c-492e-80b2-cdf8871b32b1">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="620e9844-e04e-416d-8ab1-47ca22d86b3a"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{id_factura}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="140" y="3" width="75" height="10" uuid="df7ef3f4-cc77-4b9b-b819-cdf8cef7f22e">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="a98f108f-9f35-4c46-aeba-db08a2f478b1"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fecha_factura}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="30" y="3" width="110" height="10" uuid="995a1345-692f-4fb3-9ba2-0bad4905b5d1">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d799ba9b-97e5-4a95-9b2b-ace86f067dc6"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{numero_consecutivo}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="215" y="3" width="65" height="10" uuid="f36746f4-0f5c-4e8a-b7c1-a8b8264a6a7a">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="d767c639-68d0-447f-8de4-d9e32a6e7ae9"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{condicion_venta}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="280" y="3" width="100" height="10" uuid="f003214a-14b4-4ac8-901a-a8a9ab389ed7">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="54e8ed11-c503-4051-ae3e-c2a773b4477e"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{medio_pago}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="380" y="3" width="100" height="10" uuid="e074b276-1452-4032-8943-4dd2c66b4e28">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="7799b80c-a3a6-4b9d-a452-1481bf6717fa"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{total_comprobante}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement positionType="Float" x="0" y="13" width="480" height="1" uuid="7ab6f1cb-4e97-4d3f-adda-c16e0d3b1c03"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+		</band>
+	</detail>
+</jasperReport>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:dialog id="creditos" widgetVar="about" modal="true" 
+              header="CRÉDITOS"
+              width="800"
+              height="500"
+              style="background:#000">
+
+        <marquee scrollamount="1" scrolldelay="10" direction="up" height="100%">
+            <h:panelGroup>
+                <p:panelGrid>
+                    <p:row>
+                        <p:column style="background: #000; color:#eee">
+                            <h:outputLabel value="API Technologies" 
+                                           style="font-weight: bold;"/>               
+                            <br/><br/>
+                        </p:column>
+                        <p:column>
+
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:panelGroup>
+        </marquee>
+    </p:dialog>
+</ui:composition>
+

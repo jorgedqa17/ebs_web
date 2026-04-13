@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Productos</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">  
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Lista de Productos</h1>
+
+                        <p:dataTable id="listaProductos" value="#{beanProductos.listaProductos}"
+                                     var="producto"
+                                     reflow="true"
+                                     paginator="true" 
+                                     rowKey="#{listaProductos}"
+                                     paginatorPosition="bottom" 
+                                     rows="5"
+                                     filteredValue="#{beanProductos.listaProductosSeleccionados}"
+                                     emptyMessage="#{label['tabla.vacia']}">
+
+                            <p:column  filterMatchMode="contains" filterBy="#{producto.producto.codigo_barras}" headerText="#{label['producto.id_producto']}" >
+                                <h:outputText id="codigoBarrasLista" value="#{producto.producto.codigo_barras}" />  
+                            </p:column>                
+                            <p:column  filterMatchMode="contains" filterBy="#{producto.producto.descripcion}" headerText="#{label['producto.descripcion']}" >
+                                <h:outputText id="descripcionLIsta" value="#{producto.producto.descripcion}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{producto.descripcionTipoProducto}" headerText="#{label['producto.tipo.producto']}" >
+                                <h:outputText id="tipoProductoLista" value="#{producto.descripcionTipoProducto}" />  
+                            </p:column>
+                            <p:column filterMatchMode="exact" filterBy="#{producto.estado}" headerText="Estado" >
+                                <h:outputText id="activoLista" value="#{producto.estado}" />  
+                            </p:column>
+                            <p:column>
+                                <p:commandButton id="btnEditarProducto" 
+                                                 icon="ui-icon-search" 
+                                                 value="#{label['consultacierre.verdetalle']}"                                    
+                                                 update=":form_sisadmin"
+                                                 actionListener="#{beanProductos.editarProducto(producto)}"
+                                                 >                    
+                                </p:commandButton>
+                            </p:column>
+                            <p:column>
+                                <p:commandButton id="btnInactivarProducto" 
+                                                 icon="ui-icon-cancel"  
+                                                 value="Inactivar"
+                                                 rendered="#{producto.producto.activo eq 1}"
+                                                 update=":form_sisadmin"
+                                                 actionListener="#{beanProductos.inactivarProducto(producto)}">                    
+                                </p:commandButton>
+
+                                <p:commandButton id="btnactivarProducto" 
+                                                 icon="ui-icon-cancel"  
+                                                 value="Activar"
+                                                 rendered="#{producto.producto.activo eq 0}"
+                                                 update=":form_sisadmin"
+                                                 actionListener="#{beanProductos.activarProducto(producto)}">                    
+                                </p:commandButton>
+
+
+                            </p:column>
+                            <p:column>
+                                <p:commandButton id="btnExistencia" 
+                                                 icon="ui-icon-cancel"  
+                                                 value="Ver Existencias"
+                                                 oncomplete="PF('dialogProductoDetalle').show()"
+                                                 update=":form_sisadmin:listaExistencias"
+                                                 actionListener="#{beanProductos.verExistencias(producto)}">                    
+                                </p:commandButton>
+                            </p:column>
+
+                        </p:dataTable>
+
+                    </div>
+
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-16, ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnAgregarNuevoProducto" value="Nuevo Producto"
+                                          icon="fa fa-plus"  
+                                         update=":form_sisadmin" actionListener="#{beanProductos.crearNuevoProductoo}" ></p:commandButton>
+                        <p:commandButton id="btnEditarProductoSeleccionado"
+                                         value="Editar Producto"
+                                         icon="fa fa-edit"  
+                                         update=":form_sisadmin"
+                                         actionListener="#{beanProductos.editarProductoSeleccionado}"
+                                         >
+                        </p:commandButton>
+
+                    </p:panelGrid>
+                    <ui:include src="producto.xhtml"/>    
+
+                    <p:dialog header="#{label['producto.listaExistencia']}" 
+                              widgetVar="dialogProductoDetalle" 
+                              modal="true"    
+                              minWidth="50"
+                              id="dialogProductoDetalle"
+                              showEffect="fade" 
+                              hideEffect="fade" 
+                              resizable="true">          
+                        <div class="card">                
+                            <p:panelGrid  columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >                  
+                                <p:dataTable id="listaExistencias" 
+                                             rows="5"
+                                             paginator="true"
+                                             filteredValue="#{beanProductos.listaExistenciasFiltro}"
+                                             value="#{beanProductos.listaExistencias}"
+                                             var="existencia">
+                                    <p:column filterMatchMode="contains" filterBy="#{existencia.descripcion_bodega}" headerText="#{label['producto.existencia.bodega']}">
+                                        <p:outputLabel value="#{existencia.descripcion_bodega}"></p:outputLabel>
+                                    </p:column>
+                                    <p:column filterMatchMode="contains" filterBy="#{existencia.cantidad}" headerText="#{label['producto.existencia.cantidad']}">
+                                        <p:outputLabel value="#{existencia.cantidad}"></p:outputLabel>
+                                    </p:column>
+                                </p:dataTable>
+                            </p:panelGrid>
+                        </div>
+
+                    </p:dialog>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>

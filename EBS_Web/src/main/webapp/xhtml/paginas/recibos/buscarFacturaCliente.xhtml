@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <div class="card">
+        <h1>Búsqueda de Factura</h1>
+        <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-12" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:outputLabel value="N° Factura"/>
+            <p:inputText id="consecutivo" value="#{beanRecibo.numeroConsecutivo}">                
+            </p:inputText>
+        </p:panelGrid>
+    </div>
+
+    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-12" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:commandButton update="form_sisadmin" id="btnBuscar" icon="fa fa-search" value="Buscar" actionListener="#{beanRecibo.buscarFactura}"/>    
+    </p:panelGrid>
+
+    <div class="card" style="#{beanRecibo.listaFacturasEncontradasAgente.size() > 0 ?'':'display: none'}">
+        <h1>Listado de Facturas</h1>
+        <p:dataTable id="listaFacturas" value="#{beanRecibo.listaFacturasEncontradasAgente}"
+                     var="factura"
+                     selectionMode="single"
+                     paginator="true" 
+                     rowKey="#{factura}"
+                     reflow="true"
+                     paginatorPosition="bottom"                          
+                     rows="10"
+                     filteredValue="#{beanRecibo.listaFacturasEncontradasAgenteFiltro}"
+                     emptyMessage="#{label['tabla.vacia']}">
+
+            <p:column  filterMatchMode="contains" filterBy="#{factura.factura.numero_consecutivo}" headerText="Número Consecutivo" >
+                <h:outputText id="numConsect" value="#{factura.factura.numero_consecutivo}" />  
+            </p:column>
+            <p:column filterMatchMode="contains" filterBy="#{factura.factura.total_comprobante}" 
+                      headerText="#{label['anulacion.monto']}" >
+                <h:outputText id="monto" value="#{factura.factura.total_comprobante}" />  
+            </p:column>
+            <p:column filterMatchMode="contains" filterBy="#{factura.factura.fecha_emision}" 
+                      headerText="Fecha Emisión" >
+                <h:outputText id="fecha_emision" value="#{factura.factura.fecha_emision}" />  
+            </p:column>       
+            <p:column filterMatchMode="contains" filterBy="#{factura.nombreCliente}" 
+                      headerText="Nombre Cliente" >
+                <h:outputText id="cliente" value="#{factura.nombreCliente}" />  
+            </p:column> 
+            <p:column>
+                <p:commandButton value="Seleccionar" icon="fa fa-check"  actionListener="#{beanRecibo.seleccionarFacturaAgente(factura)}" update=":form_sisadmin"></p:commandButton>
+            </p:column>
+        </p:dataTable> 
+    </div>
+
+    <div class="card" style="#{beanRecibo.facturaSeleccionada != null ?'':'display: none'}">
+        <h1>Información de Factura</h1>
+
+        <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-12" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:outputLabel value="Número Consecutivo"></p:outputLabel>
+            <p:inputText value="#{beanRecibo.facturaSeleccionada.numeroConsecutivo}" readonly="true"/>
+
+            <p:outputLabel value="Monto Factura"></p:outputLabel>
+            <p:inputNumber value="#{beanRecibo.facturaSeleccionada.montoTotalComprobante}" decimalPlaces="3" readonly="true">
+            </p:inputNumber>
+            <p:outputLabel value="Monto Restante"></p:outputLabel>
+            <p:inputNumber value="#{beanRecibo.facturaSeleccionada.factura.monto_restante}" decimalPlaces="3" readonly="true">
+            </p:inputNumber>
+            <p:outputLabel value="Cliente"></p:outputLabel>
+            <p:inputText value="#{beanRecibo.facturaSeleccionada.nombreCliente}" readonly="true"/>
+
+            <p:outputLabel value="Condición Venta"></p:outputLabel>
+            <p:inputText value="#{beanRecibo.facturaSeleccionada.descripcionCondicionVenta}" readonly="true"/>
+        </p:panelGrid>
+    </div>
+
+
+
+
+
+
+</ui:composition>

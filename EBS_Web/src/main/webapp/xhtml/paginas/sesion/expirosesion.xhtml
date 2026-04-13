@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+   <ui:define name="content">
+        <div style="width: 35%;">
+            <h:form>
+               
+                <p:panel header="#{label['logout.mensaje.header']}" >
+                    <h:outputLabel value="#{label['logout.mensaje']}"/>
+                    <br/><br/>
+                    <p:commandButton value="#{label['logout.reingreso.boton']}"
+                                     title="#{label['logout.reingreso.boton.title']}"
+                                     ajax="false" 
+                                     action="/login.xhtml"/>
+                </p:panel>
+            </h:form>
+        </div>
+    </ui:define>
+
+</ui:composition>

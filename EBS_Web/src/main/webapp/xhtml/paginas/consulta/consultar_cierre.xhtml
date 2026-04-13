@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Consulta de Cierre</ui:define>
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">  
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+
+                        <h1>Lista de Cierres</h1>
+                        <p:dataTable id="listacierre" value="#{beanConsultaCierre.listaGeneral}"
+                                     var="cierre"
+                                     paginator="true"
+                                     reflow="true"
+                                     paginatorPosition="bottom"
+                                     rowKey="#{cierre.id_cierre}"
+                                     filteredValue="#{beanConsultaCierre.listaFiltrada}"
+                                     rows="5"
+                                     selectionMode="single"
+                                     emptyMessage="#{label['tabla.vacia']}">
+
+                            <p:column filterMatchMode="contains" sortBy="#{cierre.fechaCierreTexto}" filterBy="#{cierre.fechaCierreTexto}" headerText="#{label['consultacierre.fechacierre']}" >
+                                <h:outputText id="fechaGeneracion" value="#{cierre.fechaCierreTexto}" />
+                            </p:column>                
+                            <p:column filterMatchMode="contains" sortBy="#{cierre.login}" filterBy="#{cierre.login}" headerText="#{label['consultacierre.usuariocierre']}" >
+                                <h:outputText id="usuarioCierre" value="#{cierre.login}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains"  headerText="#{label['consultacierre.fechainicio']}" >
+                                <h:outputText id="fechaInicio" value="#{cierre.fechaInicioTexto}" />
+                            </p:column>
+                            <p:column filterMatchMode="contains"  headerText="#{label['consultacierre.fechafinal']}" >
+                                <h:outputText id="fechaFinal" value="#{cierre.fechaFinTexto}" /> 
+                            </p:column>
+                            <p:column>
+                                <p:commandButton id="btnVerCierre"                                      
+                                                 icon="ui-icon-search" 
+                                                 update="form_sisadmin:panel_desglose"
+                                                 value="#{label['consultacierre.verdetalle']}"> 
+                                    <f:setPropertyActionListener value="#{cierre}" target="#{beanConsultaCierre.datoGeneral}" />
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+
+            <h1>Detalle Cierre</h1>
+
+            <p:panelGrid id="panel_desglose" columns="2" columnClasses="ui-grid-col-4, ui-grid-col-12"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >
+                <p:outputLabel style="font-weight: bold;" value="#{label['consultacierre.fechacierre']}" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.fechaCierre}" >
+                    <f:convertDateTime pattern="dd-MM-yyyy HH:mm:ss" />
+                </h:outputText>
+                <p:outputLabel style="font-weight: bold;" value="#{label['consultacierre.usuariocierre']}" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.login}" />
+                <p:outputLabel style="font-weight: bold;" value="#{label['consultacierre.montoingresos']}" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.montoEntrada}" >
+                    <f:convertNumber type="currency" currencySymbol="CRC  "  />
+                </h:outputText>
+                <p:outputLabel style="font-weight: bold;" value="#{label['consultacierre.montosalidas']}" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.montoSalida}" >
+                    <f:convertNumber type="currency" currencySymbol="CRC  " />
+                </h:outputText>
+                <p:outputLabel style="font-weight: bold;" value="#{label['consultacierre.montoanulacion']}" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.montoAnulacion}" >
+                    <f:convertNumber type="currency" currencySymbol="CRC  " />
+                </h:outputText>   
+                <p:outputLabel style="font-weight: bold;" value="Monto Facturas a Crédito" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.monto_facturas_credito}" >
+                    <f:convertNumber type="currency" currencySymbol="CRC  " />
+                </h:outputText>                  
+                <p:outputLabel style="font-weight: bold;" value="Monto Facturas en Tarjetas" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.monto_facturas_tarjeta}" >
+                    <f:convertNumber type="currency" currencySymbol="CRC  " />
+                </h:outputText>  
+                <p:outputLabel style="font-weight: bold;" value="Monto en Efectivo" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.monto_efectivo}" >
+                    <f:convertNumber type="currency" currencySymbol="CRC  " />
+                </h:outputText>  
+                <p:outputLabel style="font-weight: bold;" value="Monto en Cheque" />
+                <h:outputText value="#{beanConsultaCierre.datoGeneral.monto_cheque}" >
+                    <f:convertNumber type="currency" currencySymbol="CRC  " />
+                </h:outputText>  
+            </p:panelGrid>     
+        </div>
+
+        <p:panelGrid id="panelReportes" columns="2" columnClasses="ui-grid-col-4,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">            
+            <p:commandButton id="btnImprirReporte" update="form_sisadmin:panelReportes" value="Imprimir Cierre" icon="ui-icon-arrowthick-1-s" ajax="false" actionListener="#{beanConsultaCierre.generarReporteConsulta}" >
+                <p:fileDownload value="#{beanConsultaCierre.reporteDesplegar}"/>      
+            </p:commandButton>
+        </p:panelGrid>      
+
+    </ui:define>
+</ui:composition>
+

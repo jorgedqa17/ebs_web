@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <div class="card">
+        <h1>Información de Producto</h1>
+
+        <p:panelGrid columns="4" id="panelPrincipalProductos" columnClasses="ui-grid-col-1,ui-grid-col-6,ui-grid-col-1,ui-grid-col-6" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:outputLabel value="#{label['producto.descripcion']}" />
+            <p:inputText id="txtNombreProducto" maxlength="100" disabled="#{beanProductos.inhabilitaBotones}" value="#{beanProductos.producto.descripcion}"></p:inputText>
+
+            <p:outputLabel value="#{label['producto.codigo_barras']}" />
+            <p:inputText id="txtCodigoBarras" maxlength="30" disabled="#{beanProductos.inhabilitaBotones}" value="#{beanProductos.producto.codigo_barras}">
+                <p:ajax event="blur" listener="#{beanProductos.validarExistenciaCodigoBarrasProducto}" update="txtCodigoBarras"></p:ajax>
+            </p:inputText>
+
+            <p:outputLabel value="#{label['producto.id_unidad_medida']}" />
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              filter="true" filterMatchMode="startsWith"
+                              valueChangeListener="#{beanProductos.seleccionarUnidadMedida}"
+                              value="#{beanProductos.idUnidadMedidaSeleccionado}" 
+                              id="listaUnidadMedida" 
+                              disabled="#{beanProductos.inhabilitaBotones}"
+                              effect="fold" >     
+                <p:ajax event="change" listener="#{beanProductos.seleccionarUnidadMedida}" update=""/>         
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanProductos.listaUnidadesMedidas}"
+                               var="unidadMedida"
+                               itemLabel="#{unidadMedida.descripcion}"
+                               itemValue="#{unidadMedida.id_unidad_medida}"/>
+            </p:selectOneMenu>      
+
+
+            <p:outputLabel value="#{label['producto.tipo.producto']}" />
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              disabled="#{beanProductos.inhabilitaBotones}"
+                              valueChangeListener="#{beanProductos.seleccionarTipoProducto}"
+                              value="#{beanProductos.idTipoProductoSeleccionado}" 
+                              id="listaTiposProductos"                         
+                              effect="fold" >     
+                <p:ajax event="change" listener="#{beanProductos.seleccionarTipoProducto}" />  
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanProductos.listaTiposProducto}"
+                               var="tipoProducto"
+                               itemLabel="#{tipoProducto.descripcion}"
+                               itemValue="#{tipoProducto.id_tipo_producto}"/>
+            </p:selectOneMenu>  
+
+            <h:outputText value="#{label['producto.ind_caduce']}" />
+            <p:selectBooleanCheckbox disabled="#{beanProductos.inhabilitaBotones}" value="#{beanProductos.indCaduce}"/>
+
+            <!--<h:outputText value="#{label['producto.ind_exonerado']}" />
+            <p:selectBooleanCheckbox disabled="#{beanProductos.inhabilitaBotones}" value="#{beanProductos.exonerado}">
+                <p:ajax update="listaImpuestos, listaExoneraciones, form_sisadmin"  />
+            </p:selectBooleanCheckbox>-->
+
+            <h:outputText value="Exento" />
+            <p:selectBooleanCheckbox disabled="#{beanProductos.inhabilitaBotones}" value="#{beanProductos.exento}">
+                <p:ajax update=":form_sisadmin:listaImpuestos  :form_sisadmin:listaExoneraciones"  />
+            </p:selectBooleanCheckbox>
+
+            <p:outputLabel value="#{label['producto.impuesto.relacion']}" />
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              disabled="#{beanProductos.exento or beanProductos.inhabilitaBotones}"
+                              filter="true" filterMatchMode="startsWith"
+                              value="#{beanProductos.idImpuestoSeleccionado}" 
+                              id="listaImpuestos"    
+                              effect="fold" >
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanProductos.listaImpuestos}"
+                               var="impuesto"
+                               itemLabel="#{impuesto.descripcion}"
+                               itemValue="#{impuesto.id_impuesto}"/>
+            </p:selectOneMenu>  
+
+
+            <p:outputLabel value="Tipo de Tarifa" />
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              disabled="#{beanProductos.exento or beanProductos.inhabilitaBotones }"
+                              filter="true" filterMatchMode="startsWith"      
+                              value="#{beanProductos.idTipoTarifa}" 
+                              id="listaExoneraciones"                         
+                              effect="fold"  >     
+
+                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                <f:selectItems value="#{beanProductos.listaTiposTarifa}"
+                               var="tarifa"
+                               itemLabel="#{tarifa.descripcion}"
+                               itemValue="#{tarifa.id_tipo_tarifa_impuesto}"/>
+            </p:selectOneMenu>  
+            <p:outputLabel value="Estado del Producto" />
+            <p:selectOneMenu id="productoActivo"  disabled="#{beanProductos.inhabilitaBotones}" value="#{beanProductos.producto.activo}"  >
+                <f:selectItem itemLabel="Activo" itemValue="1" />
+                <f:selectItem itemLabel="Inactivo" itemValue="0" />
+            </p:selectOneMenu>
+
+            <p:outputLabel value="Cantidad Mínima Inventario" />
+            <p:inputNumber id="inputNumber" value="#{beanProductos.cantidadMinima}" disabled="#{beanProductos.inhabilitaBotones}" decimalPlaces="0"/>
+            <p:outputLabel value="Código Cabys" />
+            <p:inputText id="codCabys" value="#{beanProductos.codigoCabys}"  maxlength="13"   disabled="#{beanProductos.inhabilitaBotones}" />
+
+        </p:panelGrid>
+
+        <br/><br/>
+        <h2>Información de los Precios del Producto</h2>
+        <br/><br/>
+        <p:panelGrid id="panelPrecios" columns="4" columnClasses="ui-grid-col-1,ui-grid-col-6,ui-grid-col-1,ui-grid-col-6" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:outputLabel value="#{label['producto.tipo.precio.tipo']}"/>
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              disabled="#{beanProductos.inhabilitaBotones}"
+                              valueChangeListener="#{beanProductos.seleccionarTipoPrecio}"
+                              value="#{beanProductos.idTipoPrecioSeleccionado}" 
+                              id="listaTiposPrecios"                         
+                              effect="fold" >     
+                <p:ajax event="change" listener="#{beanProductos.seleccionarTipoPrecio}"/>         
+                <f:selectItems value="#{beanProductos.listaTiposPrecios}"
+                               var="tipoPrecio"
+                               itemLabel="#{tipoPrecio.descripcion}"
+                               itemValue="#{tipoPrecio.id_tipo}"/>
+            </p:selectOneMenu> 
+
+            <p:outputLabel value="#{label['producto.moneda']}"/>
+            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                              disabled="#{beanProductos.inhabilitaBotones}"
+                              valueChangeListener="#{beanProductos.seleccionarTipoPrecio}"
+                              value="#{beanProductos.idTipoMonedaSeleccionada}" 
+                              id="listaTipoMoneda"                         
+                              effect="fold" >     
+                <p:ajax event="change" listener="#{beanProductos.seleccionarTipoMoneda}"/>         
+                <f:selectItems value="#{beanProductos.listaTiposMonedas}"
+                               var="tipoMoneda"
+                               itemLabel="#{tipoMoneda.descripcion}"
+
+                               itemValue="#{tipoMoneda.id_moneda}"/>
+            </p:selectOneMenu> 
+
+            <p:outputLabel value="#{label['producto.tipo.precio.precio']}" />
+            <p:inputText disabled="#{beanProductos.inhabilitaBotones}"  maxlength="11" id="txtprecio" value="#{beanProductos.precio}"></p:inputText>
+            <p:outputLabel value=""/>
+            <p:outputLabel value=""/>
+
+
+        </p:panelGrid>
+        <p:panelGrid columns="1" columnClasses="ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:commandButton id="btnGuardarTipoPrecio" icon="fa fa-plus" disabled="#{beanProductos.inhabilitaBotones}" value="Agregar Precio" update="listaPrecios, txtprecio" actionListener="#{beanProductos.agregarTipoPrecio}"/>
+        </p:panelGrid>
+        <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:dataTable id="listaPrecios" value="#{beanProductos.listaPreciosProducto}"
+                         var="productoPrecio"
+                         paginator="true" 
+                         rowKey="#{listaPrecios}"
+                         paginatorPosition="bottom" 
+                         reflow="true"
+                         rows="10"                         
+
+                         emptyMessage="#{label['tabla.vacia']}">
+
+                <p:column headerText="#{label['producto.tipo.precio.tipo']}" >
+                    <h:outputText id="tipoPrecioDesc" value="#{productoPrecio.descripcion}" />  
+                </p:column>                
+                <p:column headerText="#{label['producto.moneda']}" >
+                    <h:outputText id="monedaDesc" value="#{productoPrecio.descripcionTipoMoneda}" />  
+                </p:column>
+                <p:column headerText="#{label['producto.precio']}" >
+                    <h:outputText id="precio" value="#{productoPrecio.productoPrecio.precio}" />  
+                </p:column>
+                <p:column >
+                    <p:commandButton id="btnElmiinarRegistro" 
+                                     disabled="#{beanProductos.inhabilitaBotones}"
+                                     icon="ui-icon-trash" 
+                                     actionListener="#{beanProductos.eliminarRegistroTablaProducto(productoPrecio)}" 
+                                     update="listaPrecios">                    
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+        </p:panelGrid>
+
+        <p:panelGrid columns="2" columnClasses="ui-grid-col-16, ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+            <p:commandButton id="btnGuardarProducto" icon="fa fa-save"   disabled="#{beanProductos.inhabilitaBotones}" update=":form_sisadmin" value="Guardar Producto" actionListener="#{beanProductos.guardarProducto}"/>      
+            <p:commandButton id="cancelar" icon="fa fa-times"  disabled="#{beanProductos.inhabilitaBotones}" update=":form_sisadmin" value="Cancelar" actionListener="#{beanProductos.cancelar}" ></p:commandButton>
+
+        </p:panelGrid>
+
+
+    </div>
+
+
+
+
+</ui:composition>

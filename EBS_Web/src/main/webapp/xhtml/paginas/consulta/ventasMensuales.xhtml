@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Ventas Mensuales</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Parámetros</h1>
+                        <p:panelGrid id="panelFechas" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['ventas.mensuales.fecha.desde']}"/>
+                            <p:calendar  value="#{beanVentasMensuales.fechaInicio}" showOn="button" pattern="dd-MM-yyyy" mask="true" />
+
+                            <p:outputLabel value="#{label['ventas.mensuales.fecha.hasta']}"/>
+                            <p:calendar  value="#{beanVentasMensuales.fechaFinal}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+                            <p:selectOneRadio id="idListaRadios" value="#{beanVentasMensuales.tipoSeleccionado}">
+                                <f:selectItem itemLabel="Por Sucursal" itemValue="0" />
+                                <f:selectItem itemLabel="Por Usuario" itemValue="1" />
+                            </p:selectOneRadio>
+
+                        </p:panelGrid >
+
+                    </div>
+                    <p:panelGrid columns="1" columnClasses="ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton ajax="false" value="Imprimir Reporte de Ventas"  actionListener="#{beanVentasMensuales.generarReporteVentasMensuales}"  icon="ui-icon-arrowthick-1-s">
+                            <p:fileDownload value="#{beanVentasMensuales.reporteDesplegar}"/> 
+                        </p:commandButton>
+                    </p:panelGrid>
+
+                </div>
+            </div>
+        </div>
+
+
+    </ui:define>
+</ui:composition>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="subReporte_estado_cuenta" pageWidth="560" pageHeight="842" whenNoDataType="NoPages" columnWidth="560" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="ad63d1b2-2094-400e-a2fc-010ce7c2ef8d">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SearMedica_Desarrollo"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="348"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="647"/>
+	<parameter name="idFactura" class="java.lang.Long"/>
+	<queryString>
+		<![CDATA[SELECT T2.ID_RECIBO, T2.MONTO_PAGO, T2.FECHA AS FECHA_RECIBO, T2.CONCEPTO_RECIBO , t2.es_recibo_manual, t2.numero_recibo_manual, t3.descripcion
+FROM SEARMEDICA.RECIBO T2 inner join searmedica.estados t3 on t2.id_estado = t3.id_estado WHERE ID_FACTURA = $P{idFactura}]]>
+	</queryString>
+	<field name="id_recibo" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="id_recibo"/>
+	</field>
+	<field name="monto_pago" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="monto_pago"/>
+	</field>
+	<field name="fecha_recibo" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="fecha_recibo"/>
+	</field>
+	<field name="concepto_recibo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="concepto_recibo"/>
+	</field>
+	<field name="es_recibo_manual" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="es_recibo_manual"/>
+	</field>
+	<field name="numero_recibo_manual" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="numero_recibo_manual"/>
+	</field>
+	<field name="descripcion" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="descripcion"/>
+	</field>
+	<columnHeader>
+		<band height="22">
+			<staticText>
+				<reportElement positionType="Float" x="72" y="9" width="134" height="13" uuid="7e7db64b-e4c3-4c95-9c0c-3657e754059c">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="785fac41-0017-414e-aed2-4a430938f861"/>
+				</reportElement>
+				<textElement verticalAlignment="Top">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[N° Recibo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="412" y="8" width="130" height="14" uuid="cad82cd8-1ac0-472c-801a-3bacbb6c01ff">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="558c98d1-71ef-4ac5-b484-37f555dccd05"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Monto Recibo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="318" y="8" width="94" height="14" uuid="cf42b3e9-825c-45ad-985a-a441183d2206">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="fe017450-e2fd-494c-83c3-2da8e8b3919f"/>
+				</reportElement>
+				<textElement verticalAlignment="Top">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Fecha Recibo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="206" y="9" width="112" height="13" uuid="0d4be2c3-06e8-413d-b79e-9a4743b3ee81">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="785fac41-0017-414e-aed2-4a430938f861"/>
+				</reportElement>
+				<textElement verticalAlignment="Top">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Estado]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="72" y="0" width="134" height="13" uuid="2b59cd96-a458-4952-aeef-5b952eeead52">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="785fac41-0017-414e-aed2-4a430938f861"/>
+				</reportElement>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{es_recibo_manual}.equals( 1 )?$F{numero_recibo_manual}:$F{id_recibo}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.000" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="412" y="0" width="130" height="13" uuid="7606514c-b8b5-4b0d-9760-1644ee21e4c4">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="558c98d1-71ef-4ac5-b484-37f555dccd05"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{monto_pago}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="318" y="0" width="94" height="13" uuid="7975c5d5-508f-498b-a1be-5f9249e54d5f">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="fe017450-e2fd-494c-83c3-2da8e8b3919f"/>
+				</reportElement>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{fecha_recibo}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="206" y="0" width="112" height="13" uuid="5aad5ce1-5905-428e-a174-a8726715a123">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="fe017450-e2fd-494c-83c3-2da8e8b3919f"/>
+				</reportElement>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{descripcion}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

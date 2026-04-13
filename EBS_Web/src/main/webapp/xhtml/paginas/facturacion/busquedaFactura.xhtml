@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+
+    <p:panelGrid columns="6" columnClasses="ui-grid-col-1,ui-grid-col-4,ui-grid-col-1,ui-grid-col-4,ui-grid-col-1,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:outputLabel for="idListaTipoFactura" value="Tipo Factura" />
+        <p:selectOneMenu id="idListaTipoFactura" value="#{beanFactura.idTipoFacturaSeleccionadaBusqueda}">
+            <f:selectItem itemLabel="Seleccione" itemValue="0" />
+            <f:selectItem itemLabel="Factura" itemValue="1" />
+            <f:selectItem itemLabel="Proforma" itemValue="3" />
+            <f:selectItem itemLabel="Pedido" itemValue="2" />
+            <f:selectItem itemLabel="Nota de Crédito" itemValue="4" />
+            <f:selectItem itemLabel="Tiquete Electrónico" itemValue="5" />
+        </p:selectOneMenu> 
+
+        <p:outputLabel for="txtIdFacturaBuscar" value="#{label['facutaion.buscar.id.factura']}" />
+        <p:inputText id="txtIdFacturaBuscar" value="#{beanFactura.idFacturaBuscar}" ></p:inputText>
+
+        <p:outputLabel for="calendarioBusquedaFacturasProcesoFact" value="#{label['facutaion.buscar.fecha.factura']}" />
+        <p:calendar id="calendarioBusquedaFacturasProcesoFact" value="#{beanFactura.fechaFacturaBuscar}" ></p:calendar>
+    </p:panelGrid>
+    <p:panelGrid columns="1" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+        <p:commandButton icon="fa fa-search" id="btnBuscarFacturasEdicion" update=":form_sisadmin:tablaFacturasEdicion" actionListener="#{beanFactura.buscarFacturasEdicion}" value="#{label['boton.buscar']}"></p:commandButton>
+    </p:panelGrid>
+    <div class="card">
+        <p:dataTable id="tablaFacturasEdicion"
+                     reflow="true"
+                     var="facturaBuscarEdicion"
+                     filteredValue="#{beanFactura.listaFacturasBuscarEdicionSeleccionada}"
+                     paginator="true" 
+                     rowKey="#{listaProductoFacturar}"
+                     paginatorPosition="bottom" 
+                     rows="10"
+                     value="#{beanFactura.listaFacturasBuscarEdicion}"
+                     emptyMessage="#{label['tabla.vacia']}">
+            <p:column filterMatchMode="contains" filterBy="#{facturaBuscarEdicion.idFactura}" headerText="#{label['facturacion.buscar.codigo']}">
+                <h:outputText value="#{facturaBuscarEdicion.idFactura}"></h:outputText>
+            </p:column>
+            <p:column filterMatchMode="contains" filterBy="#{facturaBuscarEdicion.numeroConsecutivo}" headerText="Número de Consecutivo">
+                <h:outputText value="#{facturaBuscarEdicion.numeroConsecutivo}"></h:outputText>
+            </p:column>
+
+            <p:column filterMatchMode="contains" filterBy="#{facturaBuscarEdicion.tipoFactura}" headerText="#{label['facturacion.buscar.tipo.factura']}">
+                <h:outputText value="#{facturaBuscarEdicion.tipoFactura}"></h:outputText>
+            </p:column>
+           <!-- <p:column filterMatchMode="contains" filterBy="#{facturaBuscarEdicion.fechaFactura}" headerText="#{label['facutaion.buscar.fecha.factura.tabla']}">
+                <h:outputText value="#{facturaBuscarEdicion.fechaFactura}"></h:outputText>
+            </p:column> -->
+
+            <p:column filterMatchMode="contains" filterBy="#{facturaBuscarEdicion.nombreCliente}" headerText="#{label['facturacion.buscar.nombre']}">
+                <h:outputText value="#{facturaBuscarEdicion.nombreCliente}"></h:outputText>
+            </p:column>
+            <p:column>
+                <p:commandButton id="btnSeleccionarFacturaModificar"
+                                 update="form_sisadmin, tablaFacturasEdicion"
+                                 icon="ui-icon-check fa fa-check Fs14 White" 
+                                 actionListener="#{beanFactura.seleccionarFactura(facturaBuscarEdicion)}" 
+                                 value="#{label['boton.seleccionar']}">
+                </p:commandButton>
+            </p:column>
+            <p:column>
+                <p:commandButton id="btnCrearFacturaReferencia"
+                                 update="form_sisadmin, tablaFacturasEdicion"
+                                 icon="ui-icon-check fa fa-check Fs14 White" 
+                                 actionListener="#{beanFactura.seleccionarFacturaParaReemplazo(facturaBuscarEdicion)}" 
+                                 value="Enviar Factura de Reemplazo">
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+
+    </div>
+
+
+</ui:composition>

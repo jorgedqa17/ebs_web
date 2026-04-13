@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+    <ui:define name="title">Consulta de Ingreso a Inventario</ui:define>
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h:panelGroup>
+                            <p:outputLabel style="font-weight: bold;" id="tituloIngresoInventario" value="#{label['inventario.consulta.titulo']}"/>            
+                        </h:panelGroup>
+                        <h:panelGrid columns="2">
+                            <p:dataTable id="listaingreso" value="#{beanConsultaIngresoInventario.listaIngreso}"
+                                         var="ingreso"
+                                         paginator="true" 
+                                         paginatorPosition="bottom"
+                                         reflow="true"
+                                         rowKey="#{ingreso.inventarioIngreso.idInventarioIngreso}"
+                                         filteredValue="#{beanConsultaIngresoInventario.ingresoSelecionados}"
+                                         rows="10"
+                                         selectionMode="single"
+                                         selection="#{beanConsultaIngresoInventario.ingresoSeleccionado}"
+                                         emptyMessage="#{label['tabla.vacia']}" >
+                                <f:facet name="header">
+                                    #{label['inventario.tabla.ingreso.titulo']}
+                                </f:facet>
+                                <p:ajax event="rowSelect" />
+                                <p:column filterMatchMode="contains" sortBy="#{ingreso.bodegaOrigen}" filterBy="#{ingreso.bodegaOrigen}" headerText="#{label['inventario.tabla.bodega']}" >
+                                    <h:outputText id="bodega" value="#{ingreso.bodegaOrigen}" />
+                                </p:column>                
+                                <p:column filterMatchMode="contains" sortBy="#{ingreso.responsable}" filterBy="#{ingreso.responsable}" headerText="#{label['inventario.tabla.responsable']}" >
+                                    <h:outputText id="responsable" value="#{ingreso.responsable}" />  
+                                </p:column>
+                                <p:column filterMatchMode="contains"  sortBy="#{ingreso.tipoIngreso}" filterBy="#{ingreso.tipoIngreso}" headerText="#{label['inventario.tabla.tipoIngreso']}" >
+                                    <h:outputText id="tipoIngreso" value="#{ingreso.tipoIngreso}" />
+                                </p:column>
+                                <p:column filterMatchMode="contains" sortBy="#{ingreso.fecha}" filterBy="#{ingreso.fecha}"  headerText="#{label['inventario.tabla.fechaRegistro']}" >
+                                    <h:outputText id="fecha" value="#{ingreso.fecha}" /> 
+                                </p:column> 
+
+                                <p:column >                   
+                                    <p:commandButton id="btnVerDetalle" value="Ver Detalle" actionListener="#{beanConsultaIngresoInventario.cargarLinea}" update="form_sisadmin:listaIngresoDetalle">
+                                        <f:attribute name="idLinea" value="#{ingreso}" />
+                                    </p:commandButton>
+                                </p:column>
+                            </p:dataTable>
+                            <br/>
+                            <br/><br/>
+                            <p:dataTable id="listaIngresoDetalle" value="#{beanConsultaIngresoInventario.listaDetalle}"
+                                         var="detalle"
+                                         paginator="true"
+                                         reflow="true"
+                                         paginatorPosition="bottom"
+                                         rowKey="#{detalle.inventarioIngresoDetalle.idInventarioIngresoDetalle}"
+                                         filteredValue="#{beanConsultaIngresoInventario.ingresoDetalleSelecionados}"
+                                         rows="5"
+                                         selectionMode="single"
+                                         emptyMessage="#{label['tabla.vacia']}">
+                                <f:facet name="header">
+                                    #{label['inventario.tabla.ingreso.detalle.titulo']}
+                                </f:facet>
+                                <p:column filterMatchMode="contains" sortBy="#{detalle.nombreProducto}" filterBy="#{detalle.nombreProducto}" headerText="#{label['inventario.tabla.nombreProducto']}" >
+                                    <h:outputText id="producto" value="#{detalle.nombreProducto}" />
+                                </p:column>                
+                                <p:column filterMatchMode="contains" sortBy="#{detalle.cantidad}" filterBy="#{detalle.cantidad}" headerText="#{label['inventario.tabla.cantidad']}" >
+                                    <h:outputText id="cantidad" value="#{detalle.cantidad}" />  
+                                </p:column>
+                                <p:column filterMatchMode="contains"  sortBy="#{detalle.fecha}" filterBy="#{detalle.fecha}" headerText="#{label['inventario.tabla.fechaVencimiento']}" >
+                                    <h:outputText id="fechaDetalle" value="#{detalle.fecha}" />
+                                </p:column>
+                                <p:column filterMatchMode="contains" sortBy="#{detalle.lote}" filterBy="#{detalle.lote}"  headerText="#{label['inventario.tabla.numeroLote']}" >
+                                    <h:outputText id="loteDetalle" value="#{detalle.lote}" /> 
+                                </p:column> 
+                                <p:column filterMatchMode="contains" sortBy="#{detalle.nombreProveedor}" filterBy="#{detalle.nombreProveedor}"  headerText="#{label['inventario.tabla.nombreProveedor']}" >
+                                    <h:outputText id="proveedorDetalle" value="#{detalle.nombreProveedor}" /> 
+                                </p:column> 
+                            </p:dataTable>
+                        </h:panelGrid>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </ui:define>
+</ui:composition>

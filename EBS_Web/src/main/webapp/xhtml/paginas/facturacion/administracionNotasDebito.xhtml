@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+
+    <ui:define name="title">Administración de Notas de Débito</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">      
+
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Listado de Notas de Débito</h1>
+                        <p:dataTable id="tablasNotasDebito"
+                                     widgetVar="tablasNotasDebito"
+                                     var="notaDebito"
+                                     resizableColumns="true"
+                                     editable="true"
+                                     filteredValue="#{beanAdministracionNotasDebito.listaNotasDebitoFiltro}"
+                                     editMode="cell"
+                                     reflow="true"
+                                     paginator="true" 
+                                     rowKey="#{notaDebito}"
+                                     paginatorPosition="bottom" 
+                                     rows="5"
+                                     value="#{beanAdministracionNotasDebito.listaNotasDebito}"
+                                     emptyMessage="#{label['tabla.vacia']}">
+
+                            <p:column   filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.id_nota_debito}" headerText="Id" >
+                                <h:outputText id="id_nota_debito" value="#{notaDebito.notaDebito.id_nota_debito}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.numero_consecutivo}" headerText="N° Consecutivo" >
+                                <h:outputText id="numero_consecutivo" value="#{notaDebito.notaDebito.numero_consecutivo}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.fecha_emision}" headerText="Fecha Emisión" >
+                                <h:outputText id="fecha_emision" value="#{notaDebito.notaDebito.fecha_emision}" />  
+                            </p:column> 
+                            <p:column filterMatchMode="contains" filterBy="#{notaDebito.notaDebito.estadoFactura.descripcion}" headerText="Estado" >
+                                <h:outputText id="Estado" value="#{notaDebito.notaDebito.estadoFactura.descripcion}" />  
+                            </p:column> 
+                            <p:column>
+                                <p:commandButton update="form_sisadmin" id="btnSeleccionarFactura"  
+                                                 actionListener="#{beanAdministracionNotasDebito.seleccionarNotaDebito(notaDebito)}"
+                                                 value="Ver Nota Débito" icon="fa fa-search" >
+                                </p:commandButton>  
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                    <div class="card">
+                        <h1>Información de la Nota de Débito</h1>
+                        <br/>
+                        <h2>Detalle Nota Débito</h2>
+                        <br/>
+                        <p:panelGrid id="panelNotaDebito" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="Id"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaDebito.id_nota_debito}"/>
+                            <p:outputLabel value="Clave"/>
+                            <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaDebito.clave}"/>
+                            <p:outputLabel value="#{label['anulacion.numero.consecutivo']}"/>                            
+                            <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaDebito.numero_consecutivo}"/>
+                            <p:outputLabel value="Fecha Nota Débito"/>
+                            <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaDebito.fecha_nota_debito}"/>
+                            <p:outputLabel value="Fecha Emisión"/>
+                            <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaDebito.fecha_emision}"/>
+                            <p:outputLabel value="Estado de Nota Débito"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaDebito.estadoFactura.descripcion}"/>
+                            <p:outputLabel value="Login"/>
+                            <p:inputText readonly="true" value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaDebito.login}"/>
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value=""/>
+                        </p:panelGrid>
+
+                        <br/>
+                        <h2>Histórico Hacienda Nota Crédito</h2>
+                        <br/>
+                        <p:dataTable id="idTablaHistoricoHaciendaFactura"
+                                     widgetVar="idTablaHistoricoHaciendaFactura"
+                                     var="facturaHistorico"
+                                     editable="true"                                  
+                                     reflow="true"
+                                     paginator="true" 
+                                     rowKey="#{listaHistorico}"
+                                     paginatorPosition="bottom" 
+                                     rows="5"
+                                     filteredValue="#{beanAdministracionNotasDebito.listaHistoricoHaciendaFiltro}"
+                                     value="#{beanAdministracionNotasDebito.listaHistoricoHacienda}"
+                                     emptyMessage="#{label['tabla.vacia']}">
+
+                            <p:column   filterMatchMode="contains" filterBy="#{facturaHistorico.estado}" headerText="Fecha" >
+                                <h:outputText id="estado" value="#{facturaHistorico.estado}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{facturaHistorico.fecha}" headerText="Fecha" >
+                                <h:outputText id="fechaFactura" value="#{facturaHistorico.fecha}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{facturaHistorico.login}" headerText="Usuario" >
+                                <h:outputText id="lgin" value="#{facturaHistorico.login}" />  
+                            </p:column>
+
+                            <p:column   headerText="Respuesta" >
+                                <p:commandButton id="verRespuesta"                                                  
+                                                 value="Respuesta"     
+                                                 update="form_sisadmin"
+                                                 oncomplete="PF('idRespuestaHaciendaModal').show();" icon="fa fa-search" rendered="#{facturaHistorico.respuesta eq '' ? 'false':'true'}"
+                                                 actionListener="#{beanAdministracionNotasDebito.seleccionarHistorico}">                                     
+                                    <f:attribute name="historioSeleccionado" value="#{facturaHistorico}"/>
+                                </p:commandButton>
+                            </p:column>
+                            <p:column   headerText="Detalle Respuesta" >
+                                <p:commandButton id="verDetalleRespuesta" 
+                                                 value="Detalle Respuesta" 
+                                                 update="form_sisadmin"
+                                                 oncomplete="PF('idDetalleRespuestaHaciendaModal').show();" icon="fa fa-search" rendered="#{facturaHistorico.detallerespuesta eq '' ? 'false':'true'}"
+                                                 actionListener="#{beanAdministracionNotasDebito.seleccionarHistorico}">                                     
+                                    <f:attribute name="historioSeleccionado" value="#{facturaHistorico}"/>
+                                </p:commandButton>
+                            </p:column>
+                             <p:column   headerText="Comprobante Electrónico" >
+                                <p:commandButton id="verComprobante" 
+                                                 value="Compr. Electr." 
+                                                 icon="fa fa-download" 
+                                                 ajax="false"
+                                                 actionListener="#{beanAdministracionNotasDebito.seleccionarHistorico}"
+                                                 rendered="#{facturaHistorico.documento_xml_firmado eq '' ? 'false':'true'}">    
+                                    <f:attribute name="historioSeleccionado" value="#{facturaHistorico}"/>
+                                    <p:fileDownload value="#{beanAdministracionNotasDebito.reporteDesplegarCompElectronico}"/>  
+                                </p:commandButton>
+                            </p:column>
+
+                        </p:dataTable>
+                        <p:dialog id="idDetalleRespuestaHaciendaModal"
+                                  height="350"
+                                  modal="true"
+                                  widgetVar="idDetalleRespuestaHaciendaModal" 
+                                  showEffect="fade" 
+                                  hideEffect="fade">
+                            <div class="card">
+                                <h1>Detalle Respuesta</h1>
+                                <p:panelGrid columns="1" columnClasses="ui-grid-col-16" 
+                                             layout="grid" 
+                                             styleClass="ui-panelgrid-blank" 
+                                             style="border:0px none; background-color:transparent;" >
+                                    <p:inputTextarea  rows="30" cols="100" readonly="true"  
+                                                      id="txtDescripcionLinea2" value="#{beanAdministracionNotasDebito.historicoSeleccionado.detallerespuesta}" >
+                                    </p:inputTextarea >
+                                </p:panelGrid>  
+                            </div>
+
+                        </p:dialog>
+                        <p:dialog id="idRespuestaHaciendaModal"
+                                  height="350"
+                                  modal="true"
+                                  widgetVar="idRespuestaHaciendaModal" 
+                                  showEffect="fade" 
+                                  hideEffect="fade">
+                            <div class="card">
+                                <h1>Respuesta</h1>
+                                <p:panelGrid columns="1" 
+                                             columnClasses="ui-grid-col-16" 
+                                             layout="grid" 
+                                             styleClass="ui-panelgrid-blank" 
+                                             style="border:0px none; background-color:transparent;" >
+                                    <p:inputTextarea  rows="30" cols="100" readonly="true"  
+                                                      id="txtDescripcionLinea" value="#{beanAdministracionNotasDebito.historicoSeleccionado.respuesta}" >
+                                    </p:inputTextarea >
+                                </p:panelGrid>  
+                            </div>
+
+                        </p:dialog>
+
+                        <br/>
+                        <div  style="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.factura!=null?'':'display: none'}">
+                            <h2>Factura Asociada</h2>
+                            <br/>
+                            <p:panelGrid id="panelFacturas" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                <p:outputLabel value="Id"/>
+                                <p:inputText readonly="true" value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.factura.id_factura}"/>
+                                <p:outputLabel value="Clave"/>
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.factura.clave}"/>
+                                <p:outputLabel value="#{label['anulacion.numero.consecutivo']}"/>                            
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.factura.numero_consecutivo}"/>
+                                <p:outputLabel value="Fecha Factura"/>
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.factura.fecha_factura}"/>
+                                <p:outputLabel value="Fecha Emisión"/>
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.factura.fecha_emision}"/>
+                                <p:outputLabel value="Estado de Factura"/>
+                                <p:inputText readonly="true" value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.factura.estadoFactura.descripcion}"/>
+                                s<p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                            </p:panelGrid>
+                        </div>
+                        <br/>
+                        <div  style="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaCredito!=null?'':'display: none'}">
+                            <h2>Nota de Crédito Asociada</h2>
+                            <br/>
+                            <p:panelGrid id="panelNotasCredito" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                                <p:outputLabel value="Id"/>
+                                <p:inputText readonly="true" value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaCredito.id_anulacion}"/>
+                                <p:outputLabel value="Clave"/>
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaCredito.clave}"/>
+                                <p:outputLabel value="#{label['anulacion.numero.consecutivo']}"/>                            
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaCredito.numero_consecutivo}"/>
+                                <p:outputLabel value="Fecha Factura"/>
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaCredito.fecha_anulacion}"/>
+                                <p:outputLabel value="Fecha Emisión"/>
+                                <p:inputText  readonly="true"  value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaCredito.fecha_emision}"/>
+                                <p:outputLabel value="Estado de Factura"/>
+                                <p:inputText readonly="true" value="#{beanAdministracionNotasDebito.notaDebitoSeleccionada.notaCredito.estadoFactura.descripcion}"/>
+                                s<p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                                <p:outputLabel value=""/>
+                            </p:panelGrid>
+                        </div>
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </ui:define>
+</ui:composition>

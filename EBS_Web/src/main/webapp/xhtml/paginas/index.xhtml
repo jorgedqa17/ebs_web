@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+    <ui:define name="title">Página Principal</ui:define>
+
+    <ui:define name="head">
+        <script type="text/javascript">
+            //<![CDATA[
+            function skinChart() {
+                this.cfg.shadow = false;
+                this.cfg.title = '';
+                this.cfg.seriesColors = ['#007be5', '#20d077'];
+                this.cfg.grid = {
+                    background: '#ffffff',
+                    borderColor: '#ffffff',
+                    gridLineColor: '#F5F5F5',
+                    shadow: false
+                };
+                this.cfg.axesDefaults = {
+                    rendererOptions: {
+                        textColor: '#666F77'
+                    }
+                };
+                this.cfg.seriesDefaults = {
+                    shadow: false,
+                    lineWidth: 1,
+                    markerOptions: {
+                        shadow: false,
+                        size: 7,
+                        style: 'circle'
+                    }
+                }
+            }
+            //]]>  
+        </script>
+        <style type="text/css">
+            .main-content {
+                padding: 0;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">
+
+        <div class="ui-g ui-fluid dashboard">
+            <div class="ui-g-12 ui-md-4" style="#{beanDashboard.cantidadProductosConExistenciasMinimas eq 0?'display: none':''}">
+                <div class="card clearfix summary">
+                    <span class="title">Inventario</span>
+                    <span class="detail">Inventario con cantidades mínimas</span>
+                    <span class="count visitors">#{beanDashboard.cantidadProductosConExistenciasMinimas}</span>
+                </div>
+            </div>
+            <div class="ui-g-12 ui-md-4" style="#{beanDashboard.cantidadPedidosProformas eq 0?'display: none':''}">
+                <div class="card clearfix summary">
+                    <span class="title">Facturación</span>
+                    <span class="detail">Cantidad de Pedidos o Proformas con reservas</span>
+                    <span class="count purchases">#{beanDashboard.cantidadPedidosProformas}</span>
+                </div>
+            </div>
+        </div>
+
+
+    </ui:define>
+</ui:composition>

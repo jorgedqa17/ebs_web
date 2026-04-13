@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Procesamiento de Pagos</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">  
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+
+                    <div class="card">
+                        <h1>Lectura de Archivos Automática</h1>
+                        <p:fileUpload  fileUploadListener="#{beanPagos.cargarArchivo}"  oncomplete="procesar();"  update="tablaPagos,informacionDeLectura" multiple="true" mode="advanced" dragDropSupport="true" sizeLimit="100000" allowTypes="/(\.|\/)(xml)$/"/>
+                        <!--<p:remoteCommand name="procesar" actionListener="#{beanPagos.leerProcesarLecturaArchivos}"/>-->
+                    </div>
+
+                    <div class="card" style="#{beanPagos.resultadoValidacion ne ''?'display: none':''}">
+                        <h1>Información Importante</h1>
+                        <p:inputTextarea  id="informacionDeLectura" value="#{beanPagos.resultadoValidacion}" cols="1000" rows="10" style="width: 98%; height: 100%;"></p:inputTextarea>
+
+                    </div>
+
+                    <div class="card">
+                        <h1>Ingreso Pago Manual</h1>
+                        <p:panelGrid id="panelDatosPAgosManuales" columns="6" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel for="listaTipoIdentificacion" value="#{label['receptor.tipo.identificacion']}" />
+                            <p:selectOneMenu  converter="ConvertidorListaDesplegables" 
+                                              valueChangeListener="#{beanPagos.seleccionarTipoCedula}"
+                                              value="#{beanPagos.tipoIdentificacionSeleccionadaReceptor}" 
+                                              id="listaTipoIdentificacion"
+                                              effect="fold" >     
+                                <p:ajax event="change" update="txtIdentificacion" />     
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanPagos.listaTiposCedulas}"
+                                               var="tipoCedula"
+                                               itemLabel="#{tipoCedula.descripcion}"
+                                               itemValue="#{tipoCedula.id_tipo_cedula}"/>
+                            </p:selectOneMenu>                
+                            <p:outputLabel id="lblIdentificacion" value="#{label['receptor.identificacion']}"/>
+                            <p:inputMask id="txtIdentificacion" 
+                                         value="#{beanPagos.pagoManual.identificacionReceptor}"                                  
+                                         maxlength="#{beanPagos.tamannoCedula}" 
+                                         mask="#{beanPagos.mascaraSeleccionada}">
+                            </p:inputMask>  
+                            <p:outputLabel id="lblCorreoFactura" value="Correo Electrónico:"/>
+                            <p:inputText id="txtCorreoFactura"  maxlength="300" value="#{beanPagos.pagoManual.correoElectronicoReceptor}" >
+                                <f:validator validatorId="EmailValidator" />
+                            </p:inputText>
+                            <p:outputLabel value="Número Consecutivo del Documento"/>
+                            <p:inputText id="numConsecReceptor" value="#{beanPagos.pagoManual.numeroConsecutivoReceptor}" />
+                            <p:outputLabel value="Total de Impuestos"/>
+                            <p:inputNumber decimalPlaces="2"  id="totImpuestos" value="#{beanPagos.pagoManual.montoImpuestos}" >
+                            </p:inputNumber >
+                            <p:outputLabel value="Total del Comprobante"/>
+                            <p:inputNumber decimalPlaces="2" id="totComprobante" value="#{beanPagos.pagoManual.montoTotal}" >
+                            </p:inputNumber >
+
+                        </p:panelGrid>
+                        <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:commandButton id="btnAgregarPagoManual" value="Agregar Pago" icon="ui-icon-check" actionListener="#{beanPagos.agregarPAgoManual}"
+                                             update=":form_sisadmin:tablaPagos, panelDatosPAgosManuales"/>
+                        </p:panelGrid>
+
+                    </div>
+                    <div class="card">
+                        <h1>Información para toda la carga</h1>
+                        <p:panelGrid id="panelInfoCarga" columns="6" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel for="listaTiposRespuestaGlobal" value="Tipo Respuesta" />
+                            <p:column headerText="Tipo Respuesta">
+                                <p:selectOneMenu 
+                                    style="width: 85%; height: 50%;"
+                                    converter="ConvertidorListaDesplegables"                                   
+                                    value="#{beanPagos.idTipoMensajeGlobal}" 
+                                    id="listaTiposRespuestaGlobal"                           
+                                    effect="fold" > 
+                                    <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                    <f:selectItems value="#{beanPagos.listaMensajeRecepcion}"
+                                                   var="tipoRespuesta"
+                                                   itemLabel="#{tipoRespuesta.nombre}"
+                                                   itemValue="#{tipoRespuesta.codigo}"/>
+                                </p:selectOneMenu>       
+                            </p:column>
+                            <p:outputLabel for="listaCondImpuestoGlobal" value="Condición Impuesto" />
+                            <p:selectOneMenu 
+                                style="width: 85%; height: 50%;"
+                                converter="ConvertidorListaDesplegables"                                   
+                                value="#{beanPagos.idCondicionImpuestoGlobal}" 
+                                id="listaCondImpuestoGlobal"                           
+                                effect="fold" > 
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanPagos.listaCondicionImpuesto}"
+                                               var="condImpuesto"
+                                               itemLabel="#{condImpuesto.descripcion}"
+                                               itemValue="#{condImpuesto.id_condicion_impuesto}"/>
+                            </p:selectOneMenu>  
+                            <p:outputLabel for="idMensajeGlobal" value="Detalle Mensaje" />
+                            <p:inputText id="idMensajeGlobal" maxlength="80" value="#{beanPagos.detalleMensajeGlobal}"/>
+
+                        </p:panelGrid>
+
+                        <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:commandButton id="btnAgregarInformacionGlobal" value="Aceptar" icon="ui-icon-check" actionListener="#{beanPagos.agregarInformacionGlobal}"
+                                             update="tablaPagos"      />
+                        </p:panelGrid>
+
+                    </div>
+                    <div class="card">
+                        <h1>Listado de Pagos Por Procesar</h1>
+                        <p:dataTable  paginator="true" id="tablaPagos" value="#{beanPagos.listaPagos}" 
+                                      rows="10"
+                                      reflow="true"
+                                      editable="true"
+                                      editMode="cell"
+                                      var="pago" >
+                            <p:ajax event="cellEdit" listener="#{beanPagos.editarFila}" />
+                            <p:column headerText="Identificación Vendedor">
+                                <h:outputText value="#{pago.identificacionReceptor}"/>
+                            </p:column>
+                            <p:column headerText="Clave Factura">
+                                <h:outputText value="#{pago.numeroConsecutivoReceptor.substring(33)}"/>
+                            </p:column>
+                            <!--<p:column headerText="Correo Electrónico">
+                                <p:cellEditor>
+                                    <f:facet name="output">
+                                        <h:outputText value="#{pago.correoElectronicoReceptor}"/>
+                                    </f:facet>
+                                    <f:facet name="input">
+                                        <p:inputText value="#{pago.correoElectronicoReceptor}">
+                                            <f:validator validatorId="EmailValidator" />
+                                        </p:inputText>
+                                    </f:facet>
+                                </p:cellEditor>
+                            </p:column>-->
+                            <p:column headerText="Total de Impuestos Pago">
+                                <h:outputText value="#{pago.montoImpuestos}">
+                                    <f:convertNumber type="currency" currencySymbol=""/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Total de Comprobante Pago">
+                                <h:outputText value="#{pago.montoTotal}">
+                                    <f:convertNumber type="currency" currencySymbol=""/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Monto Total Impuesto Acreditar">
+                                <p:cellEditor>
+                                    <f:facet name="output">
+                                        <h:outputText value="#{pago.monto_total_impuesto_acreditar}">
+                                            <f:convertNumber type="currency"  currencySymbol=""/>
+                                        </h:outputText>
+                                    </f:facet>
+                                    <f:facet name="input">
+                                        <p:inputNumber  disabled="#{(pago.id_condicion_impuesto eq 5) or (pago.tipoRespuesta eq 3) }" value="#{pago.monto_total_impuesto_acreditar}"  decimalPlaces="2"/>                                                          
+                                    </f:facet>
+                                </p:cellEditor>
+                            </p:column>
+                            <p:column headerText="Monto Total Gasto Aplicable">
+                                <p:cellEditor>
+                                    <f:facet name="output">
+                                        <h:outputText value="#{pago.monto_total_gasto_aplicable}">
+                                            <f:convertNumber type="currency" currencySymbol=""/>
+                                        </h:outputText>
+                                    </f:facet>
+                                    <f:facet name="input">
+                                        <p:inputNumber disabled="#{(pago.id_condicion_impuesto eq 5) or (pago.tipoRespuesta eq 3) }"  value="#{pago.monto_total_gasto_aplicable}"  decimalPlaces="2"/>                                                          
+                                    </f:facet>
+                                </p:cellEditor>
+                            </p:column>
+                            <p:column headerText="Condición del Impuesto">
+                                <p:selectOneMenu 
+                                    style="width: 85%; height: 50%;"
+                                    converter="ConvertidorListaDesplegables"                                   
+                                    value="#{pago.id_condicion_impuesto}" 
+                                    id="listaCondImpuesto"                           
+                                    effect="fold" > 
+                                    <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                    <f:selectItems value="#{beanPagos.listaCondicionImpuesto}"
+                                                   var="condImpuesto"
+                                                   itemLabel="#{condImpuesto.descripcion}"
+                                                   itemValue="#{condImpuesto.id_condicion_impuesto}"/>
+                                </p:selectOneMenu>       
+                            </p:column>
+                            <p:column headerText="Tipo Respuesta">
+                                <p:selectOneMenu 
+                                    style="width: 85%; height: 50%;"
+                                    converter="ConvertidorListaDesplegables"                                   
+                                    value="#{pago.tipoRespuesta}" 
+                                    id="listaTiposRespuesta"                           
+                                    effect="fold" > 
+                                    <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                    <f:selectItems value="#{beanPagos.listaMensajeRecepcion}"
+                                                   var="tipoRespuesta"
+                                                   itemLabel="#{tipoRespuesta.nombre}"
+                                                   itemValue="#{tipoRespuesta.codigo}"/>
+                                </p:selectOneMenu>       
+                            </p:column>
+                            <p:column headerText="Detalle del Mensaje">
+                                <p:cellEditor>
+                                    <f:facet name="output">
+                                        <h:outputLabel value="#{pago.detalleMensaje}"/>
+                                    </f:facet>
+                                    <f:facet name="input">
+                                        <p:inputText maxlength="80" value="#{pago.detalleMensaje}"/>
+                                    </f:facet>
+                                </p:cellEditor>
+                            </p:column>
+                            <p:column>
+                                <p:commandButton id="btnElmiinarRegistro"                                      
+                                                 icon="ui-icon-trash" 
+                                                 actionListener="#{beanPagos.eliminarPago(pago)}" 
+                                                 update="tablaPagos">                    
+                                </p:commandButton>
+                            </p:column>
+
+                        </p:dataTable> 
+                    </div>
+                    <div class="card">
+
+                        <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:commandButton id="btnProcesarPagos"                                      
+                                             icon="ui-icon-circle-check"
+                                             value="Procesar Pagos"
+                                             actionListener="#{beanPagos.procesarPagos}"
+                                             update=":form_sisadmin, informacionDeLectura">                    
+                            </p:commandButton>
+                            <!-- <p:commandButton id="btnProcesarPago2s"                                      
+                                              icon="ui-icon-circle-check"
+                                              value="Leer Archivos"
+                                              actionListener="#{beanPagos.procesarArchivoNuevos}"
+                                              update=":form_sisadmin, informacionDeLectura">                    
+                             </p:commandButton>-->
+
+                        </p:panelGrid>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <p:dialog id="idDialogDescripcionLinea"
+                  minWidth="50"
+                  header="Mensaje"
+                  modal="true"
+                  widgetVar="descripcionLineaDialog" 
+                  showEffect="fade" 
+                  hideEffect="fade">
+            <div class="card">
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+
+                    <p:inputTextarea rows="10" cols="1500" counterTemplate="{0} caracteres restantes" counter="display" 
+                                     id="txtDescripcionLinea" value="#{beanPagos.pagoManualSeleccionado.detalleMensaje}" maxlength="80">
+                    </p:inputTextarea >
+                    <h:outputText id="display" />
+                </p:panelGrid>
+                <p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                    <p:commandButton  oncomplete="PF('descripcionLineaDialog').hide()" 
+                                      update=":form_sisadmin:tablaPagos, txtDescripcionLinea" 
+                                      id="btnGuardarDescripcionLinea" value="#{label['anulacion.guardar']}" 
+                                      actionListener="#{beanPagos.agregarDescripcionLinea}">
+                    </p:commandButton>       
+
+
+                </p:panelGrid>
+            </div>
+
+        </p:dialog> 
+
+    </ui:define>
+</ui:composition>

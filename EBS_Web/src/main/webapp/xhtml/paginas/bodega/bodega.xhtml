@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition 
+    template="/WEB-INF/template.xhtml"
+    xmlns="http://www.w3.org/1999/xhtml" 
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Bodega</ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+    </ui:define>
+    <ui:define name="content">
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel  value="Bodega" />
+                            <p:inputText value="#{beanBodega.id}"/>
+                            <p:outputLabel value="Descripcion"/>
+                            <p:inputText value="#{beanAdministracionPagos.pago.numero_consecutivo}"/>
+                            <p:outputLabel value="Ubicacion"/>
+                            <p:inputText value="#{beanAdministracionPagos.pago.numero_consecutivo}"/>
+                            <p:commandButton id="btnConsultarPagos" 
+                                             value="Aceptar"/>
+                        </p:panelGrid>
+                    </div>
+                    <div class="card">
+                        <h1>Resultados de la Búsqueda</h1>
+
+                        <p:dataTable id="idTablaConsultaPagos" 
+                                     value="#{beanBodega.listaPagoResultadoBusqueda}"
+                                     filteredValue="#{beanAdministracionPagos.listaPagoResultadoBusquedaFiltro}"
+                                     var="pago"
+                                     reflow="true"
+                                     rowKey="#{pago}"
+                                     paginator="true" 
+                                     rows="7"
+                                     emptyMessage="#{label['tabla.vacia']}">
+                            <p:column  filterMatchMode="contains" filterBy="#{pago.id_pago}" headerText="Id Bodega" >
+                                <h:outputText id="codigoPago" value="#{pago.id_pago}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{pago.numero_consecutivo}" headerText="Id Negocio" >
+                                <h:outputText id="numeroConsecutivo" value="#{pago.numero_consecutivo}" />  
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{pago.clave_comprobante_pago}" headerText="Descripcion" >
+                                <h:outputText id="claveComprobante" value="#{pago.clave_comprobante_pago}" />  
+                            </p:column>
+                            <p:column   filterMatchMode="contains" filterBy="#{pago.mensaje}" headerText="Ubicación" >
+                                <h:outputText id="respuestaDad" value="#{pago.mensaje}" />  
+                            </p:column>
+                            <p:column>   
+                                <p:commandButton icon="fa fa-search"
+                                                 update=":form_sisadmin"
+                                                 value="#{label['consultacierre.verdetalle']}"/>
+                            </p:column>
+                        </p:dataTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>

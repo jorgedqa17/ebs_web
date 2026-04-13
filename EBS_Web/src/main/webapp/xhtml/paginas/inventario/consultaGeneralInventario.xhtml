@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">
+        Consulta General de Inventario
+    </ui:define>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .nba-grid {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+        </style>
+        <style type="text/css">
+            .grid-pad .ui-panelgrid-content .ui-panelgrid-cell.ui-grid-col-12 {
+                padding-bottom: 10px;
+            }
+        </style>
+
+    </ui:define>
+
+    <ui:define name="content">  
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Filtros de búsqueda</h1>
+                        <p:panelGrid columns="4" columnClasses="ui-grid-col-1,ui-grid-col-4,ui-grid-col-1,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel  value="#{label['inventario.general.bodega']}" />
+                            <p:selectOneMenu id="bodegasOrigen" value="#{beanConsultaGeneralInventario.filtroInventario.idBodegaSeleccionada}" >
+                                <f:selectItems value="#{beanConsultaGeneralInventario.listaBodegas}" />
+                            </p:selectOneMenu>
+
+                            <p:outputLabel value="Código de Barras:" />
+                            <p:inputText id="txtCodigoBarras"  value="#{beanConsultaGeneralInventario.busquedaCodigoBarras}">
+                                <p:ajax event="blur" listener="#{beanConsultaGeneralInventario.buscarProducto}" update="tablaProductoDescripcion form_sisadmin:mensajes"></p:ajax>
+                            </p:inputText>
+
+                            <p:outputLabel value="#{label['inventario.general.activo']}" />
+                            <p:selectOneMenu filter="true" filterMatchMode="startsWith" id="estado" value="#{beanConsultaGeneralInventario.filtroInventario.idActivoSeleccionado}" >
+                                <f:selectItems value="#{beanConsultaGeneralInventario.listaEstados}" />
+                            </p:selectOneMenu>
+                            <p:outputLabel value="Nombre Producto:" />
+                            <p:inputText  id="txtDescripcionProductoBusqueda" value="#{beanConsultaGeneralInventario.nombreProducto}" >
+                                <p:ajax event="keyup" listener="#{beanConsultaGeneralInventario.buscarProductoPorDescripcion}" update="tablaProductoDescripcion" ></p:ajax>
+                            </p:inputText>
+                        </p:panelGrid>
+
+                        <p:dataTable id="tablaProductoDescripcion"
+                                     widgetVar="tablaProductoDescripcion"
+                                     var="productoBusqueda"
+                                     reflow="true"
+                                     paginator="true"
+                                     paginatorPosition="bottom"
+                                     rowKey="#{productoBusqueda.id_producto}"
+                                     rows="10"
+                                     value="#{beanConsultaGeneralInventario.listaProductosBusqueda}"
+                                     emptyMessage="#{label['tabla.vacia']}" 
+                                     selection="#{beanConsultaGeneralInventario.busquedadSeleccionados}">
+
+                            <p:column selectionMode="multiple" style="text-align:center;"/>
+
+                            <p:column style="text-align: left;" headerText="#{label['producto.descripcion']}">
+                                <p:outputLabel  value="#{productoBusqueda.descripcion}"/>
+                            </p:column>
+
+                        </p:dataTable> 
+
+
+                    </div>
+
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-3,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnBuscar" value="#{label['inventario.botones.buscarInventario']}" icon="ui-icon-search" 
+                                         actionListener="#{beanConsultaGeneralInventario.obtenerNuevaLista}" update="form_sisadmin:listaProductos"/>
+                        <p:commandButton id="btnGenerarReporte" value="Generar Reporte" icon="ui-icon-search" 
+                                         actionListener="#{beanConsultaGeneralInventario.generarReporte}" ajax="false">
+                            <p:fileDownload value="#{beanConsultaGeneralInventario.reporteDesplegar}"/>  
+                        </p:commandButton>
+
+                    </p:panelGrid>
+
+                    <div class="card">
+                        <h1>Lista de Productos</h1>
+                        <p:dataTable id="listaProductos" 
+                                     widgetVar="listaProductos" 
+                                     var="linea"
+                                     editable="true"
+                                     editMode="cell"
+                                     reflow="true"
+                                     paginator="true"
+                                     rowKey="#{producto.inventario.idInventario}"
+                                     paginatorPosition="top"
+                                     rows="10"
+                                     value="#{beanConsultaGeneralInventario.listaGeneralInventario}" 
+                                     emptyMessage="Tabla Vacía" 
+                                     filteredValue="#{beanConsultaGeneralInventario.listaFiltrada}" 
+                                     rowsPerPageTemplate="5,10,15,20,30,50">
+
+                            <p:column headerText="Bodega" filterMatchMode="contains"  >
+                                <p:outputLabel value="#{beanConsultaGeneralInventario.getNombreBodega(linea.inventario.idBodega)}" />
+                            </p:column>
+                            <p:column headerText="Id Producto" filterMatchMode="contains" filterBy="#{linea.producto.id_producto}"  sortBy="#{linea.producto.id_producto}" >
+                                <p:outputLabel value="#{linea.producto.id_producto}" />
+                            </p:column>
+                            <p:column headerText="Producto" filterMatchMode="contains" filterBy="#{linea.producto.descripcion}"  sortBy="#{linea.producto.descripcion}" >
+                                <p:outputLabel value="#{linea.producto.descripcion}" />
+                            </p:column>
+
+                            <p:column headerText="Número de Lote" filterMatchMode="contains" filterBy="#{linea.inventario.numeroLote}"  sortBy="#{linea.inventario.numeroLote}" >
+                                <p:outputLabel value="#{linea.inventario.numeroLote}" />
+                            </p:column>
+
+                            <p:column headerText="Fecha de Vencimiento" filterMatchMode="contains" filterBy="#{linea.fechaTexto}" sortBy="#{linea.fechaTexto}" >
+                                <p:outputLabel value="#{linea.fechaTexto}" />
+                            </p:column>
+
+                            <p:column headerText="Cantidad Actual" filterMatchMode="contains" filterBy="#{linea.cantidadTexto}" sortBy="#{linea.cantidadTexto}" >
+                                <p:outputLabel value="#{linea.cantidadTexto}" />
+                            </p:column>
+
+                            <p:column headerText="Activo" filterMatchMode="contains" filterBy="#{linea.activoTexto}" sortBy="#{linea.activoTexto}" >
+                                <h:outputText value="#{linea.activoTexto}" />
+                            </p:column>
+
+                            <p:column headerText="Motivo" filterMatchMode="contains" filterBy="#{linea.razonInactividad}" sortBy="#{linea.razonInactividad}" >
+                                <h:outputText value="#{linea.razonInactividad}" />
+                            </p:column>
+
+                            <p:column visible="#{beanConsultaGeneralInventario.esAdministrador}" >
+                                <p:commandButton id="btnModificacion" value="#{label['inventario.botones.modificarInventario']}" icon="ui-icon-circle-plus"
+                                                 update="form_sisadmin:panelModal" actionListener="#{beanConsultaGeneralInventario.abrirLineaInventario}">
+                                    <f:attribute name="lineaInventario" value="#{linea}"/>
+                                </p:commandButton>
+                            </p:column>
+
+                            <p:column visible="#{beanConsultaGeneralInventario.esAdministrador}">
+                                <p:commandButton id="btnEliminacionProducto" value="#{label['inventario.botones.borrarExistencia']}" icon="ui-icon-circle-minus"
+                                                 update="form_sisadmin:panelEliminacion form_sisadmin:mensajes" actionListener="#{beanConsultaGeneralInventario.abrirModalEliminacion}">
+                                    <f:attribute name="lineaInventarioEliminacion" value="#{linea}"/>
+                                </p:commandButton>
+                            </p:column>
+
+                        </p:dataTable>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+
+    <!-- :::::::::::::::::::: PERSONALIZAR EL PANEL DE MODIFICACION :::::::::::::::::::-->
+    <ui:define name="dialogoHeader">
+        <h2>#{label['inventario.general.modal.titulo']}</h2>
+    </ui:define>
+    <ui:define name="dialogoMensaje">
+        <br/>
+        <div class="card">
+            <p:panelGrid id="ElementosLinea" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-3,ui-grid-col-2,ui-grid-col-3" layout="grid" styleClass="ui-panelgrid-blank">
+                <p:outputLabel value="#{label['inventario.general.modal.lineaActivo']}" />
+                <p:selectOneMenu id="lstActivo" value="#{beanConsultaGeneralInventario.lineaSeleccionada.lineaActivo}" >
+                    <f:selectItems value="#{beanConsultaGeneralInventario.lineaSeleccionada.listaActivos}" />
+                    <p:ajax update="ElementosLinea" listener="#{beanConsultaGeneralInventario.actualizarmotivo}"/>
+                </p:selectOneMenu>
+                <p:outputLabel value="#{label['inventario.general.modal.observacionActivo']}"/>
+                <p:inputTextarea id="textRazon" maxlength="500" value="#{beanConsultaGeneralInventario.lineaSeleccionada.razonTexto}"/>
+            </p:panelGrid> 
+        </div>        
+    </ui:define>
+    <ui:define name="dialogoBotones">
+        <br/>
+        <p:commandButton id="boton_dialogo_si" icon="ui-icon-circle-plus" 
+                         value="#{label['sistema.boton.guardar']}" actionListener="#{beanConsultaGeneralInventario.guardarLineaInventario}"
+                         update="ElementosLinea form_sisadmin:listaProductos form_sisadmin:mensajes"/>
+        <p:commandButton id="boton_dialogo_no" icon="ui-icon-circle-close" 
+                         value="#{label['sistema.boton.cerrar']}" actionListener="#{beanConsultaGeneralInventario.cerrarLineaInventario}"
+                         update="ElementosLinea"/>
+    </ui:define>
+    <!-- ::::::::::::::::::::::::::: FIN ::::::::::::::::::::::::::::::::::::::::::::--> 
+
+    <!-- :::::::::::::::::::: PERSONALIZAR EL PANEL DE CONFIRMACION DE ELIMINACION :::::::::::::::::::-->
+    <ui:define name="eliminacionHeader">
+        <h2>#{label['inventario.eliminacion.titulo']}</h2>
+    </ui:define>
+    <ui:define name="eliminacionMensaje">
+        <br/>
+        <h1><p:outputLabel value="#{beanConsultaGeneralInventario.lineaEliminacion.producto.descripcion}"/></h1>
+        <div class="card">
+            <p:panelGrid id="DatosEliminacion" columns="2" columnClasses="ui-grid-col-4,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank">
+                <p:outputLabel value="#{label['inventario.eliminacion.responsable']}" style="font-weight: bold;" />
+                <h:outputText value="#{beanConsultaGeneralInventario.usuarioActual.login}" />                
+                <p:outputLabel value="#{label['inventario.eliminacion.cantidad']}" style="font-weight: bold;" />
+                <p:inputNumber decimalPlaces="0" minValue="0" maxValue="999999" value="#{beanConsultaGeneralInventario.cantidadExistencia}">
+                    <f:convertNumber pattern="###.###"/>
+                </p:inputNumber>
+                <p:outputLabel value="#{label['inventario.eliminacion.motivo']}" style="font-weight: bold;"/>
+                <p:inputTextarea id="textMotivo" maxlength="200"  value="#{beanConsultaGeneralInventario.motivo}"/>
+            </p:panelGrid> 
+        </div>        
+    </ui:define>
+    <ui:define name="eliminacionBotones">
+        <br/>
+        <p:commandButton id="boton_eliminacion_si" icon="ui-icon-circle-plus" 
+                         value="#{label['sistema.boton.guardar']}" actionListener="#{beanConsultaGeneralInventario.guardarEliminacion}"
+                         update="DatosEliminacion form_sisadmin:listaProductos form_sisadmin:mensajes"/>
+        <p:commandButton id="boton_eliminacion_no" icon="ui-icon-circle-close" 
+                         value="#{label['sistema.boton.cerrar']}" actionListener="#{beanConsultaGeneralInventario.cerrarEliminacion}"
+                         update="DatosEliminacion"/>
+    </ui:define>
+    <!-- ::::::::::::::::::::::::::: FIN ::::::::::::::::::::::::::::::::::::::::::::--> 
+
+
+</ui:composition>
