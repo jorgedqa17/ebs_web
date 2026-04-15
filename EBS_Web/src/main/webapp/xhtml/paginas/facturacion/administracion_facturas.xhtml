@@ -336,12 +336,22 @@
                                 </p:commandButton>
                             </p:column>
                             <p:column   headerText="Detalle Respuesta" >
-                                <p:commandButton id="verDetalleRespuesta" 
-                                                 value="Detalle Respuesta" 
+                                <p:commandButton id="verDetalleRespuesta"
+                                                 value="Detalle Respuesta"
                                                  update="form_sisadmin"
                                                  oncomplete="PF('idDetalleRespuestaHaciendaModal').show();" icon="fa fa-search" rendered="#{facturaHistorico.detallerespuesta eq '' ? 'false':'true'}"
-                                                 actionListener="#{beanAdministracionFacturas.seleccionarHistorico}">                                     
+                                                 actionListener="#{beanAdministracionFacturas.seleccionarHistorico}">
                                     <f:attribute name="historioSeleccionado" value="#{facturaHistorico}"/>
+                                </p:commandButton>
+                                <p:commandButton id="descargarRespuestaXML"
+                                                 value="Descargar XML"
+                                                 icon="fa fa-download"
+                                                 ajax="false"
+                                                 rendered="#{facturaHistorico.detallerespuesta eq '' ? 'false':'true'}"
+                                                 actionListener="#{beanAdministracionFacturas.seleccionarHistorico}"
+                                                 action="#{beanAdministracionFacturas.descargarRespuestaComprobanteElectronicoXML}">
+                                    <f:attribute name="historioSeleccionado" value="#{facturaHistorico}"/>
+                                    <p:fileDownload value="#{beanAdministracionFacturas.respuestaHaciendaXMLDescarga}"/>
                                 </p:commandButton>
                             </p:column>
 
