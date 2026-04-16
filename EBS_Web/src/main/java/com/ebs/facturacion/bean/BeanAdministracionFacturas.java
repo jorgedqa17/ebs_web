@@ -187,6 +187,8 @@ public class BeanAdministracionFacturas {
     @Getter
     private StreamedContent reporteDesplegarCompElectronico = null;
     @Getter
+    private StreamedContent respuestaHaciendaXMLDescarga = null;
+    @Getter
     @Setter
     private boolean facturaCancelada;
     @Getter
@@ -355,6 +357,44 @@ public class BeanAdministracionFacturas {
         } catch (IOException ex) {
             ex.printStackTrace();
             MensajeUtil.agregarMensajeError("Ha ocurrido un error cuando se intentó descargar el xml");
+        }
+    }
+
+    public void descargarRespuestaComprobanteElectronicoXML() {
+        try {
+            respuestaHaciendaXMLDescarga = null;
+            if (this.historicoSeleccionado != null
+                    && this.historicoSeleccionado.getDetallerespuesta() != null
+                    && !this.historicoSeleccionado.getDetallerespuesta().isEmpty()) {
+
+                byte[] contenido;
+                // El detallerespuesta puede venir como XML plano o Base64 — se intenta decodificar.
+                try {
+                    contenido = Utilitario.convertirBase64ABytes(
+                            this.historicoSeleccionado.getDetallerespuesta());
+                } catch (Exception e) {
+                    contenido = this.historicoSeleccionado.getDetallerespuesta()
+                            .getBytes(StandardCharsets.UTF_8);
+                }
+
+                String clave = facturaSeleccionadaMostrar.getClave() == null
+                        ? facturaSeleccionadaMostrar.getId_factura().toString()
+                        : facturaSeleccionadaMostrar.getClave();
+
+                InputStream input = new ByteArrayInputStream(contenido);
+                respuestaHaciendaXMLDescarga = new DefaultStreamedContent(
+                        input,
+                        TiposMimeTypes.XML.getMimeType(),
+                        "RespuestaComprobanteElectronico_" + clave + "." + TiposMimeTypes.XML.getExtension()
+                );
+            } else {
+                MensajeUtil.agregarMensajeAdvertencia(
+                        "No hay detalle de respuesta disponible para descargar");
+            }
+        } catch (Exception ex) {
+            MensajeUtil.agregarMensajeError(
+                    "Ha ocurrido un error cuando se intentó descargar la respuesta XML");
+            ExcepcionManager.manejarExcepcion(ex);
         }
     }
 
