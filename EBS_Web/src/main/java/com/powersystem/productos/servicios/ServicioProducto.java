@@ -987,4 +987,27 @@ public class ServicioProducto extends ServicioBase {
         return lista;
     }
 
+    public List<Object[]> listarProductosPorTipoPrecio(Long idTipoPrecio) {
+        List<Object[]> listaResultado = new ArrayList<>();
+        try {
+            String sql = "SELECT p.descripcion, pp.precio "
+                    + "FROM searmedica.producto p "
+                    + "INNER JOIN searmedica.producto_precios pp ON p.id_producto = pp.id_producto "
+                    + "WHERE pp.id_tipo = :idTipoPrecio "
+                    + "AND p.activo = 1 "
+                    + "ORDER BY p.descripcion ASC";
+            listaResultado = (List<Object[]>) em.createNativeQuery(sql)
+                    .setParameter("idTipoPrecio", idTipoPrecio)
+                    .getResultList();
+        } catch (NoResultException nex) {
+            nex.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
+                    "mensaje.obtener.lista.producto.por.descripcion.usuario",
+                    "mensaje.obtener.lista.producto.por.descripcion.desarrollador");
+        }
+        return listaResultado;
+    }
+
 }
