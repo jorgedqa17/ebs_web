@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.9.0.final using JasperReports Library version 6.9.0-cb8f9004be492ccc537180b49c026951f4220bf3  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporte_factura" pageWidth="204" pageHeight="850" whenNoDataType="AllSectionsNoDetail" columnWidth="202" leftMargin="2" rightMargin="0" topMargin="0" bottomMargin="0" uuid="5a2bc2e4-ca89-46e9-97a1-cf353aa6114a">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="421"/>
@@ -500,7 +500,7 @@ and t2.es_para_nota_credito = 0]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{numero_consecutivo}==null?"":"Autorizada mediante resolución N° DGT-R-033-2019 del 20 de junio del 2019"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{numero_consecutivo}==null?"":"Autorizado mediante la resolución de facturación electrónica No DGT-R-0027-2024 del 13-11-2024. V4.4"]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement positionType="Float" x="0" y="100" width="198" height="63" uuid="c50e3808-ec73-4b28-b510-ffa2f84b5f9e"/>

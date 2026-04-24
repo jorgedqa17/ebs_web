@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.9.0.final using JasperReports Library version 6.9.0-cb8f9004be492ccc537180b49c026951f4220bf3  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reporte_notas_debito" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="68babeb9-976b-4b1a-a9cd-d4affa632f24">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Desarrollo"/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
@@ -396,7 +396,7 @@ WHERE T1.ID_NOTA_DEBITO =   $P{idNotaDebito}]]>
 			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement x="0" y="10" width="347" height="40" uuid="4568f5cd-055f-4122-b6ae-f6472f012aea"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA["Autorizada mediante resolución N° DGT-R-033-2019 del 20 de junio del 2019"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Autorizado mediante la resolución de facturación electrónica No DGT-R-0027-2024 del 13-11-2024. V4.4"]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>
