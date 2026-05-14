@@ -2,14 +2,17 @@ package com.ebs.consulta.bean;
 
 import com.ebs.consulta.servicio.ServicioExportarVentasGastos;
 import com.ebs.exception.ExcepcionManager;
+import com.powersystem.utilitario.CorreoElectronico;
 import com.powersystem.utilitario.MensajeUtil;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
@@ -34,6 +37,10 @@ public class BeanExportarVentasGastos {
     @Setter
     private Integer anno;
 
+    @Getter
+    @Setter
+    private String correos;
+
     @Setter
     private StreamedContent reporteDesplegar = null;
 
@@ -53,6 +60,55 @@ public class BeanExportarVentasGastos {
     }
 
     public void generarExcel(ActionEvent evt) {
+        try {
+            byte[] bytes = construirExcel();
+
+            InputStream input = new ByteArrayInputStream(bytes);
+            reporteDesplegar = new DefaultStreamedContent(input,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Reporte_Ventas_Gastos_" + anno + ".xlsx");
+
+            MensajeUtil.agregarMensajeInfo("El reporte se generó satisfactoriamente.");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            ExcepcionManager.manejarExcepcion(ex);
+        }
+    }
+
+    public void enviarPorCorreo(ActionEvent evt) {
+        if (correos == null || correos.trim().isEmpty()) {
+            MensajeUtil.agregarMensajeError("Debe ingresar al menos un correo electrónico.");
+            return;
+        }
+
+        try {
+            List<String> listaCorreos = Arrays.stream(correos.split("[,;\\s]+"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+
+            if (listaCorreos.isEmpty()) {
+                MensajeUtil.agregarMensajeError("Debe ingresar al menos un correo electrónico.");
+                return;
+            }
+
+            byte[] bytes = construirExcel();
+
+            String asunto = "Reporte de Ventas y Gastos - " + anno;
+            String cuerpo = "Adjunto el reporte de Ventas y Gastos del año " + anno + ".";
+            String nombreArchivo = "Reporte_Ventas_Gastos_" + anno + ".xlsx";
+
+            new CorreoElectronico().sendEmailExcelVentasGastos(asunto, cuerpo, bytes,
+                    nombreArchivo, listaCorreos);
+
+            MensajeUtil.agregarMensajeInfo("Correo enviado satisfactoriamente a: " + listaCorreos);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            ExcepcionManager.manejarExcepcion(ex);
+        }
+    }
+
+    private byte[] construirExcel() throws IOException {
         XSSFWorkbook workbook = null;
         try {
             List<Object[]> ventas = servicioExportarVentasGastos.obtenerVentas(anno);
@@ -67,17 +123,7 @@ public class BeanExportarVentasGastos {
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             workbook.write(bos);
-            byte[] bytes = bos.toByteArray();
-
-            InputStream input = new ByteArrayInputStream(bytes);
-            reporteDesplegar = new DefaultStreamedContent(input,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "Reporte_Ventas_Gastos_" + anno + ".xlsx");
-
-            MensajeUtil.agregarMensajeInfo("El reporte se generó satisfactoriamente.");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            ExcepcionManager.manejarExcepcion(ex);
+            return bos.toByteArray();
         } finally {
             if (workbook != null) {
                 try {

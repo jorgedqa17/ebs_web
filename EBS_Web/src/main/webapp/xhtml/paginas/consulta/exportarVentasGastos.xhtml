@@ -24,9 +24,15 @@
                                        min="2020" max="2050"
                                        style="width:150px;"/>
 
+                            <p:outputLabel value="Correos (separados por coma):" for="txtCorreos"/>
+                            <p:inputText id="txtCorreos"
+                                         value="#{beanExportarVentasGastos.correos}"
+                                         style="width:400px;"
+                                         placeholder="correo1@dominio.com, correo2@dominio.com"/>
+
                         </p:panelGrid>
                     </div>
-                    <p:panelGrid columns="1" columnClasses="ui-grid-col-3"
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-3,ui-grid-col-3"
                                  layout="grid" styleClass="ui-panelgrid-blank"
                                  style="border:0px none; background-color:transparent;">
                         <p:commandButton ajax="false"
@@ -35,6 +41,10 @@
                                          icon="ui-icon-arrowthick-1-s">
                             <p:fileDownload value="#{beanExportarVentasGastos.reporteDesplegar}"/>
                         </p:commandButton>
+                        <p:commandButton value="Enviar por Correo"
+                                         actionListener="#{beanExportarVentasGastos.enviarPorCorreo}"
+                                         icon="ui-icon-mail-closed"
+                                         update="@form"/>
                     </p:panelGrid>
                 </div>
             </div>
