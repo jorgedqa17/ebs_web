@@ -704,7 +704,7 @@ public class BeanPersona {
                 if (estaModificando) {
                     clienteSeleccionado.setInd_requiere_transporte(requiereTransporte ? 1 : 0);
                     clienteSeleccionado.setId_tipo_cliente(idTipoClienteSeleccionado);
-                    this.servicioPersona.actualizazr(persona, clienteSeleccionado);
+                    this.servicioPersona.actualizarCliente(persona, clienteSeleccionado);
                 } else {
 
                     PersonaPK personaPK = new PersonaPK(identificacion, tipoIdentificacionSeleccionadaReceptor);

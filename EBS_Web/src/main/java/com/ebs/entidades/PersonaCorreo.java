@@ -6,6 +6,7 @@
 package com.ebs.entidades;
 
 import java.io.Serializable;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -72,6 +73,22 @@ public class PersonaCorreo implements Serializable {
 
     public void setAlias_cliente(String alias_cliente) {
         this.alias_cliente = alias_cliente;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PersonaCorreo that = (PersonaCorreo) o;
+        return Objects.equals(numero_cedula, that.numero_cedula)
+                && Objects.equals(id_tipo_cedula, that.id_tipo_cedula)
+                && Objects.equals(correo_electronico, that.correo_electronico)
+                && Objects.equals(alias_cliente, that.alias_cliente);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(numero_cedula, id_tipo_cedula, correo_electronico, alias_cliente);
     }
 
 }

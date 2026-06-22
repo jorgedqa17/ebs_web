@@ -25,7 +25,9 @@ import com.powersystem.util.ServicioBase;
 import com.powersystem.utilitario.JSFUtil;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -606,22 +608,45 @@ public class ServicioPersona extends ServicioBase {
      * @param persona
      * @param cliente
      */
-    public void actualizazr(Persona persona, Cliente cliente) {
+    public void actualizarCliente(Persona persona, Cliente cliente) {
         try {
             actualizar(persona);
-            List<PersonaCorreo> listaCorreos = this.obtenerListaCorreosPersona(persona.getPersonaPK().getNumero_cedula(), persona.getPersonaPK().getId_tipo_cedula());
-            listaCorreos.forEach(elemento -> {
-                eliminar(elemento);
-            });
-            persona.getListaCorreosPersona().forEach(elemento -> {
-                guardar(elemento);
-            });
+            sincronizarCorreos(persona);
             actualizar(cliente);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
                     "mensaje.error.guardar.persona",
                     "mensaje.error.guardar.persona.desarrollador");
+        }
+    }
+
+    private void sincronizarCorreos(Persona persona) {
+        List<PersonaCorreo> correosExistentes = this.obtenerListaCorreosPersona(
+                persona.getPersonaPK().getNumero_cedula(),
+                persona.getPersonaPK().getId_tipo_cedula());
+        List<PersonaCorreo> correosNuevos = persona.getListaCorreosPersona();
+
+        if (correosExistentes == null) {
+            correosExistentes = new ArrayList<>();
+        }
+        if (correosNuevos == null) {
+            correosNuevos = new ArrayList<>();
+        }
+
+        Set<PersonaCorreo> setExistentes = new HashSet<>(correosExistentes);
+        Set<PersonaCorreo> setNuevos = new HashSet<>(correosNuevos);
+
+        for (PersonaCorreo existente : correosExistentes) {
+            if (!setNuevos.contains(existente)) {
+                eliminar(existente);
+            }
+        }
+
+        for (PersonaCorreo nuevo : correosNuevos) {
+            if (!setExistentes.contains(nuevo)) {
+                guardar(nuevo);
+            }
         }
     }
 
@@ -648,13 +673,7 @@ public class ServicioPersona extends ServicioBase {
     public void guardarPersona(Persona persona, Cliente cliente) {
         try {
             guardar(persona);
-            List<PersonaCorreo> listaCorreos = this.obtenerListaCorreosPersona(persona.getPersonaPK().getNumero_cedula(), persona.getPersonaPK().getId_tipo_cedula());
-            listaCorreos.forEach(elemento -> {
-                eliminar(elemento);
-            });
-            persona.getListaCorreosPersona().forEach(elemento -> {
-                guardar(elemento);
-            });
+            sincronizarCorreos(persona);
             guardar(cliente);
         } catch (Exception ex) {
             ex.printStackTrace();
