@@ -43,6 +43,11 @@ import javax.persistence.NoResultException;
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class ServicioNotaDebito extends ServicioBase {
 
+    //Id de tipo_documento_referencia para "Anula documento de referencia".
+    //No confundir con TipoDocumentoReferenciaEnum, que guarda el código de
+    //Hacienda ("01") y no el id de la tabla.
+    private static final Long TIPO_DOC_REFERENCIA_ANULA = 1L;
+
     @Inject
     private ServicioFactura servicioFactura;
 
@@ -211,8 +216,8 @@ public class ServicioNotaDebito extends ServicioBase {
 
         factura.setTotal_descuentos(factura.getTotal_descuentos().add(notaDebito.getTotal_descuento()));
         factura.setTotal_impuestos(factura.getTotal_impuestos().add(notaDebito.getTotal_impuesto()));
-        factura.setTotal_venta_neta(factura.getTotal_venta().add(notaDebito.getTotal_venta()));
-        factura.setTotal_venta(factura.getTotal_venta_neta().add(notaDebito.getTotal_venta_neta()));
+        factura.setTotal_venta(factura.getTotal_venta().add(notaDebito.getTotal_venta()));
+        factura.setTotal_venta_neta(factura.getTotal_venta_neta().add(notaDebito.getTotal_venta_neta()));
         factura.setTotal_servicios_grabados(factura.getTotal_servicios_grabados().add(notaDebito.getTotal_servicios_grabados()));
         factura.setTotal_servicios_exentos(factura.getTotal_servicios_exentos().add(notaDebito.getTotal_servicios_exentos()));
         factura.setTotal_mercancias_gravadas(factura.getTotal_mercancias_gravadas().add(notaDebito.getTotal_mercancias_gravadas()));
@@ -220,6 +225,12 @@ public class ServicioNotaDebito extends ServicioBase {
         factura.setTotal_gravado(factura.getTotal_gravado().add(notaDebito.getTotal_gravado()));
         factura.setTotal_exento(factura.getTotal_exento().add(notaDebito.getTotal_exento()));
         factura.setTotal_comprobante(factura.getTotal_comprobante().add(notaDebito.getTotal_nota_debito()));
+        //Estos campos los resta la nota de crédito, así que la nota de débito
+        //debe devolverlos para que la factura vuelva a su valor original
+        factura.setTotal_servicios_exonerados(factura.getTotal_servicios_exonerados().add(notaDebito.getTotal_servicios_exonerados()));
+        factura.setTotal_mercancias_exonerados(factura.getTotal_mercancias_exonerados().add(notaDebito.getTotal_mercancias_exonerados()));
+        factura.setTotal_exonerado(factura.getTotal_exonerado().add(notaDebito.getTotal_exonerado()));
+        factura.setMonto_restante(factura.getMonto_restante().add(notaDebito.getTotal_nota_debito()));
         return factura;
     }
 
@@ -264,9 +275,14 @@ public class ServicioNotaDebito extends ServicioBase {
             actualizar(notaCredito);
 
             factura = this.calcularMontosParaFacturaDespuesDeNotaDebito(factura, notaDebito);
-            //actualizo los montos de la factura 
+            //actualizo los montos de la factura
             if (notaDebito.getNota_debito_interna().equals(1)) {
                 factura.setEstado_factura(EstadoFactura.RECHAZADA_HACIENDA.getEstadoFactura());
+            } else if (notaCredito != null
+                    && TIPO_DOC_REFERENCIA_ANULA.equals(notaCredito.getId_tipo_doc_referencia())) {
+                //La nota de crédito había anulado la factura, así que al anularla
+                //con esta nota de débito la factura vuelve a estar vigente
+                factura.setEstado_factura(EstadoFactura.APROBADA_HACIENDA.getEstadoFactura());
             }
             actualizar(factura);
 

@@ -3153,8 +3153,8 @@ public class ServicioFactura extends ServicioBase {
 
         factura.setTotal_descuentos(factura.getTotal_descuentos().subtract(notaCredito.getTotal_descuento()));
         factura.setTotal_impuestos(factura.getTotal_impuestos().subtract(notaCredito.getTotal_impuesto()));
-        factura.setTotal_venta_neta(factura.getTotal_venta().subtract(notaCredito.getTotal_venta()));
-        factura.setTotal_venta(factura.getTotal_venta_neta().subtract(notaCredito.getTotal_venta_neta()));
+        factura.setTotal_venta(factura.getTotal_venta().subtract(notaCredito.getTotal_venta()));
+        factura.setTotal_venta_neta(factura.getTotal_venta_neta().subtract(notaCredito.getTotal_venta_neta()));
         factura.setTotal_servicios_grabados(factura.getTotal_servicios_grabados().subtract(notaCredito.getTotal_servicios_grabados()));
         factura.setTotal_servicios_exentos(factura.getTotal_servicios_exentos().subtract(notaCredito.getTotal_servicios_exentos()));
         factura.setTotal_mercancias_gravadas(factura.getTotal_mercancias_gravadas().subtract(notaCredito.getTotal_mercancias_gravadas()));
