@@ -402,6 +402,9 @@ public class BeanAnulacionFactura {
                     this.facturaSeleccionada.getListaDetalleFactura().forEach(elemento -> {
                         if (elemento.isEsParaNotaCredito() && elemento.isPuedeModificar()) {
                             elemento.getDetalleFactura().setId_estado(EstadosLineasFactura.PENDIENTE_ENVIO.getEstadoLineaFactura());
+                            //La línea pasa a la nota de crédito, así que ya no pende de
+                            //ninguna nota de débito previa
+                            elemento.getDetalleFactura().setEs_para_nota_debito(LineaDetalleEstado.PARA_NOTA_DEBITO_QUITAR.getEstadoLineaDetalle());
                             listaDetalleFacturaNotaCredito.add(new DetalleFacturaNotaCredito(elemento.getNumeroLinea(), null, elemento.getDetalleFactura().getDetallePK().getId_producto(), elemento.getDetalleFactura().getDetallePK().getId_factura(), elemento.getDetalleFactura()));
                         }
                     });
