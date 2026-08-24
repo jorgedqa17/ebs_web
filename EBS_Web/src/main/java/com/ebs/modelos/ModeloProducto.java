@@ -435,7 +435,9 @@ public class ModeloProducto {
 
     public void calcularImpuesto() {
         totalImpuesto = new BigDecimal("0.0");
-        if (impuesto != null && (producto.getInd_exento().equals(Indicadores.EXENTO_NO.getIndicador())) && !this.esPersonaExenta) {
+        //El indicador de exento y la tarifa vienen de la línea y pueden ser nulos
+        if (impuesto != null && (Indicadores.EXENTO_NO.getIndicador().equals(producto.getInd_exento())) && !this.esPersonaExenta
+                && tipoTarifaImpuesto != null) {
 
             Float imp = Float.parseFloat(tipoTarifaImpuesto.getValor().toString()) / 100f;
             totalImpuesto = subTotal.multiply(new BigDecimal(imp)).setScale(3, BigDecimal.ROUND_HALF_EVEN);
@@ -484,11 +486,11 @@ public class ModeloProducto {
 
     public void calcularMontoTotalLinea() {
         montoTotalLinea = new BigDecimal("0.0");
-        if ((esPersonaExonerada && exoneracionLinea != null) || producto.getInd_exonerado().equals(Indicadores.EXONERADO_SI.getIndicador())) {
+        if ((esPersonaExonerada && exoneracionLinea != null) || Indicadores.EXONERADO_SI.getIndicador().equals(producto.getInd_exonerado())) {
             montoTotalLinea = subTotal.add(totalImpuestoNeto).setScale(3, BigDecimal.ROUND_HALF_EVEN);
         } else if (impuesto != null) {
             montoTotalLinea = subTotal.add(totalImpuesto).setScale(3, BigDecimal.ROUND_HALF_EVEN);
-        } else if (producto.getInd_exento().equals(1) || esPersonaExenta) {
+        } else if (Indicadores.EXENTO_SI.getIndicador().equals(producto.getInd_exento()) || esPersonaExenta) {
             montoTotalLinea = subTotal;
         } else {
             montoTotalLinea = subTotal;

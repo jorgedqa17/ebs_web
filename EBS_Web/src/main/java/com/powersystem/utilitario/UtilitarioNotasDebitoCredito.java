@@ -9,6 +9,7 @@ import com.ebs.constantes.enums.Indicadores;
 import com.ebs.constantes.enums.TipoProducto;
 import com.ebs.constantes.enums.TipoTarifaTimpuestoEnum;
 import com.ebs.entidades.Persona;
+import com.ebs.entidades.TipoTarifaImpuesto;
 import com.ebs.modelos.ModeloProducto;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -54,6 +55,24 @@ public class UtilitarioNotasDebitoCredito {
 
     private Persona personaEdicionFactura;
 
+    /**
+     * Determina si la línea es exenta de IVA. La clasificación se deriva
+     * siempre de los datos de la línea, nunca de la cabecera.
+     *
+     * @param producto ModeloProducto
+     * @return boolean
+     */
+    private boolean esLineaExenta(ModeloProducto producto) {
+        if (Indicadores.EXENTO_SI.getIndicador().equals(producto.getProducto().getInd_exento())
+                || producto.isEsPersonaExenta()) {
+            return true;
+        }
+        //La tarifa de la línea puede venir nula, por eso se valida antes de leerla
+        TipoTarifaImpuesto tarifa = producto.getTipoTarifaImpuesto();
+        return tarifa != null
+                && TipoTarifaTimpuestoEnum.TARIFA_10.getIdTipoTarifa().equals(tarifa.getId_tipo_tarifa_impuesto());
+    }
+
     public List<ModeloProducto> obtenerProductoGravados(boolean mercancias) {
         List<ModeloProducto> retorno = new ArrayList<>();
         if (personaEdicionFactura != null
@@ -62,7 +81,7 @@ public class UtilitarioNotasDebitoCredito {
         } else if (mercancias) {
             for (ModeloProducto producto : this.listaProductoPorFacturar) {
                 if (producto.getTipoProducto().getId_tipo_producto().equals(TipoProducto.MERCANCIA.getIdTipoProducto())) {
-                    if (producto.getImpuesto() != null) {
+                    if (producto.getImpuesto() != null && !esLineaExenta(producto)) {
                         retorno.add(producto);
                     }
                 }
@@ -70,33 +89,7 @@ public class UtilitarioNotasDebitoCredito {
         } else {
             for (ModeloProducto producto : this.listaProductoPorFacturar) {
                 if (producto.getTipoProducto().getId_tipo_producto().equals(TipoProducto.SERVICIO.getIdTipoProducto())) {
-                    if (producto.getImpuesto() != null) {
-                        retorno.add(producto);
-                    }
-                }
-            }
-        }
-
-        return retorno;
-    }
-
-    public List<ModeloProducto> obtenerProductoExentos(boolean mercancias) {
-        List<ModeloProducto> retorno = new ArrayList<>();
-        if (personaEdicionFactura != null
-                && (personaEdicionFactura.getEs_exento().equals(Indicadores.EXENTO_SI.getIndicador()))) {
-            retorno.addAll(this.listaProductoPorFacturar);
-        } else if (mercancias) {
-            for (ModeloProducto producto : this.listaProductoPorFacturar) {
-                if (producto.getTipoProducto().getId_tipo_producto().equals(TipoProducto.MERCANCIA.getIdTipoProducto())) {
-                    if (producto.getInd_exonerado().equals(Indicadores.EXENTO_SI.getIndicador())) {
-                        retorno.add(producto);
-                    }
-                }
-            }
-        } else {
-            for (ModeloProducto producto : this.listaProductoPorFacturar) {
-                if (producto.getTipoProducto().getId_tipo_producto().equals(TipoProducto.SERVICIO.getIdTipoProducto())) {
-                    if (producto.getInd_exonerado().equals(Indicadores.EXENTO_SI.getIndicador())) {
+                    if (producto.getImpuesto() != null && !esLineaExenta(producto)) {
                         retorno.add(producto);
                     }
                 }
@@ -194,7 +187,8 @@ public class UtilitarioNotasDebitoCredito {
 
             if (modeloProducto.getPersonaAsociada() != null
                     && (modeloProducto.isEsPersonaExonerada()
-                    && !modeloProducto.getTipoTarifaImpuesto().getId_tipo_tarifa_impuesto().equals(TipoTarifaTimpuestoEnum.TARIFA_01.getIdTipoTarifa()))
+                    && modeloProducto.getTipoTarifaImpuesto() != null
+                    && !TipoTarifaTimpuestoEnum.TARIFA_01.getIdTipoTarifa().equals(modeloProducto.getTipoTarifaImpuesto().getId_tipo_tarifa_impuesto()))
                     && (modeloProducto.getExoneracionLinea() != null)) {
 
                 monto = modeloProducto.getMontoTotal() == null ? new BigDecimal("0.0") : modeloProducto.getMontoTotal();
@@ -219,7 +213,8 @@ public class UtilitarioNotasDebitoCredito {
         for (ModeloProducto modeloProducto : retorno) {
             if (modeloProducto.getPersonaAsociada() != null
                     && (modeloProducto.isEsPersonaExonerada()
-                    && !modeloProducto.getTipoTarifaImpuesto().getId_tipo_tarifa_impuesto().equals(TipoTarifaTimpuestoEnum.TARIFA_01.getIdTipoTarifa()))
+                    && modeloProducto.getTipoTarifaImpuesto() != null
+                    && !TipoTarifaTimpuestoEnum.TARIFA_01.getIdTipoTarifa().equals(modeloProducto.getTipoTarifaImpuesto().getId_tipo_tarifa_impuesto()))
                     && (modeloProducto.getExoneracionLinea() != null)) {
 
                 monto = modeloProducto.getMontoTotal() == null ? new BigDecimal("0.0") : modeloProducto.getMontoTotal();
@@ -245,7 +240,7 @@ public class UtilitarioNotasDebitoCredito {
     public BigDecimal getTotalExentos() {
         totalExentos = new BigDecimal("0.0");
         for (ModeloProducto producto : this.listaProductoPorFacturar) {
-            if (producto.getProducto().getInd_exento().equals(Indicadores.EXENTO_SI.getIndicador()) || producto.isEsPersonaExenta()) {
+            if (esLineaExenta(producto)) {
                 totalExentos = totalExentos.add(producto.getMontoTotal()).setScale(3, BigDecimal.ROUND_HALF_EVEN);;
             }
         }
@@ -262,7 +257,7 @@ public class UtilitarioNotasDebitoCredito {
         totalExentosServicios = new BigDecimal("0.0");
         for (ModeloProducto producto : this.listaProductoPorFacturar) {
             if (producto.getTipoProducto().getId_tipo_producto().equals(TipoProducto.SERVICIO.getIdTipoProducto())) {
-                if (producto.getProducto().getInd_exento().equals(Indicadores.EXENTO_SI.getIndicador()) || producto.isEsPersonaExenta()) {
+                if (esLineaExenta(producto)) {
                     totalExentosServicios = totalExentosServicios.add(producto.getMontoTotal()).setScale(3, BigDecimal.ROUND_HALF_EVEN);;
                 }
             }
@@ -274,7 +269,7 @@ public class UtilitarioNotasDebitoCredito {
         totalExentosMercancias = new BigDecimal("0.0");
         for (ModeloProducto producto : this.listaProductoPorFacturar) {
             if (producto.getTipoProducto().getId_tipo_producto().equals(TipoProducto.MERCANCIA.getIdTipoProducto())) {
-                if (producto.getProducto().getInd_exento().equals(Indicadores.EXENTO_SI.getIndicador()) || producto.isEsPersonaExenta()) {
+                if (esLineaExenta(producto)) {
                     totalExentosMercancias = totalExentosMercancias.add(producto.getMontoTotal()).setScale(3, BigDecimal.ROUND_HALF_EVEN);;
                 }
             }

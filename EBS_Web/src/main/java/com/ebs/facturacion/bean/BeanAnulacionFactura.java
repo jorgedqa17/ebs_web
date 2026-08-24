@@ -70,6 +70,9 @@ import org.primefaces.model.StreamedContent;
 @Data
 public class BeanAnulacionFactura {
 
+    //Tolerancia para comparar montos, según el redondeo a 3 decimales de Hacienda
+    private static final BigDecimal TOLERANCIA_MONTOS = new BigDecimal("0.005");
+
     @Inject
     private ServicioReporte servicioReporte;
     @Inject
@@ -399,6 +402,9 @@ public class BeanAnulacionFactura {
                     this.facturaSeleccionada.getListaDetalleFactura().forEach(elemento -> {
                         if (elemento.isEsParaNotaCredito() && elemento.isPuedeModificar()) {
                             elemento.getDetalleFactura().setId_estado(EstadosLineasFactura.PENDIENTE_ENVIO.getEstadoLineaFactura());
+                            //La línea pasa a la nota de crédito, así que ya no pende de
+                            //ninguna nota de débito previa
+                            elemento.getDetalleFactura().setEs_para_nota_debito(LineaDetalleEstado.PARA_NOTA_DEBITO_QUITAR.getEstadoLineaDetalle());
                             listaDetalleFacturaNotaCredito.add(new DetalleFacturaNotaCredito(elemento.getNumeroLinea(), null, elemento.getDetalleFactura().getDetallePK().getId_producto(), elemento.getDetalleFactura().getDetallePK().getId_factura(), elemento.getDetalleFactura()));
                         }
                     });
@@ -417,10 +423,13 @@ public class BeanAnulacionFactura {
                     });
                 }
 
+                List<ModeloProducto> lineasCalculo = null;
+
                 if (esNotaCreditoParaFactura) {
 
                     UtilitarioNotasDebitoCredito utilitario = new UtilitarioNotasDebitoCredito();
-                    utilitario.setListaProductoPorFacturar(this.obtenerLineasParaCalcular(listaDetalleFacturaNotaCredito));
+                    lineasCalculo = this.obtenerLineasParaCalcular(listaDetalleFacturaNotaCredito);
+                    utilitario.setListaProductoPorFacturar(lineasCalculo);
                     if (this.facturaSeleccionada.getFactura() != null) {
                         if (this.facturaSeleccionada.getFactura().getId_cliente() != null) {
                             utilitario.setPersonaEdicionFactura(servicioPersona.obtenerPersonaPorIdCliente(this.facturaSeleccionada.getFactura().getId_cliente()));
@@ -457,6 +466,10 @@ public class BeanAnulacionFactura {
                     anulacion.setTotal_mercancias_exenonerados(this.notaDebitoSeleccionada.getNotaDebito().getTotal_mercancias_exonerados());
                     anulacion.setTotal_servicios_exenonerados(this.notaDebitoSeleccionada.getNotaDebito().getTotal_servicios_exonerados());
                     anulacion.setTotal_exonerado(this.notaDebitoSeleccionada.getNotaDebito().getTotal_exonerado());
+                }
+
+                if (esNotaCreditoParaFactura && !validarTotalesNotaCredito(anulacion, lineasCalculo)) {
+                    return;
                 }
 
                 servicioFactura.guardarAnulacion(anulacion, listaDetalleFacturaNotaCredito, (this.facturaSeleccionada == null ? null : this.facturaSeleccionada.getFactura()), notaDebitoSeleccionada.getNotaDebito(), esNotaCreditoParaFactura, notaDebitoAsociadaFactura);
@@ -519,6 +532,75 @@ public class BeanAnulacionFactura {
         }
 
         return resultado;
+    }
+
+    /**
+     * Valida las identidades aritméticas del resumen de la nota de crédito.
+     * Se ejecuta después de calcular los totales y antes de guardar, para que
+     * un documento descuadrado no llegue a Hacienda.
+     *
+     * @param anulacion AnulacionFactura
+     * @param lineas List<ModeloProducto> líneas que componen la nota de crédito
+     * @return boolean
+     */
+    public boolean validarTotalesNotaCredito(AnulacionFactura anulacion, List<ModeloProducto> lineas) {
+        boolean resultado = true;
+
+        resultado = validarIdentidad("A1", "Total gravado + exento + exonerado",
+                anulacion.getTotal_gravado().add(anulacion.getTotal_exento()).add(anulacion.getTotal_exonerado()),
+                "Total venta", anulacion.getTotal_venta()) && resultado;
+
+        resultado = validarIdentidad("A2", "Total venta - Total descuentos",
+                anulacion.getTotal_venta().subtract(anulacion.getTotal_descuento()),
+                "Total venta neta", anulacion.getTotal_venta_neta()) && resultado;
+
+        resultado = validarIdentidad("A3", "Total venta neta + Total impuesto",
+                anulacion.getTotal_venta_neta().add(anulacion.getTotal_impuesto()),
+                "Total nota de crédito", anulacion.getTotal_nota_credito()) && resultado;
+
+        if (lineas != null) {
+            BigDecimal sumaLineas = new BigDecimal("0.0");
+            for (ModeloProducto linea : lineas) {
+                sumaLineas = sumaLineas.add(linea.getMontoTotalLinea() == null ? new BigDecimal("0.0") : linea.getMontoTotalLinea());
+            }
+            resultado = validarIdentidad("A4", "Suma de los totales por línea", sumaLineas,
+                    "Total nota de crédito", anulacion.getTotal_nota_credito()) && resultado;
+        }
+
+        resultado = validarIdentidad("A6", "Servicios gravados + Mercancías gravadas",
+                anulacion.getTotal_servicios_grabados().add(anulacion.getTotal_mercancias_gravadas()),
+                "Total gravado", anulacion.getTotal_gravado()) && resultado;
+
+        resultado = validarIdentidad("A7", "Servicios exentos + Mercancías exentas",
+                anulacion.getTotal_servicios_exentos().add(anulacion.getTotal_mercancias_exentas()),
+                "Total exento", anulacion.getTotal_exento()) && resultado;
+
+        //Cuando se anula el documento de referencia la nota de crédito debe cubrir el total de la factura
+        if (anulacion.getId_tipo_doc_referencia() != null
+                && anulacion.getId_tipo_doc_referencia().equals(1L)
+                && this.facturaSeleccionada != null
+                && this.facturaSeleccionada.getFactura() != null) {
+            resultado = validarIdentidad("A19", "Total nota de crédito", anulacion.getTotal_nota_credito(),
+                    "Total de la factura de referencia", this.facturaSeleccionada.getFactura().getTotal_comprobante()) && resultado;
+        }
+
+        return resultado;
+    }
+
+    private boolean validarIdentidad(String assertId, String nombreIzquierda, BigDecimal izquierda,
+            String nombreDerecha, BigDecimal derecha) {
+        if (izquierda == null || derecha == null) {
+            MensajeUtil.agregarMensajeAdvertencia(assertId + ": no se puede validar, \"" + nombreIzquierda
+                    + "\" o \"" + nombreDerecha + "\" viene sin valor. No se guardó la nota de crédito.");
+            return false;
+        }
+        if (izquierda.subtract(derecha).abs().compareTo(TOLERANCIA_MONTOS) >= 0) {
+            MensajeUtil.agregarMensajeAdvertencia(assertId + ": \"" + nombreIzquierda + "\" (" + izquierda.setScale(3, BigDecimal.ROUND_HALF_EVEN)
+                    + ") no coincide con \"" + nombreDerecha + "\" (" + derecha.setScale(3, BigDecimal.ROUND_HALF_EVEN)
+                    + "). No se guardó la nota de crédito.");
+            return false;
+        }
+        return true;
     }
 
     public FacturaAnulacionHistoricoHacienda construirHistorico(AnulacionFactura anulacion) {
