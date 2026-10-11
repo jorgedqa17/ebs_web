@@ -1052,7 +1052,8 @@ public class BeanFactura {
             this.informacionReferenciaDocumento.setTipoDoc(Indicadores.OPCION_PARA_REEMPLAZAR_FACTURA_RECHAZADA.getIndicador().toString());
             this.informacionReferenciaDocumento.setIdFacturaReferencia(facturaSeleccionadaBusqueda.getId_factura());
             this.informacionReferenciaDocumento.setNumero(facturaSeleccionadaBusqueda.getClave());
-            this.informacionReferenciaDocumento.setCodigo("01");
+            //Nota 9 Anexos 4.4: 16 = Sustituye comprobante electrónico rechazado
+            this.informacionReferenciaDocumento.setCodigo("16");
             this.informacionReferenciaDocumento.setTipoDocumentoReferencia("10");
             this.informacionReferenciaDocumento.setRazon("Se reemplaza la factura " + facturaSeleccionadaBusqueda.getClave());
 
