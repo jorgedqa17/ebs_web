@@ -5,6 +5,7 @@
  */
 package com.powersystem.utilitario;
 
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -23,7 +24,9 @@ public class Encriptador {
      */
     public static String encriptarCadena(String cadena) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(cadena.getBytes());
+        // Las claves existentes se calcularon con el charset por defecto de Windows (windows-1252);
+        // se fija explícito para que el hash no cambie según el sistema operativo.
+        md.update(cadena.getBytes(Charset.forName("windows-1252")));
 
         byte byteData[] = md.digest();
 

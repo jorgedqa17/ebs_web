@@ -220,7 +220,7 @@ public class BeanReimpresionFactura {
             parametros.put("idFactura", facturaSeleccionada.getIdFactura());
             parametros.put("simbolo", "CRC");
             parametros.put("montoLetras", Utilitario.Convertir(facturaSeleccionada.getMontoTotalComprobante().toString(), true));
-            parametros.put("QRCode", ImageIO.read(new ByteArrayInputStream(Utilitario.generarQRCode("https://35.185.53.104:8181/ServiciosRestFul/services/comprobanteElectronico?consecutivo=" + this.facturaSeleccionada.getNumeroConsecutivo()))));
+            parametros.put("QRCode", ImageIO.read(new ByteArrayInputStream(Utilitario.generarQRCode(System.getProperty("ebs.qr.base.url", "https://35.185.53.104:8181") + "/ServiciosRestFul/services/comprobanteElectronico?consecutivo=" +this.facturaSeleccionada.getNumeroConsecutivo()))));
             reporte = servicioReporte.generarReporte(Reportes.FACTURA, TiposMimeTypes.PDF, parametros, false);
             InputStream input = new ByteArrayInputStream(reporte);
             reporteDesplegar = new DefaultStreamedContent(input, TiposMimeTypes.PDF.getMimeType(), (Reportes.FACTURA.getNombreReporte() + "-" + (facturaSeleccionada.getNumeroConsecutivo().equals("") ? facturaSeleccionada.getIdFactura() : facturaSeleccionada.getNumeroConsecutivo()) + "." + TiposMimeTypes.PDF.getExtension()));
