@@ -14,7 +14,8 @@ public enum TiposCedulaMascaras {
     CEDULA_FISICA(Long.parseLong("1"), "999999999", 9),
     //Anexos 4.4 (22/04/2026): la secuencia de la cédula jurídica puede ser alfanumérica (ej. 3101A00001)
     CEDULA_JURIDICA(Long.parseLong("2"), "9999******", 10),
-    DIMEX(Long.parseLong("3"), "999999999999", 12),
+    //Anexos 4.4: el DIMEX tiene 11 o 12 dígitos (el último es opcional en la máscara)
+    DIMEX(Long.parseLong("3"), "99999999999?9", 12),
     NITE(Long.parseLong("4"), "9999999999", 10);
 
     private final Long idTipoCedula;
