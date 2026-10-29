@@ -338,7 +338,7 @@ public class BeanAnulacionFactura {
 
     public void seleccionarTipoDocReferencia(ValueChangeEvent evt) {
         tipoDocumentoReferenciaSeleccionado = (Long) evt.getNewValue();
-        if (tipoDocumentoReferenciaSeleccionado.equals(1L)) {
+        if (TipoDocumentoReferencia.esAnulacionTotal(tipoDocumentoReferenciaSeleccionado)) {
             if (this.facturaSeleccionada.getListaDetalleFactura() != null) {
                 this.facturaSeleccionada.getListaDetalleFactura().forEach(elemento -> {
                     if (elemento.isPuedeModificar()) {
@@ -576,8 +576,7 @@ public class BeanAnulacionFactura {
                 "Total exento", anulacion.getTotal_exento()) && resultado;
 
         //Cuando se anula el documento de referencia la nota de crédito debe cubrir el total de la factura
-        if (anulacion.getId_tipo_doc_referencia() != null
-                && anulacion.getId_tipo_doc_referencia().equals(1L)
+        if (TipoDocumentoReferencia.esAnulacionTotal(anulacion.getId_tipo_doc_referencia())
                 && this.facturaSeleccionada != null
                 && this.facturaSeleccionada.getFactura() != null) {
             resultado = validarIdentidad("A19", "Total nota de crédito", anulacion.getTotal_nota_credito(),

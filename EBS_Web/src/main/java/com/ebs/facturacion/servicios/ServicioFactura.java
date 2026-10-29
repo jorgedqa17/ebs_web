@@ -3102,7 +3102,7 @@ public class ServicioFactura extends ServicioBase {
             if (esNotaCreditoParaFactura) {
 
                 factura = this.calcularMontosParaFacturaDespuesDeNotaCredito(factura, anulacion);
-                if (anulacion.getId_tipo_doc_referencia().equals(1L)) {
+                if (TipoDocumentoReferencia.esAnulacionTotal(anulacion.getId_tipo_doc_referencia())) {
                     factura.setEstado_factura(EstadoFactura.ANULADA.getEstadoFactura());
                 }
                 actualizar(factura);

@@ -19,6 +19,7 @@ import com.ebs.entidades.Estados;
 import com.ebs.entidades.Factura;
 import com.ebs.entidades.FacturaDebito;
 import com.ebs.entidades.FacturaNotaDebitoHistoricoHacienda;
+import com.ebs.entidades.TipoDocumentoReferencia;
 import com.ebs.exception.ExcepcionManager;
 import com.powersystem.util.ServicioBase;
 import java.util.List;
@@ -42,11 +43,6 @@ import javax.persistence.NoResultException;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class ServicioNotaDebito extends ServicioBase {
-
-    //Id de tipo_documento_referencia para "Anula documento de referencia".
-    //No confundir con TipoDocumentoReferenciaEnum, que guarda el código de
-    //Hacienda ("01") y no el id de la tabla.
-    private static final Long TIPO_DOC_REFERENCIA_ANULA = 1L;
 
     @Inject
     private ServicioFactura servicioFactura;
@@ -279,7 +275,7 @@ public class ServicioNotaDebito extends ServicioBase {
             if (notaDebito.getNota_debito_interna().equals(1)) {
                 factura.setEstado_factura(EstadoFactura.RECHAZADA_HACIENDA.getEstadoFactura());
             } else if (notaCredito != null
-                    && TIPO_DOC_REFERENCIA_ANULA.equals(notaCredito.getId_tipo_doc_referencia())) {
+                    && TipoDocumentoReferencia.esAnulacionTotal(notaCredito.getId_tipo_doc_referencia())) {
                 //La nota de crédito había anulado la factura, así que al anularla
                 //con esta nota de débito la factura vuelve a estar vigente
                 factura.setEstado_factura(EstadoFactura.APROBADA_HACIENDA.getEstadoFactura());
