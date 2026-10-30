@@ -180,6 +180,47 @@ public class ServicioNotaDebito extends ServicioBase {
         return calendar.getTime();
     }
 
+    /**
+     * Notas de crédito disponibles para crear una nota de débito, en un rango
+     * de fechas. Los estados se cargan en bloque, sin una query por fila.
+     *
+     * @param consecutivo opcional, coincidencia parcial
+     */
+    public List<AnulacionFactura> obtenerNotasCredito(Date fechaInicio, Date fechaFin, String consecutivo) {
+        List<AnulacionFactura> resultado = new ArrayList<>();
+        try {
+            boolean filtraConsecutivo = consecutivo != null && !consecutivo.trim().isEmpty();
+            String sql = "SELECT nd FROM AnulacionFactura nd WHERE nd.id_estado NOT in( :id_estado1, :idEstado2) "
+                    + " AND nd.fecha_anulacion >= :fechaInicio AND nd.fecha_anulacion < :fechaFin "
+                    + (filtraConsecutivo ? " AND nd.numero_consecutivo LIKE :consecutivo " : "")
+                    + " ORDER BY nd.id_anulacion desc";
+            javax.persistence.TypedQuery<AnulacionFactura> query = em.createQuery(sql, AnulacionFactura.class)
+                    .setParameter("id_estado1", EstadoAnulacion.ANULADA.getEstadoAnulacion())
+                    .setParameter("idEstado2", EstadoAnulacion.PENDIENTE_DE_ENVIO_HACIENDA.getEstadoAnulacion())
+                    .setParameter("fechaInicio", inicioDelDia(fechaInicio, 0), javax.persistence.TemporalType.TIMESTAMP)
+                    .setParameter("fechaFin", inicioDelDia(fechaFin, 1), javax.persistence.TemporalType.TIMESTAMP);
+            if (filtraConsecutivo) {
+                query.setParameter("consecutivo", "%" + consecutivo.trim() + "%");
+            }
+            resultado = query.getResultList();
+            if (!resultado.isEmpty()) {
+                java.util.Map<Long, Estados> estados = new java.util.HashMap<>();
+                for (Estados estado : em.createQuery("SELECT e FROM Estados e", Estados.class).getResultList()) {
+                    estados.put(estado.getIdEstado(), estado);
+                }
+                for (AnulacionFactura notaCredito : resultado) {
+                    notaCredito.setEstadoFactura(estados.get(notaCredito.getId_estado()));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
+                    "mensaje.error.obtenre.nota.credito.listar.notas.credito",
+                    "mensaje.error.obtenre.nota.credito.listar.notas.credito");
+        }
+        return resultado;
+    }
+
     public List<AnulacionFactura> obtenerNotasCredito() {
         List<AnulacionFactura> resultado = null;
         try {
