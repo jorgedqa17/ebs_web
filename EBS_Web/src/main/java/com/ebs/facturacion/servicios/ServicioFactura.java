@@ -2956,17 +2956,68 @@ public class ServicioFactura extends ServicioBase {
      * @return List<FacturaModeloAnulacion>
      */
     public List<FacturaModeloAnulacion> obtenerFacturasAnulacion(String login) {
+        return obtenerFacturasAnulacion(login, null, null, null);
+    }
+
+    /**
+     * Facturas del usuario que pueden recibir una nota de crédito. Solo se
+     * devuelven las que tienen menos de 364 días de emitidas, así que el límite
+     * inferior de fecha nunca baja de ese tope.
+     *
+     * @param fechaInicio opcional
+     * @param fechaFin opcional
+     * @param consecutivo opcional, coincidencia parcial
+     */
+    public List<FacturaModeloAnulacion> obtenerFacturasAnulacion(String login, Date fechaInicio, Date fechaFin, String consecutivo) {
         List<FacturaModeloAnulacion> lista = new ArrayList<>();
         FacturaModeloAnulacion factura = null;
         try {
+            java.util.Calendar topeVigencia = java.util.Calendar.getInstance();
+            topeVigencia.set(java.util.Calendar.HOUR_OF_DAY, 0);
+            topeVigencia.set(java.util.Calendar.MINUTE, 0);
+            topeVigencia.set(java.util.Calendar.SECOND, 0);
+            topeVigencia.set(java.util.Calendar.MILLISECOND, 0);
+            topeVigencia.add(java.util.Calendar.DATE, -363);
+            Date desde = topeVigencia.getTime();
+            if (fechaInicio != null) {
+                java.util.Calendar inicio = java.util.Calendar.getInstance();
+                inicio.setTime(fechaInicio);
+                inicio.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                inicio.set(java.util.Calendar.MINUTE, 0);
+                inicio.set(java.util.Calendar.SECOND, 0);
+                inicio.set(java.util.Calendar.MILLISECOND, 0);
+                if (inicio.getTime().after(desde)) {
+                    desde = inicio.getTime();
+                }
+            }
+            boolean filtraFin = fechaFin != null;
+            boolean filtraConsecutivo = consecutivo != null && !consecutivo.trim().isEmpty();
 
             String sql = "select ft.id_factura, ft.numero_consecutivo, est.descripcion as estado_factura, ft.total_comprobante, to_date(to_char(now(), 'DD/MM/YYYY'), 'DD/MM/YYYY') - to_date(to_char(ft.fecha_factura, 'DD/MM/YYYY'), 'DD/MM/YYYY') as cantidad_dias, ft.fecha_factura "
-                    + "from searmedica.factura ft left join searmedica.estados est on ft.estado_factura = est.id_estado where ft.estado_factura <> :estadofactura and ft.estado_factura <> :estadofactura2  and ft.login =:login and ft.numero_consecutivo is not null order by ft.fecha_factura desc";
-            List<Object[]> listaObjetos = (List<Object[]>) em.createNativeQuery(sql)
+                    + "from searmedica.factura ft left join searmedica.estados est on ft.estado_factura = est.id_estado where ft.estado_factura <> :estadofactura and ft.estado_factura <> :estadofactura2  and ft.login =:login and ft.numero_consecutivo is not null "
+                    + " and ft.fecha_factura >= :fechaInicio "
+                    + (filtraFin ? " and ft.fecha_factura < :fechaFin " : "")
+                    + (filtraConsecutivo ? " and ft.numero_consecutivo like :consecutivo " : "")
+                    + " order by ft.fecha_factura desc";
+            javax.persistence.Query query = em.createNativeQuery(sql)
                     .setParameter("estadofactura", EstadoFactura.ANULADA.getEstadoFactura())
                     .setParameter("estadofactura2", EstadoFactura.PAGADA_PENDIENTE_ENVIO_HACIENDA.getEstadoFactura())
                     .setParameter("login", login)
-                    .getResultList();
+                    .setParameter("fechaInicio", desde, javax.persistence.TemporalType.TIMESTAMP);
+            if (filtraFin) {
+                java.util.Calendar fin = java.util.Calendar.getInstance();
+                fin.setTime(fechaFin);
+                fin.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                fin.set(java.util.Calendar.MINUTE, 0);
+                fin.set(java.util.Calendar.SECOND, 0);
+                fin.set(java.util.Calendar.MILLISECOND, 0);
+                fin.add(java.util.Calendar.DATE, 1);
+                query.setParameter("fechaFin", fin.getTime(), javax.persistence.TemporalType.TIMESTAMP);
+            }
+            if (filtraConsecutivo) {
+                query.setParameter("consecutivo", "%" + consecutivo.trim() + "%");
+            }
+            List<Object[]> listaObjetos = (List<Object[]>) query.getResultList();
 
             for (Object[] objeto : listaObjetos) {
                 factura = new FacturaModeloAnulacion();
