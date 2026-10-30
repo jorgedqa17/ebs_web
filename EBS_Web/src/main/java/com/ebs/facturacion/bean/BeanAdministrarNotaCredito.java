@@ -7,7 +7,13 @@ package com.ebs.facturacion.bean;
 
 import com.ebs.constantes.enums.EstadoAnulacion;
 import com.ebs.constantes.enums.TiposMimeTypes;
+import com.ebs.entidades.Estados;
 import com.ebs.entidades.FacturaAnulacionHistoricoHacienda;
+import com.ebs.entidades.Usuario;
+import com.ebs.modelos.ConsultaNotasCreditoModelo;
+import com.powersystem.seguridad.servicios.ServicioLogin;
+import java.util.ArrayList;
+import java.util.Date;
 import com.ebs.exception.ExcepcionManager;
 import com.ebs.facturacion.servicios.ServicioFactura;
 import com.ebs.facturacion.servicios.ServicioNotaCredito;
@@ -41,8 +47,17 @@ public class BeanAdministrarNotaCredito {
     private ServicioNotaCredito servicioNotaCredito;
     @Inject
     private ServicioFactura servicioFactura;
-    private List<NotaCreditoModelo> listaNotasCredito;
-    private List<NotaCreditoModelo> listaNotasCreditoFiltro;
+    @Inject
+    private ServicioLogin servicioLogin;
+    private List<ConsultaNotasCreditoModelo> listaNotasCredito;
+    private List<ConsultaNotasCreditoModelo> listaNotasCreditoFiltro;
+    private List<Estados> listaEstados;
+    private List<Usuario> listaUsuarios;
+    private Date fechaInicio;
+    private Date fechaFin;
+    private Long idEstadoSeleccionado;
+    private String usuarioSeleccionado;
+    private String consecutivo;
     private NotaCreditoModelo notaCreditoSeleccionada;
 
     private List<FacturaAnulacionHistoricoHacienda> listaHistoricoHacienda;
@@ -54,22 +69,40 @@ public class BeanAdministrarNotaCredito {
 
     @PostConstruct
     public void inicializar() {
-        this.notaCreditoSeleccionada = new NotaCreditoModelo();
-        this.listaNotasCredito = servicioNotaCredito.obtenerNotasCredito();
+        try {
+            this.notaCreditoSeleccionada = new NotaCreditoModelo();
+            this.listaNotasCredito = new ArrayList<>();
+            this.listaEstados = servicioNotaCredito.obtenerEstadosNotaCredito();
+            this.listaUsuarios = servicioLogin.obtenerUsuariosSistema();
+            this.fechaInicio = new Date();
+            this.fechaFin = new Date();
+            this.idEstadoSeleccionado = 0L;
+            this.usuarioSeleccionado = Utilitario.obtenerUsuario().getLogin();
+            this.consecutivo = "";
+        } catch (Exception ex) {
+            ExcepcionManager.manejarExcepcion(ex);
+        }
     }
 
-    public void seleccionarNotaCredito(NotaCreditoModelo notaSeleccionada) {
+    public void buscarNotasCredito() {
         try {
-            notaCreditoSeleccionada = notaSeleccionada;
+            if (fechaInicio == null || fechaFin == null || fechaInicio.after(fechaFin)) {
+                MensajeUtil.agregarMensajeAdvertencia("El rango de fechas no es válido");
+                return;
+            }
+            this.listaNotasCreditoFiltro = null;
+            this.notaCreditoSeleccionada = new NotaCreditoModelo();
+            this.listaHistoricoHacienda = null;
+            this.listaNotasCredito = servicioNotaCredito.consultarNotasCreditoPorFiltros(
+                    fechaInicio, fechaFin, idEstadoSeleccionado, usuarioSeleccionado, consecutivo);
+        } catch (Exception ex) {
+            ExcepcionManager.manejarExcepcion(ex);
+        }
+    }
 
-            if (notaCreditoSeleccionada.getNotaCredito().getId_factura() != null) {
-                notaCreditoSeleccionada.setFactura(servicioFactura.obtenerFacturaBusqueda(notaCreditoSeleccionada.getNotaCredito().getId_factura()));
-                notaCreditoSeleccionada.getFactura().setEstadoFactura(servicioNotaCredito.obtenerEstado(Long.parseLong(notaCreditoSeleccionada.getFactura().getEstado_factura().toString())));
-            }
-            if (notaCreditoSeleccionada.getNotaCredito().getId_nota_debito() != null) {
-                notaCreditoSeleccionada.setNotaDebito(servicioFactura.obtenerNotaDebitoBusqueda(notaCreditoSeleccionada.getNotaCredito().getId_nota_debito()));
-                notaCreditoSeleccionada.getNotaDebito().setEstadoFactura(servicioNotaCredito.obtenerEstado(notaCreditoSeleccionada.getNotaDebito().getId_estado()));
-            }
+    public void seleccionarNotaCredito(ConsultaNotasCreditoModelo fila) {
+        try {
+            notaCreditoSeleccionada = servicioNotaCredito.obtenerDetalleNotaCredito(fila.getIdAnulacion());
             this.listaHistoricoHacienda = this.servicioNotaCredito.obtenerListaHistoricoNotaCredito(notaCreditoSeleccionada.getNotaCredito().getId_anulacion());
         } catch (Exception ex) {
             ExcepcionManager.manejarExcepcion(ex);
