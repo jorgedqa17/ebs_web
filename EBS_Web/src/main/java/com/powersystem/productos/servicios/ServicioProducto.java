@@ -289,7 +289,13 @@ public class ServicioProducto extends ServicioBase {
             ProductoPrecio precioEntidad;
             ProductoPrecioPK precioEntidadPk;
 
-            String consultaPrecios = "  select t1.id_tipo, t1.id_moneda, t1.precio, t2.descripcion as descripcion_tipo, t3.descripcion as descripcion_moneda from  searmedica.producto_precios t1, searmedica.tipos_precios t2, searmedica.tipo_moneda t3  where t1.id_tipo = t2.id_tipo and t1.id_moneda = t3.id_moneda and t1.id_producto =:idProducto ";
+            // Todos los precios en UNA consulta (antes: una consulta por producto, ~1000 por pantalla)
+            String consultaPrecios = "  select t1.id_producto, t1.id_tipo, t1.id_moneda, t1.precio, t2.descripcion as descripcion_tipo, t3.descripcion as descripcion_moneda from  searmedica.producto_precios t1, searmedica.tipos_precios t2, searmedica.tipo_moneda t3  where t1.id_tipo = t2.id_tipo and t1.id_moneda = t3.id_moneda order by t1.id_producto, t1.id_tipo ";
+            java.util.Map<Long, List<Object[]>> preciosPorProducto = new java.util.HashMap<>();
+            for (Object[] filaPrecio : (List<Object[]>) em.createNativeQuery(consultaPrecios).getResultList()) {
+                preciosPorProducto.computeIfAbsent(Long.parseLong(filaPrecio[0].toString()), k -> new ArrayList<>()).add(
+                        new Object[]{filaPrecio[1], filaPrecio[2], filaPrecio[3], filaPrecio[4], filaPrecio[5]});
+            }
 
             for (Object[] fila : lista) {
                 try {
@@ -320,8 +326,8 @@ public class ServicioProducto extends ServicioBase {
                     modelo.setDescripcionImpuesto(fila[10] == null ? "" : fila[10].toString());
                     modelo.setProducto(productoEntidad);
 
-                    List<Object[]> listaPreciosProducto = (List<Object[]>) em.createNativeQuery(consultaPrecios)
-                            .setParameter("idProducto", Long.parseLong(fila[0].toString())).getResultList();
+                    List<Object[]> listaPreciosProducto = preciosPorProducto.getOrDefault(
+                            Long.parseLong(fila[0].toString()), new ArrayList<Object[]>());
                     if (listaPreciosProducto != null) {
                         listaPrecios = new ArrayList<>();
 
@@ -361,6 +367,146 @@ public class ServicioProducto extends ServicioBase {
                     "mensaje.error.listar.producto.desarrollador");
         }
         return listaResultado;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Lista de productos paginada (pantalla producto/listaProducto.xhtml). No carga precios: se piden
+    // al abrir un producto con obtenerPreciosParaLista(). Evita guardar ~1000 productos y ~28000
+    // precios en la memoria de cada sesión.
+    // ---------------------------------------------------------------------------------------------
+    private static final String FROM_PRODUCTOS_LISTA
+            = " FROM searmedica.producto t1 left join searmedica.unidad_medida t2 "
+            + " on t1.id_unidad_medida=t2.id_unidad_medida left join searmedica.tipo_producto t3 "
+            + " on t1.id_tipo_producto = t3.id_tipo_producto left join searmedica.impuesto t4 "
+            + " on t1.id_impuesto = t4.id_impuesto ";
+
+    /**
+     * Mismas filas que mostraba obtenerTodosProductos(): el ciclo de esa consulta descartaba (por una
+     * excepción silenciosa) los productos con alguno de estos campos nulos, así que se excluyen aquí.
+     */
+    private static final String CONDICION_BASE_PRODUCTOS_LISTA
+            = " t1.id_producto is not null and t1.id_unidad_medida is not null and t2.descripcion is not null "
+            + " and t1.descripcion is not null and t1.ind_caduce is not null and t1.ind_exonerado is not null "
+            + " and t1.codigo_barras is not null and t1.id_tipo_producto is not null and t3.descripcion is not null "
+            + " and t1.activo is not null ";
+
+    private static String escaparLike(String texto) {
+        return texto.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
+
+    /**
+     * Arma el WHERE (con parámetros enlazados) a partir de los filtros de la tabla. Las claves son las
+     * expresiones filterBy de la columna: producto.codigo_barras, producto.descripcion,
+     * descripcionTipoProducto y estado.
+     */
+    private String condicionesProductosLista(java.util.Map<String, String> filtros, java.util.Map<String, Object> parametros) {
+        StringBuilder where = new StringBuilder(" WHERE ").append(CONDICION_BASE_PRODUCTOS_LISTA);
+        int i = 0;
+        if (filtros != null) {
+            for (java.util.Map.Entry<String, String> f : filtros.entrySet()) {
+                String valor = f.getValue() == null ? "" : f.getValue().trim();
+                if (valor.isEmpty()) {
+                    continue;
+                }
+                String clave = f.getKey();
+                if (clave.contains("estado")) {
+                    // coincidencia exacta con el texto que muestra la columna
+                    if (valor.equalsIgnoreCase("Activo")) {
+                        where.append(" and t1.activo = 1 ");
+                    } else if (valor.equalsIgnoreCase("Inactivo")) {
+                        where.append(" and t1.activo = 0 ");
+                    } else {
+                        where.append(" and 1 = 0 ");
+                    }
+                    continue;
+                }
+                String columna;
+                if (clave.contains("codigo_barras")) {
+                    columna = "t1.codigo_barras";
+                } else if (clave.contains("descripcionTipoProducto")) {
+                    columna = "t3.descripcion";
+                } else if (clave.endsWith("descripcion")) {
+                    columna = "t1.descripcion";
+                } else {
+                    continue;
+                }
+                String nombre = "f" + (i++);
+                where.append(" and upper(").append(columna).append(") like upper(:").append(nombre).append(") escape '\\' ");
+                parametros.put(nombre, "%" + escaparLike(valor) + "%");
+            }
+        }
+        return where.toString();
+    }
+
+    public long contarProductosLista(java.util.Map<String, String> filtros) {
+        java.util.Map<String, Object> parametros = new java.util.HashMap<>();
+        String sql = "select count(*) " + FROM_PRODUCTOS_LISTA + condicionesProductosLista(filtros, parametros);
+        Query q = em.createNativeQuery(sql);
+        parametros.forEach(q::setParameter);
+        return ((Number) q.getSingleResult()).longValue();
+    }
+
+    public List<ModeloListaProductos> listarProductosLista(int primero, int tamanno, java.util.Map<String, String> filtros) {
+        java.util.Map<String, Object> parametros = new java.util.HashMap<>();
+        String sql = " SELECT t1.id_producto, t1.id_unidad_medida, t2.descripcion as descripcion_unidad_medida, t1.descripcion, "
+                + " t1.ind_caduce, t1.ind_exonerado, t1.codigo_barras, t1.id_tipo_producto, t3.descripcion as descripcion_tipo_producto, "
+                + " t1.id_impuesto, t4.descripcion as descripcion_impuesto, t1.activo, t1.cantidad_minima, t1.id_tipo_tarifa_impuesto, "
+                + " t1.ind_exento, t1.codigo_cabys "
+                + FROM_PRODUCTOS_LISTA + condicionesProductosLista(filtros, parametros)
+                + " order by t1.descripcion asc, t1.id_producto asc ";
+        Query q = em.createNativeQuery(sql);
+        parametros.forEach(q::setParameter);
+        q.setFirstResult(primero);
+        q.setMaxResults(tamanno);
+        List<ModeloListaProductos> resultado = new ArrayList<>();
+        for (Object[] fila : (List<Object[]>) q.getResultList()) {
+            Producto productoEntidad = new Producto();
+            ModeloListaProductos modelo = new ModeloListaProductos();
+            modelo.setDescripcionUnidadMedida(fila[2].toString());
+            productoEntidad.setId_producto(Long.parseLong(fila[0].toString()));
+            productoEntidad.setId_unidad_medida(Long.parseLong(fila[1].toString()));
+            productoEntidad.setDescripcion(fila[3].toString());
+            productoEntidad.setInd_caduce(Integer.parseInt(fila[4].toString()));
+            productoEntidad.setInd_exonerado(Integer.parseInt(fila[5].toString()));
+            productoEntidad.setCodigo_barras(fila[6].toString());
+            productoEntidad.setId_tipo_producto(Long.parseLong(fila[7].toString()));
+            productoEntidad.setActivo(Integer.parseInt(fila[11].toString()));
+            productoEntidad.setCantidad_minima(fila[12] == null ? null : Integer.parseInt(fila[12].toString()));
+            productoEntidad.setId_tipo_tarifa_impuesto(fila[13] == null ? null : Long.parseLong(fila[13].toString()));
+            productoEntidad.setInd_exento(fila[14] == null ? null : Integer.parseInt(fila[14].toString()));
+            productoEntidad.setCodigo_cabys(fila[15] == null ? "" : String.valueOf(fila[15]));
+            modelo.setDescripcionTipoProducto(fila[8].toString());
+            productoEntidad.setId_impuesto(fila[9] == null ? null : Long.parseLong(fila[9].toString()));
+            modelo.setDescripcionImpuesto(fila[10] == null ? "" : fila[10].toString());
+            modelo.setProducto(productoEntidad);
+            modelo.setListaPrecios(new ArrayList<ModeloTipoPrecio>());
+            resultado.add(modelo);
+        }
+        return resultado;
+    }
+
+    /**
+     * Precios de un producto con la misma forma que antes traía obtenerTodosProductos() (sin los costos
+     * de impuesto que agrega obtenerPreciosProductos()).
+     */
+    public List<ModeloTipoPrecio> obtenerPreciosParaLista(Long idProducto) {
+        String consultaPrecios = "  select t1.id_tipo, t1.id_moneda, t1.precio, t2.descripcion as descripcion_tipo, t3.descripcion as descripcion_moneda from  searmedica.producto_precios t1, searmedica.tipos_precios t2, searmedica.tipo_moneda t3  where t1.id_tipo = t2.id_tipo and t1.id_moneda = t3.id_moneda and t1.id_producto =:idProducto order by t1.id_tipo ";
+        List<ModeloTipoPrecio> listaPrecios = new ArrayList<>();
+        for (Object[] precioProd : (List<Object[]>) em.createNativeQuery(consultaPrecios).setParameter("idProducto", idProducto).getResultList()) {
+            ModeloTipoPrecio precio = new ModeloTipoPrecio();
+            ProductoPrecio precioEntidad = new ProductoPrecio();
+            ProductoPrecioPK precioEntidadPk = new ProductoPrecioPK();
+            precioEntidadPk.setId_tipo(Long.parseLong(precioProd[0].toString()));
+            precioEntidadPk.setId_producto(idProducto);
+            precioEntidad.setProductoPrecioPK(precioEntidadPk);
+            precioEntidad.setId_moneda(Long.parseLong(precioProd[1].toString()));
+            precioEntidad.setPrecio(new BigDecimal(precioProd[2] == null ? "0.0" : precioProd[2].toString()));
+            precio.setDescripcion(precioProd[3].toString());
+            precio.setDescripcionTipoMoneda(precioProd[4].toString());
+            precio.setProductoPrecio(precioEntidad);
+            listaPrecios.add(precio);
+        }
+        return listaPrecios;
     }
 
     public List<ModeloTipoPrecio> obtenerPreciosProductos(Long idProducto) {
@@ -939,16 +1085,35 @@ public class ServicioProducto extends ServicioBase {
         try {
             consulta = em.createNativeQuery("Select p.* from searMedica.producto p where p.id_producto = ?1", Producto.class);
             consulta.setParameter(1, idProducto);
-            Object preliminar = consulta.getSingleResult();
-            if (preliminar == null) {
-                resultado = null;
-            } else {
-                resultado = (Producto) consulta.getSingleResult();
-            }
+            // Una sola consulta: antes se ejecutaba getSingleResult() dos veces por producto
+            resultado = (Producto) consulta.getSingleResult();
         } catch (Exception e) {
             resultado = null;
         }
 
+        return resultado;
+    }
+
+    /**
+     * Obtiene varios productos con una consulta por tanda (en lugar de una consulta por producto).
+     *
+     * @param ids ids de producto; se ignoran nulos y repetidos
+     * @return productos encontrados, sin orden garantizado
+     */
+    public List<Producto> obtenerProductosPorIds(java.util.Collection<Long> ids) {
+        List<Producto> resultado = new ArrayList<>();
+        if (ids == null || ids.isEmpty()) {
+            return resultado;
+        }
+        List<Long> unicos = new ArrayList<>(new java.util.LinkedHashSet<>(ids));
+        unicos.remove(null);
+        final int tanda = 1000;
+        for (int desde = 0; desde < unicos.size(); desde += tanda) {
+            List<Long> parte = unicos.subList(desde, Math.min(desde + tanda, unicos.size()));
+            resultado.addAll(em.createQuery("SELECT p FROM Producto p WHERE p.id_producto IN :ids", Producto.class)
+                    .setParameter("ids", parte)
+                    .getResultList());
+        }
         return resultado;
     }
 
