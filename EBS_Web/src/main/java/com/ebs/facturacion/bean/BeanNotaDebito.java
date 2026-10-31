@@ -48,6 +48,9 @@ public class BeanNotaDebito {
     private ServicioFactura servicioFactura;
     private List<AnulacionFactura> listaNotasCredito;
     private List<AnulacionFactura> listaNotasCreditoFiltro;
+    private java.util.Date fechaInicio;
+    private java.util.Date fechaFin;
+    private String consecutivo;
     private AnulacionFactura notaCreditoSeleccionada;
     private List<TipoDocumentoReferencia> listaTipoDocumentoReferencia;
     private List<MotivoDebito> listaMotivoDebito;
@@ -81,11 +84,33 @@ public class BeanNotaDebito {
             this.tipoDocumentoReferenciaSeleccionado = 0L;
             this.motivoDebitoSeleccionado = 0L;
             this.notaCreditoSeleccionada = new AnulacionFactura();
-            this.listaNotasCredito = servicioNotaDebito.obtenerNotasCredito();
+            java.util.Calendar hace30Dias = java.util.Calendar.getInstance();
+            hace30Dias.add(java.util.Calendar.DATE, -30);
+            this.fechaInicio = hace30Dias.getTime();
+            this.fechaFin = new java.util.Date();
+            this.consecutivo = "";
+            buscarNotasCredito();
             listaMotivoDebito = servicioFactura.obtenerTiposMotivosDebitos();
             listaTipoDocumentoReferencia = servicioFactura.obtenerTiposDocumentosReferencia();
 //            this.facturaNotaCreditoActual = new FacturaModeloAnulacion();
 //            this.facturaNotaCreditoActual.setFactura(new Factura());
+        } catch (Exception ex) {
+            ExcepcionManager.manejarExcepcion(ex);
+        }
+    }
+
+    /**
+     * Recarga las notas de crédito según el rango de fechas y el consecutivo
+     * indicados.
+     */
+    public void buscarNotasCredito() {
+        try {
+            if (fechaInicio == null || fechaFin == null || fechaInicio.after(fechaFin)) {
+                MensajeUtil.agregarMensajeAdvertencia("El rango de fechas no es válido");
+                return;
+            }
+            this.listaNotasCreditoFiltro = null;
+            this.listaNotasCredito = servicioNotaDebito.obtenerNotasCredito(fechaInicio, fechaFin, consecutivo);
         } catch (Exception ex) {
             ExcepcionManager.manejarExcepcion(ex);
         }

@@ -28,43 +28,99 @@
             <div class="ui-g">
                 <div class="ui-g-12">
                     <div class="card">
-                        <h1>Listado de Notas de Crédito</h1>
+                        <h1>Parámetros de Búsqueda</h1>
+                        <p:panelGrid id="panelFiltros" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['cierre.fecha.desde']}"/>
+                            <p:calendar value="#{beanAdministrarNotaCredito.fechaInicio}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+                            <p:outputLabel value="#{label['cierre.fecha.hasta']}"/>
+                            <p:calendar value="#{beanAdministrarNotaCredito.fechaFin}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+
+                            <h:outputLabel value="Estados"/>
+                            <p:selectOneMenu converter="ConvertidorListaDesplegables"
+                                             value="#{beanAdministrarNotaCredito.idEstadoSeleccionado}"
+                                             id="listaEstados"
+                                             effect="fold">
+                                <f:selectItem itemLabel="Seleccione" itemValue="0" />
+                                <f:selectItems value="#{beanAdministrarNotaCredito.listaEstados}"
+                                               var="estado"
+                                               itemLabel="#{estado.descripcion}"
+                                               itemValue="#{estado.idEstado}"/>
+                            </p:selectOneMenu>
+                            <h:outputLabel value="Usuario"/>
+                            <p:selectOneMenu converter="ConvertidorListasString"
+                                             value="#{beanAdministrarNotaCredito.usuarioSeleccionado}"
+                                             id="listaUsuarios"
+                                             effect="fold">
+                                <f:selectItem itemLabel="Todos" itemValue="" />
+                                <f:selectItems value="#{beanAdministrarNotaCredito.listaUsuarios}"
+                                               var="usuario"
+                                               itemLabel="#{usuario.login}"
+                                               itemValue="#{usuario.login}"/>
+                            </p:selectOneMenu>
+                            <p:outputLabel value="N° Consecutivo"/>
+                            <p:inputText value="#{beanAdministrarNotaCredito.consecutivo}" maxlength="20"/>
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value=""/>
+                        </p:panelGrid>
+                    </div>
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnBuscarNotasCredito"
+                                         update=":form_sisadmin:tablasNotasCredito :form_sisadmin:detalleNotaCredito"
+                                         value="#{label['cierre.buscar']}"
+                                         oncomplete="PF('tablasNotasCredito').clearFilters()"
+                                         icon="fa fa-search"
+                                         actionListener="#{beanAdministrarNotaCredito.buscarNotasCredito}"/>
+                    </p:panelGrid>
+
+                    <div class="card">
+                        <h1>Resultados de la Búsqueda</h1>
                         <p:dataTable id="tablasNotasCredito"
                                      widgetVar="tablasNotasCredito"
                                      var="notaCredito"
                                      resizableColumns="true"
-                                     editable="true"
                                      filteredValue="#{beanAdministrarNotaCredito.listaNotasCreditoFiltro}"
-                                     editMode="cell"
                                      reflow="true"
-                                     paginator="true" 
-                                     rowKey="#{notaCredito}"
-                                     paginatorPosition="bottom" 
+                                     paginator="true"
+                                     rowKey="#{notaCredito.idAnulacion}"
+                                     paginatorPosition="bottom"
                                      rows="5"
                                      value="#{beanAdministrarNotaCredito.listaNotasCredito}"
                                      emptyMessage="#{label['tabla.vacia']}">
 
-                            <p:column   filterMatchMode="contains" filterBy="#{notaCredito.notaCredito.id_anulacion}" headerText="Id" >
-                                <h:outputText id="id_nota_debito" value="#{notaCredito.notaCredito.id_anulacion}" />  
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.idAnulacion}" headerText="Id">
+                                <h:outputText value="#{notaCredito.idAnulacion}"/>
                             </p:column>
-                            <p:column   filterMatchMode="contains" filterBy="#{notaCredito.notaCredito.numero_consecutivo}" headerText="N° Consecutivo" >
-                                <h:outputText id="numero_consecutivo" value="#{notaCredito.notaCredito.numero_consecutivo}" />  
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.numeroConsecutivo}" headerText="N° Consecutivo">
+                                <h:outputText value="#{notaCredito.numeroConsecutivo}"/>
                             </p:column>
-                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.notaCredito.fecha_emision}" headerText="Fecha Emisión" >
-                                <h:outputText id="fecha_emision" value="#{notaCredito.notaCredito.fecha_emision}" />  
-                            </p:column> 
-                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.notaCredito.estadoFactura.descripcion}" headerText="Estado" >
-                                <h:outputText id="Estado" value="#{notaCredito.notaCredito.estadoFactura.descripcion}" />  
-                            </p:column> 
+                            <p:column headerText="Fecha Nota Crédito">
+                                <h:outputText value="#{notaCredito.fechaAnulacion}">
+                                    <f:convertDateTime pattern="dd-MM-yyyy HH:mm"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.estado}" headerText="Estado">
+                                <h:outputText value="#{notaCredito.estado}"/>
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.usuario}" headerText="Usuario">
+                                <h:outputText value="#{notaCredito.usuario}"/>
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.consecutivoFactura}" headerText="Factura">
+                                <h:outputText value="#{notaCredito.consecutivoFactura}"/>
+                            </p:column>
+                            <p:column filterMatchMode="contains" filterBy="#{notaCredito.consecutivoNotaDebito}" headerText="Nota Débito">
+                                <h:outputText value="#{notaCredito.consecutivoNotaDebito}"/>
+                            </p:column>
+                            <p:column headerText="Total">
+                                <h:outputText value="#{notaCredito.totalNotaCredito}"/>
+                            </p:column>
                             <p:column>
-                                <p:commandButton update="form_sisadmin" id="btnSeleccionarFactura"  
+                                <p:commandButton update=":form_sisadmin:detalleNotaCredito" id="btnSeleccionarNotaCredito"
                                                  actionListener="#{beanAdministrarNotaCredito.seleccionarNotaCredito(notaCredito)}"
-                                                 value="Ver Nota Crédito" icon="fa fa-search" >
-                                </p:commandButton>  
+                                                 value="Ver Nota Crédito" icon="fa fa-search"/>
                             </p:column>
                         </p:dataTable>
                     </div>
-                    <div class="card">
+                    <p:outputPanel id="detalleNotaCredito" layout="block" styleClass="card">
                         <h1>Información de la Nota de Crédito</h1>
                         <br/>
                         <h2>Detalle Nota Crédito</h2>
@@ -117,7 +173,7 @@
                             <p:column   headerText="Respuesta" >
                                 <p:commandButton id="verRespuesta"                                                  
                                                  value="Respuesta"     
-                                                 update="form_sisadmin"
+                                                 update="detalleNotaCredito"
                                                  oncomplete="PF('idRespuestaHaciendaModal').show();" icon="fa fa-search" rendered="#{facturaHistorico.respuesta eq '' ? 'false':'true'}"
                                                  actionListener="#{beanAdministrarNotaCredito.seleccionarHistorico}">                                     
                                     <f:attribute name="historioSeleccionado" value="#{facturaHistorico}"/>
@@ -126,7 +182,7 @@
                             <p:column   headerText="Detalle Respuesta" >
                                 <p:commandButton id="verDetalleRespuesta" 
                                                  value="Detalle Respuesta" 
-                                                 update="form_sisadmin"
+                                                 update="detalleNotaCredito"
                                                  oncomplete="PF('idDetalleRespuestaHaciendaModal').show();" icon="fa fa-search" rendered="#{facturaHistorico.detallerespuesta eq '' ? 'false':'true'}"
                                                  actionListener="#{beanAdministrarNotaCredito.seleccionarHistorico}">                                     
                                     <f:attribute name="historioSeleccionado" value="#{facturaHistorico}"/>
@@ -237,7 +293,7 @@
                             <p:menuitem  update="form_sisadmin" id="btnReeenviarEmailFactura" actionListener="#{beanAdministrarNotaCredito.reenviarCorreoElectronicoFactura}" value="Reenviar Nota Crédito Correo Electrónico" icon="fa fa-send" />
 
                         </p:splitButton>
-                    </div>
+                    </p:outputPanel>
 
                 </div>
             </div>

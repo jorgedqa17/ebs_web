@@ -27,6 +27,28 @@
         <div class="ui-fluid">
             <div class="ui-g">
                 <div class="ui-g-12">
+                    <div class="card">
+                        <h1>Parámetros de Búsqueda</h1>
+                        <p:panelGrid id="panelFiltros" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['cierre.fecha.desde']}"/>
+                            <p:calendar value="#{beanAnulacionFactura.fechaInicio}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+                            <p:outputLabel value="#{label['cierre.fecha.hasta']}"/>
+                            <p:calendar value="#{beanAnulacionFactura.fechaFin}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+                            <p:outputLabel value="N° Consecutivo"/>
+                            <p:inputText value="#{beanAnulacionFactura.consecutivo}" maxlength="20"/>
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value=""/>
+                        </p:panelGrid>
+                        <p:outputLabel style="color:red;" value="** Solo se pueden crear notas de crédito sobre facturas con menos de 364 días de emitidas"/>
+                    </div>
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnBuscarDocumentos"
+                                         update=":form_sisadmin"
+                                         value="#{label['cierre.buscar']}"
+                                         icon="fa fa-search"
+                                         actionListener="#{beanAnulacionFactura.buscarDocumentos}"/>
+                    </p:panelGrid>
+
                     <p:tabView>
                         <p:tab title="Facturas">
                             <div class="card">

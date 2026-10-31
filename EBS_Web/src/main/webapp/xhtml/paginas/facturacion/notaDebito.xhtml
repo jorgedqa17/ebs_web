@@ -26,7 +26,29 @@
         <div class="ui-fluid">
             <div class="ui-g">
                 <div class="ui-g-12">
-                    <div class="card">                        
+                    <div class="card">
+                        <h1>Parámetros de Búsqueda</h1>
+                        <p:panelGrid id="panelFiltros" columns="4" columnClasses="ui-grid-col-2,ui-grid-col-4,ui-grid-col-2,ui-grid-col-4" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                            <p:outputLabel value="#{label['cierre.fecha.desde']}"/>
+                            <p:calendar value="#{beanNotaDebito.fechaInicio}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+                            <p:outputLabel value="#{label['cierre.fecha.hasta']}"/>
+                            <p:calendar value="#{beanNotaDebito.fechaFin}" showOn="button" pattern="dd-MM-yyyy" mask="true"/>
+                            <p:outputLabel value="N° Consecutivo"/>
+                            <p:inputText value="#{beanNotaDebito.consecutivo}" maxlength="20"/>
+                            <p:outputLabel value=""/>
+                            <p:outputLabel value=""/>
+                        </p:panelGrid>
+                    </div>
+                    <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
+                        <p:commandButton id="btnBuscarNotasCredito"
+                                         update=":form_sisadmin:tablasNotasDebito"
+                                         value="#{label['cierre.buscar']}"
+                                         oncomplete="PF('tablasNotasCredito').clearFilters()"
+                                         icon="fa fa-search"
+                                         actionListener="#{beanNotaDebito.buscarNotasCredito}"/>
+                    </p:panelGrid>
+
+                    <div class="card">
                         <h1>Listado de Notas de Crédito</h1>
                         <p:dataTable id="tablasNotasDebito"
                                      widgetVar="tablasNotasCredito"

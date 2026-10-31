@@ -32,6 +32,7 @@ import com.powersystem.utilitario.Utilitario;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -83,6 +84,140 @@ public class ServicioNotaDebito extends ServicioBase {
                     "mensaje.error.obtenre.nota.debito");
         }
 
+        return resultado;
+    }
+
+    /**
+     * Notas de débito del usuario en un rango de fechas. Carga factura, nota de
+     * crédito y estados en bloque (4 queries en total, sin importar el número
+     * de filas).
+     *
+     * @param consecutivo opcional, coincidencia parcial
+     */
+    public List<NotaDebitoModelo> obtenerNotasDebito(Date fechaInicio, Date fechaFin, String consecutivo) {
+        List<NotaDebitoModelo> resultado = new ArrayList<>();
+        try {
+            boolean filtraConsecutivo = consecutivo != null && !consecutivo.trim().isEmpty();
+            String sql = " SELECT nd FROM FacturaDebito nd WHERE nd.login = :login "
+                    + " AND nd.fecha_nota_debito >= :fechaInicio AND nd.fecha_nota_debito < :fechaFin "
+                    + (filtraConsecutivo ? " AND nd.numero_consecutivo LIKE :consecutivo " : "")
+                    + " ORDER BY nd.id_nota_debito DESC ";
+            javax.persistence.TypedQuery<FacturaDebito> query = em.createQuery(sql, FacturaDebito.class)
+                    .setParameter("login", Utilitario.obtenerUsuario().getLogin())
+                    .setParameter("fechaInicio", inicioDelDia(fechaInicio, 0), javax.persistence.TemporalType.TIMESTAMP)
+                    .setParameter("fechaFin", inicioDelDia(fechaFin, 1), javax.persistence.TemporalType.TIMESTAMP);
+            if (filtraConsecutivo) {
+                query.setParameter("consecutivo", "%" + consecutivo.trim() + "%");
+            }
+            List<FacturaDebito> notasDebito = query.getResultList();
+            if (notasDebito.isEmpty()) {
+                return resultado;
+            }
+
+            java.util.Set<Long> idsFactura = new java.util.HashSet<>();
+            java.util.Set<Long> idsNotaCredito = new java.util.HashSet<>();
+            for (FacturaDebito nd : notasDebito) {
+                if (nd.getId_factura() != null) {
+                    idsFactura.add(nd.getId_factura());
+                }
+                if (nd.getId_anulacion() != null) {
+                    idsNotaCredito.add(nd.getId_anulacion());
+                }
+            }
+
+            java.util.Map<Long, Estados> estados = new java.util.HashMap<>();
+            for (Estados estado : em.createQuery("SELECT e FROM Estados e", Estados.class).getResultList()) {
+                estados.put(estado.getIdEstado(), estado);
+            }
+            java.util.Map<Long, Factura> facturas = new java.util.HashMap<>();
+            if (!idsFactura.isEmpty()) {
+                for (Factura factura : em.createQuery("SELECT f FROM Factura f WHERE f.id_factura IN :ids", Factura.class)
+                        .setParameter("ids", idsFactura).getResultList()) {
+                    facturas.put(factura.getId_factura(), factura);
+                }
+            }
+            java.util.Map<Long, AnulacionFactura> notasCredito = new java.util.HashMap<>();
+            if (!idsNotaCredito.isEmpty()) {
+                for (AnulacionFactura nc : em.createQuery("SELECT a FROM AnulacionFactura a WHERE a.id_anulacion IN :ids", AnulacionFactura.class)
+                        .setParameter("ids", idsNotaCredito).getResultList()) {
+                    notasCredito.put(nc.getId_anulacion(), nc);
+                }
+            }
+
+            for (FacturaDebito nd : notasDebito) {
+                NotaDebitoModelo modelo = new NotaDebitoModelo();
+                Factura factura = nd.getId_factura() == null ? null : facturas.get(nd.getId_factura());
+                if (factura != null) {
+                    factura.setEstadoFactura(estados.get(Long.parseLong(factura.getEstado_factura().toString())));
+                    modelo.setFactura(factura);
+                }
+                AnulacionFactura nc = nd.getId_anulacion() == null ? null : notasCredito.get(nd.getId_anulacion());
+                if (nc != null) {
+                    nc.setEstadoFactura(estados.get(nc.getId_estado()));
+                    modelo.setNotaCredito(nc);
+                }
+                nd.setEstadoFactura(estados.get(nd.getId_estado()));
+                modelo.setNotaDebito(nd);
+                resultado.add(modelo);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
+                    "mensaje.error.obtenre.nota.debito",
+                    "mensaje.error.obtenre.nota.debito");
+        }
+        return resultado;
+    }
+
+    private Date inicioDelDia(Date fecha, int diasAdicionales) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.setTime(fecha);
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        calendar.set(java.util.Calendar.MINUTE, 0);
+        calendar.set(java.util.Calendar.SECOND, 0);
+        calendar.set(java.util.Calendar.MILLISECOND, 0);
+        calendar.add(java.util.Calendar.DATE, diasAdicionales);
+        return calendar.getTime();
+    }
+
+    /**
+     * Notas de crédito disponibles para crear una nota de débito, en un rango
+     * de fechas. Los estados se cargan en bloque, sin una query por fila.
+     *
+     * @param consecutivo opcional, coincidencia parcial
+     */
+    public List<AnulacionFactura> obtenerNotasCredito(Date fechaInicio, Date fechaFin, String consecutivo) {
+        List<AnulacionFactura> resultado = new ArrayList<>();
+        try {
+            boolean filtraConsecutivo = consecutivo != null && !consecutivo.trim().isEmpty();
+            String sql = "SELECT nd FROM AnulacionFactura nd WHERE nd.id_estado NOT in( :id_estado1, :idEstado2) "
+                    + " AND nd.fecha_anulacion >= :fechaInicio AND nd.fecha_anulacion < :fechaFin "
+                    + (filtraConsecutivo ? " AND nd.numero_consecutivo LIKE :consecutivo " : "")
+                    + " ORDER BY nd.id_anulacion desc";
+            javax.persistence.TypedQuery<AnulacionFactura> query = em.createQuery(sql, AnulacionFactura.class)
+                    .setParameter("id_estado1", EstadoAnulacion.ANULADA.getEstadoAnulacion())
+                    .setParameter("idEstado2", EstadoAnulacion.PENDIENTE_DE_ENVIO_HACIENDA.getEstadoAnulacion())
+                    .setParameter("fechaInicio", inicioDelDia(fechaInicio, 0), javax.persistence.TemporalType.TIMESTAMP)
+                    .setParameter("fechaFin", inicioDelDia(fechaFin, 1), javax.persistence.TemporalType.TIMESTAMP);
+            if (filtraConsecutivo) {
+                query.setParameter("consecutivo", "%" + consecutivo.trim() + "%");
+            }
+            resultado = query.getResultList();
+            if (!resultado.isEmpty()) {
+                java.util.Map<Long, Estados> estados = new java.util.HashMap<>();
+                for (Estados estado : em.createQuery("SELECT e FROM Estados e", Estados.class).getResultList()) {
+                    estados.put(estado.getIdEstado(), estado);
+                }
+                for (AnulacionFactura notaCredito : resultado) {
+                    notaCredito.setEstadoFactura(estados.get(notaCredito.getId_estado()));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
+                    "mensaje.error.obtenre.nota.credito.listar.notas.credito",
+                    "mensaje.error.obtenre.nota.credito.listar.notas.credito");
+        }
         return resultado;
     }
 

@@ -120,6 +120,9 @@ public class BeanAnulacionFactura {
     private ServicioNotaDebito servicioNotaDebito;
     private List<NotaDebitoModelo> listaNotasDebito;
     private List<NotaDebitoModelo> listaNotasDebitoFiltro;
+    private Date fechaInicio;
+    private Date fechaFin;
+    private String consecutivo;
     private boolean esNotaCreditoParaFactura;
     private NotaDebitoModelo notaDebitoSeleccionada;
     private List<LineaDetalleFactura> listaLineasDetalleNotaDebito;
@@ -145,10 +148,34 @@ public class BeanAnulacionFactura {
             notaDebitoAsociadaFactura = false;
             this.motivoAnulacionSeleccionado = 0L;
             this.tipoDocumentoReferenciaSeleccionado = 0L;
-            listaFacturas = servicioFactura.obtenerFacturasAnulacion(Utilitario.obtenerUsuario().getLogin());
+            java.util.Calendar hace30Dias = java.util.Calendar.getInstance();
+            hace30Dias.add(java.util.Calendar.DATE, -30);
+            this.fechaInicio = hace30Dias.getTime();
+            this.fechaFin = new Date();
+            this.consecutivo = "";
             listaMotivosAnulacion = servicioFactura.obtenerTiposMotivosAnulacion();
             listaTipoDocumentoReferencia = servicioFactura.obtenerTiposDocumentosReferencia();
-            this.listaNotasDebito = servicioNotaDebito.obtenerNotasDebito();
+            buscarDocumentos();
+        } catch (Exception ex) {
+            ExcepcionManager.manejarExcepcion(ex);
+        }
+    }
+
+    /**
+     * Recarga las facturas y las notas de débito del usuario según el rango de
+     * fechas y el consecutivo indicados.
+     */
+    public void buscarDocumentos() {
+        try {
+            if (fechaInicio == null || fechaFin == null || fechaInicio.after(fechaFin)) {
+                MensajeUtil.agregarMensajeAdvertencia("El rango de fechas no es válido");
+                return;
+            }
+            this.listaFacturasSeleccionadas = null;
+            this.listaNotasDebitoFiltro = null;
+            this.listaFacturas = servicioFactura.obtenerFacturasAnulacion(
+                    Utilitario.obtenerUsuario().getLogin(), fechaInicio, fechaFin, consecutivo);
+            this.listaNotasDebito = servicioNotaDebito.obtenerNotasDebito(fechaInicio, fechaFin, consecutivo);
         } catch (Exception ex) {
             ExcepcionManager.manejarExcepcion(ex);
         }
