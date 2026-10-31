@@ -843,6 +843,7 @@ public class BeanFactura {
                 personaReceptor = ModeloPersona.convertirPersonaAModeloPersona(personaEdicionFactura);
                 tipoIdentificacionSeleccionadaReceptor = personaReceptor.getId_tipo_cedula();
                 identificacionReceptor = personaReceptor.getNumero_cedula();
+                this.idActvidadSeleccionada = personaReceptor.getCodigoActividad();
                 this.esPersonaExenta = personaEdicionFactura.getEs_exento().equals(Indicadores.EXENTO_SI.getIndicador());
                 this.esPersonaExonerada = personaEdicionFactura.getEs_exonerado().equals(Indicadores.EXONERADO_SI.getIndicador());
 
@@ -973,6 +974,7 @@ public class BeanFactura {
                 personaReceptor = ModeloPersona.convertirPersonaAModeloPersona(personaEdicionFactura);
                 tipoIdentificacionSeleccionadaReceptor = personaReceptor.getId_tipo_cedula();
                 identificacionReceptor = personaReceptor.getNumero_cedula();
+                this.idActvidadSeleccionada = personaReceptor.getCodigoActividad();
 
                 this.esPersonaExenta = personaEdicionFactura.getEs_exento().equals(Indicadores.EXENTO_SI.getIndicador());
                 this.esPersonaExonerada = personaEdicionFactura.getEs_exonerado().equals(Indicadores.EXONERADO_SI.getIndicador());
@@ -1052,7 +1054,8 @@ public class BeanFactura {
             this.informacionReferenciaDocumento.setTipoDoc(Indicadores.OPCION_PARA_REEMPLAZAR_FACTURA_RECHAZADA.getIndicador().toString());
             this.informacionReferenciaDocumento.setIdFacturaReferencia(facturaSeleccionadaBusqueda.getId_factura());
             this.informacionReferenciaDocumento.setNumero(facturaSeleccionadaBusqueda.getClave());
-            this.informacionReferenciaDocumento.setCodigo("01");
+            //Nota 9 Anexos 4.4: 16 = Sustituye comprobante electrónico rechazado
+            this.informacionReferenciaDocumento.setCodigo("16");
             this.informacionReferenciaDocumento.setTipoDocumentoReferencia("10");
             this.informacionReferenciaDocumento.setRazon("Se reemplaza la factura " + facturaSeleccionadaBusqueda.getClave());
 
@@ -1238,6 +1241,7 @@ public class BeanFactura {
                             Persona persona = this.servicioPersona.obtenerPersonaPorIdentificacion(identificacionReceptor, tipoIdentificacionSeleccionadaReceptor);
                             if (persona != null) {
                                 personaReceptor = ModeloPersona.convertirPersonaAModeloPersona(persona);
+                                this.idActvidadSeleccionada = personaReceptor.getCodigoActividad();
                                 clienteSeleccionado = this.servicioPersona.obtenerCliente(persona.getPersonaPK().getNumero_cedula());
 
                                 personaReceptor.setListaCorreosPersona(servicioPersona.obtenerListaCorreosPersona(personaReceptor.getNumero_cedula(), personaReceptor.getId_tipo_cedula()));

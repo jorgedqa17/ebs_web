@@ -98,7 +98,10 @@
                                 <f:selectItem itemLabel="Seleccione" itemValue="00" />
                                 <f:selectItem itemLabel="Sustituye comprobante provisional por contingencia" itemValue="05" />
                                 <f:selectItem itemLabel="Anulado documento referencia" itemValue="01" />
-                            </p:selectOneMenu> 
+                                <f:selectItem itemLabel="Sustituye comprobante electrónico" itemValue="07" />
+                                <f:selectItem itemLabel="Sustituye comprobante electrónico por error material" itemValue="15" />
+                                <f:selectItem itemLabel="Sustituye comprobante electrónico rechazado" itemValue="16" />
+                            </p:selectOneMenu>
                             <p:outputLabel value=""/>
                             <p:outputLabel value="Tipo de Documento de Referencia"/>
                             <p:selectOneMenu 
@@ -117,8 +120,8 @@
                                 <f:selectItem itemLabel="Contrato" itemValue="06" />
                                 <f:selectItem itemLabel="Procedimiento" itemValue="07" />
                                 <f:selectItem itemLabel="Comprobante emitido en contingencia" itemValue="08" />
-                                <f:selectItem itemLabel="Devolución mercadería" itemValue="09" />
-                                <f:selectItem itemLabel="Sustituye factura rechazada por el Ministerio de Hacienda" itemValue="10" />
+                                <f:selectItem itemLabel="Devolución mercadería (solo notas de crédito y débito)" itemValue="09" />
+                                <f:selectItem itemLabel="Comprobante electrónico rechazado por el Ministerio de Hacienda" itemValue="10" />
                                 <f:selectItem itemLabel="Sustituye factura rechazada por el Receptor del comprobante" itemValue="11" />
                                 <f:selectItem itemLabel="Sustituye Factura de exportación" itemValue="12" />
                             </p:selectOneMenu> 
