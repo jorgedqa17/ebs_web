@@ -24,7 +24,7 @@
                             <!--<li><a href="#"><i class="fa fa-fw fa-sliders"></i><span>Account</span></a></li>
                             <li><a href="#"><i class="fa fa-fw fa-bell"></i><span>Notifications</span><span class="menu-badge">2</span></a></li>-->
                             <li><a href="#{beanLogOut.pantallaLogin}" onclick="rc();"><i class="fa fa-fw fa-sign-out"></i><span>Salir</span></a></li>
-                            <p:remoteCommand id="logOut" name="rc" update=":form_sisadmin"  actionListener="#{beanLogOut.terminarSesion}" />
+                            <p:remoteCommand id="logOut" name="rc" process="@this" update="@none" actionListener="#{beanLogOut.terminarSesion}" />
                         </ul>
                     </div>
 
