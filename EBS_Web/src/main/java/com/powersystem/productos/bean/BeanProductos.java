@@ -47,7 +47,7 @@ public class BeanProductos {
 
     @Getter
     @Setter
-    private List<ModeloListaProductos> listaProductos;
+    private ProductoLazyModel modeloProductos;
     @Getter
     @Setter
     private List<TipoPrecio> listaTiposPrecios;
@@ -179,7 +179,7 @@ public class BeanProductos {
             listaExistencias = new ArrayList<>();
             productoPrcioNuevo = new ProductoPrecio();
             precio = new BigDecimal("0.0");
-            listaProductos = servicioProducto.obtenerTodosProductos();
+            modeloProductos = new ProductoLazyModel(servicioProducto);
             this.listaUnidadesMedidas = servicioProducto.obtenerTodasUnidadesMedida();
             this.listaImpuestos = servicioProducto.obtenerTodosImpuestos();
             this.listaExoneraciones = servicioProducto.obtenerTodosTiposExoneraciones();
@@ -205,7 +205,9 @@ public class BeanProductos {
             fechaEmision = null;
             montoImpuesto = null;
             porcentajeCompra = null;
-            listaProductos = servicioProducto.obtenerTodosProductos();
+            if (modeloProductos == null) {
+                modeloProductos = new ProductoLazyModel(servicioProducto);
+            }
             listaExistencias = new ArrayList<>();
             inhabilitaBotones = true;
             this.cantidadMinima = null;
@@ -398,7 +400,7 @@ public class BeanProductos {
     public void activarProducto(ModeloListaProductos productoSeleccionado) {
         try {
             this.producto = productoSeleccionado.getProducto();
-            this.listaPreciosProducto = productoSeleccionado.getListaPrecios();
+            this.listaPreciosProducto = servicioProducto.obtenerPreciosParaLista(productoSeleccionado.getProducto().getId_producto());
             this.producto.setActivo(1);
             servicioProducto.modificarProducto(producto, null);
             inicializarSinCarga();
@@ -426,7 +428,7 @@ public class BeanProductos {
             this.producto = productoSeleccionado.getProducto();
             this.listaExistencias = servicioProducto.obtenerExistenciaProducto(this.producto.getId_producto());
             if (this.listaExistencias.size() <= 0) {
-                this.listaPreciosProducto = productoSeleccionado.getListaPrecios();
+                this.listaPreciosProducto = servicioProducto.obtenerPreciosParaLista(productoSeleccionado.getProducto().getId_producto());
                 this.producto.setActivo(0);
                 servicioProducto.modificarProducto(producto, null);
                 inicializarSinCarga();
@@ -453,7 +455,7 @@ public class BeanProductos {
             this.exento = this.producto.getInd_exento().equals(1);
             this.cantidadMinima = this.producto.getCantidad_minima();
             inhabilitaBotones = true;
-            this.listaPreciosProducto = productoSeleccionado.getListaPrecios();
+            this.listaPreciosProducto = servicioProducto.obtenerPreciosParaLista(productoSeleccionado.getProducto().getId_producto());
 
         } catch (Exception ex) {
             ExcepcionManager.manejarExcepcion(ex);

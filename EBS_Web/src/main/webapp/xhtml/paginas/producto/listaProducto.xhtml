@@ -28,14 +28,14 @@
                     <div class="card">
                         <h1>Lista de Productos</h1>
 
-                        <p:dataTable id="listaProductos" value="#{beanProductos.listaProductos}"
+                        <p:dataTable id="listaProductos" value="#{beanProductos.modeloProductos}"
                                      var="producto"
+                                     lazy="true"
                                      reflow="true"
-                                     paginator="true" 
-                                     rowKey="#{listaProductos}"
-                                     paginatorPosition="bottom" 
+                                     paginator="true"
+                                     rowKey="#{producto.producto.id_producto}"
+                                     paginatorPosition="bottom"
                                      rows="5"
-                                     filteredValue="#{beanProductos.listaProductosSeleccionados}"
                                      emptyMessage="#{label['tabla.vacia']}">
 
                             <p:column  filterMatchMode="contains" filterBy="#{producto.producto.codigo_barras}" headerText="#{label['producto.id_producto']}" >

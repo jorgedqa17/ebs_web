@@ -28,16 +28,16 @@
                 <div class="ui-g-12">
                     <div class="card">
                         <h1>Lista de Clientes</h1>
-                        <p:dataTable id="listaPersonas" value="#{beanPersona.listaPersonas}"
+                        <p:dataTable id="listaPersonas" value="#{beanPersona.modeloPersonas}"
                                      var="persona"
+                                     lazy="true"
                                      paginator="true" 
-                                     rowKey="#{listaPersonas}"
+                                     rowKey="#{persona.persona.personaPK.numero_cedula}|#{persona.persona.personaPK.id_tipo_cedula}"
                                      paginatorPosition="bottom" 
                                      rows="10"
                                      reflow="true"
                                      editMode="cell"
                                      editable="true"
-                                     filteredValue="#{beanPersona.listaPersonasSeleccionadas}"
                                      emptyMessage="#{label['tabla.vacia']}">
 
                             <p:column filterMatchMode="contains" filterBy="#{persona.persona.personaPK.numero_cedula}" headerText="Número de Cédula:" >

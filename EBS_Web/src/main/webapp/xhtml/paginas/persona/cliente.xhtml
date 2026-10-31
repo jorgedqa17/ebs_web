@@ -157,20 +157,15 @@
         <h:outputText rendered="#{beanFactura.verPanelNuevaPersona}" id="displayPersonas" />     
 
         <p:outputLabel id="actEconoc" value="Actividad Económica:"/>
-        <p:selectOneMenu  converter="ConvertidorListaDesplegables"           
-                          valueChangeListener="#{beanPersona.seleccionarActividad}"
-                          value="#{beanPersona.idActvidadSeleccionada}" 
-                          id="listaActividadEconocimca"     
-                          rendered="#{beanFactura.verPanelNuevaPersona}"
-                          filter="true" filterMatchMode="startsWith"
-                          effect="fold" >     
-            <p:ajax event="change"  />         
-            <f:selectItem itemLabel="Seleccione" itemValue="0" />
-            <f:selectItems value="#{beanPersona.listaTiposActividadesEconomicas}"
-                           var="barrioP"
-                           itemLabel="#{barrioP.dscCIIU3}"
-                           itemValue="#{barrioP.idCodigoActividad}"/>
-        </p:selectOneMenu>  
+        <p:autoComplete id="listaActividadEconocimca" value="#{beanPersona.actividadSeleccionada}"
+                        completeMethod="#{beanPersona.completarActividad}"
+                        var="act" itemValue="#{act}"
+                        itemLabel="#{act.codigoActividadCIIU4} - #{act.dscCIIU4} - #{act.codigoActividadCIIU3} - #{act.dscCIIU3}"
+                        converter="ConvertidorActividadEconomica"
+                        dropdown="true" forceSelection="true" queryDelay="300" scrollHeight="250" placeholder="Escriba el código o la descripción"
+                        rendered="#{beanFactura.verPanelNuevaPersona}">
+            <p:ajax event="itemSelect" />
+        </p:autoComplete>  
 
     </p:panelGrid>
     <p:panelGrid columns="2" columnClasses="ui-grid-col-16, ui-grid-col-16"  layout="grid" styleClass="ui-panelgrid-blank" 

@@ -160,20 +160,15 @@
 
         <p:outputLabel  value=""/>
         <p:outputLabel id="actEconoc" value="Actividad Económica:"/>
-        <p:selectOneMenu  converter="ConvertidorListaDesplegables"           
-                          valueChangeListener="#{beanPersona.seleccionarActividad}"
-                          value="#{beanPersona.idActvidadSeleccionada}" 
-                          id="listaActividadEconocimca"     
-                          disabled="#{beanPersona.inhabilitaBotones}"
-                          filter="true" filterMatchMode="contains"
-                          effect="fold" >     
-            <p:ajax event="change"  />         
-            <f:selectItem itemLabel="Seleccione" itemValue="0" />
-            <f:selectItems value="#{beanPersona.listaTiposActividadesEconomicas}"
-                           var="barrioP"
-                           itemLabel="#{barrioP.codigoActividadCIIU4} - #{barrioP.dscCIIU4} - #{barrioP.codigoActividadCIIU3} - #{barrioP.dscCIIU3}"
-                           itemValue="#{barrioP.idCodigoActividad}"/>
-        </p:selectOneMenu>  
+        <p:autoComplete id="listaActividadEconocimca" value="#{beanPersona.actividadSeleccionada}"
+                        completeMethod="#{beanPersona.completarActividad}"
+                        var="act" itemValue="#{act}"
+                        itemLabel="#{act.codigoActividadCIIU4} - #{act.dscCIIU4} - #{act.codigoActividadCIIU3} - #{act.dscCIIU3}"
+                        converter="ConvertidorActividadEconomica"
+                        dropdown="true" forceSelection="true" queryDelay="300" scrollHeight="250" placeholder="Escriba el código o la descripción"
+                        disabled="#{beanPersona.inhabilitaBotones}">
+            <p:ajax event="itemSelect" />
+        </p:autoComplete>  
 
     </p:panelGrid>
     <h2>Listado de Exoneraciones</h2>
