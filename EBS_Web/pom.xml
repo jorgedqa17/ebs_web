@@ -212,12 +212,9 @@ ENCRIPCION
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.56</version>
         </dependency>
-        <!-- Hibernate Core Entity Manager -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>4.3.1.Final</version>
-        </dependency>
+        <!-- hibernate-entitymanager 4.3.1 se quitó: hibernate-core 5.2.2 ya incluye JPA y ambos JARs traen
+             org.hibernate.jpa.boot.spi.Bootstrap; en Linux (orden de JARs arbitrario) ganaba el viejo y
+             fallaba con NoClassDefFoundError ...ClassLoaderServiceImpl$Work -->
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
