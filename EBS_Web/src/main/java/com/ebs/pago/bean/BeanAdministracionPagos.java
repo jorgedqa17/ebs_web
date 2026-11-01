@@ -83,6 +83,10 @@ public class BeanAdministracionPagos {
     private StreamedContent reporteDesplegarCompElectronico = null;
     private StreamedContent reporteDesplegarRespHacienda = null;
     private byte[] reporteConfirmacion;
+    /** Respuesta de Hacienda del pago seleccionado (se lee del archivo _respuesta.xml). */
+    @Getter
+    @Setter
+    private String respuestaHaciendaTexto;
 
     public BeanAdministracionPagos() {
     }
@@ -111,6 +115,7 @@ public class BeanAdministracionPagos {
             pagoSeleccionado = servicioPago.obtenerPagoPorId(pagoSeleccionadoTabla.getId_pago());
             pagoSeleccionado.setDescripcionEstadoPago(pagoSeleccionadoTabla.getDescripcionEstadoPago());
             pagoSeleccionado.setDescripcionRespuesta(pagoSeleccionadoTabla.getMensaje());
+            respuestaHaciendaTexto = servicioPago.obtenerRespuestaHacienda(pagoSeleccionado);
 
         } catch (Exception ex) {
             ExcepcionManager.manejarExcepcion(ex);
@@ -196,8 +201,8 @@ public class BeanAdministracionPagos {
     }
 
     public void generarXMLComprobanteElectronico(ActionEvent evt) {
-        if (pagoSeleccionado.getDocumento_xml_firmado() != null) {
-            byte[] arregloXML = Utilitario.convertirBase64ABytes(pagoSeleccionado.getDocumento_xml_firmado());
+        byte[] arregloXML = servicioPago.obtenerXmlFirmado(pagoSeleccionado);
+        if (arregloXML != null) {
             InputStream input = new ByteArrayInputStream(arregloXML);
             reporteDesplegarCompElectronico = new DefaultStreamedContent(input, TiposMimeTypes.XML.getMimeType(), ("Comprobante Electrónico - " + pagoSeleccionado.getNumero_consecutivo() + "." + TiposMimeTypes.XML.getExtension()));
         }
@@ -205,8 +210,8 @@ public class BeanAdministracionPagos {
     }
 
     public void generarXMLRespuestaHacienda(ActionEvent evt) {
-        if (pagoSeleccionado.getDetalle_respuesta_hacienda() != null) {
-            byte[] arregloXML = pagoSeleccionado.getDetalle_respuesta_hacienda().getBytes();
+        if (respuestaHaciendaTexto != null) {
+            byte[] arregloXML = respuestaHaciendaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8);
             InputStream input = new ByteArrayInputStream(arregloXML);
             reporteDesplegarRespHacienda = new DefaultStreamedContent(input, TiposMimeTypes.XML.getMimeType(), ("Respuesta Hacienda - " + pagoSeleccionado.getNumero_consecutivo() + "." + TiposMimeTypes.XML.getExtension()));
         }
@@ -226,8 +231,8 @@ public class BeanAdministracionPagos {
                     reporteConfirmacion,
                     (Reportes.CONFIRMACIO_COMPROBANTES_ELECTRONICOS.getNombreReporte() + "-" + pagoNuevo.getNumero_consecutivo() + "." + TiposMimeTypes.PDF.getExtension()),
                     listaCorreos,
-                    (pagoNuevo.getDocumento_xml_firmado() == null ? null : Utilitario.convertirBase64ABytes(pagoNuevo.getDocumento_xml_firmado())),
-                    (pagoNuevo.getDetalle_respuesta_hacienda() == null ? null : pagoNuevo.getDetalle_respuesta_hacienda().getBytes()),
+                    servicioPago.obtenerXmlFirmado(pagoNuevo),
+                    (servicioPago.obtenerRespuestaHacienda(pagoNuevo) == null ? null : servicioPago.obtenerRespuestaHacienda(pagoNuevo).getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                     pagoNuevo.getNumero_consecutivo());
 
         } catch (Exception ex) {
@@ -248,8 +253,8 @@ public class BeanAdministracionPagos {
                     reporteConfirmacion,
                     (Reportes.CONFIRMACIO_COMPROBANTES_ELECTRONICOS.getNombreReporte() + "-" + pagoSeleccionado.getNumero_consecutivo() + "." + TiposMimeTypes.PDF.getExtension()),
                     listaCorreos,
-                    (pagoSeleccionado.getDocumento_xml_firmado() == null ? null : Utilitario.convertirBase64ABytes(pagoSeleccionado.getDocumento_xml_firmado())),
-                    (pagoSeleccionado.getDetalle_respuesta_hacienda() == null ? null : pagoSeleccionado.getDetalle_respuesta_hacienda().getBytes()),
+                    servicioPago.obtenerXmlFirmado(pagoSeleccionado),
+                    (respuestaHaciendaTexto == null ? null : respuestaHaciendaTexto.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                     pagoSeleccionado.getNumero_consecutivo());
 
         } catch (Exception ex) {

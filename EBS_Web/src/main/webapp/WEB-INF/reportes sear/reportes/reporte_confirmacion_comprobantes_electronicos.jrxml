@@ -16,7 +16,7 @@ comprobante_enviado, correo_electronico, fecha_pago,
   WHEN (tipo_mensaje_respuesta = '06')  THEN 'PARCIALMENTE ACEPTADO'
   WHEN (tipo_mensaje_respuesta = '07')  THEN 'RECHAZADO'
  END AS tipo_mensaje_respuesta
-, documento_xml_firmado, detalle_respuesta_hacienda, tipo_identificacion_proveedor, mensaje_detalle, url_consulta_estado
+, tipo_identificacion_proveedor, mensaje_detalle, url_consulta_estado
 	FROM searmedica.pago
 where id_pago =  $P{idPago}]]>
 	</queryString>
@@ -61,12 +61,6 @@ where id_pago =  $P{idPago}]]>
 	</field>
 	<field name="tipo_mensaje_respuesta" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.label" value="tipo_mensaje_respuesta"/>
-	</field>
-	<field name="documento_xml_firmado" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.label" value="documento_xml_firmado"/>
-	</field>
-	<field name="detalle_respuesta_hacienda" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.label" value="detalle_respuesta_hacienda"/>
 	</field>
 	<field name="tipo_identificacion_proveedor" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.label" value="tipo_identificacion_proveedor"/>

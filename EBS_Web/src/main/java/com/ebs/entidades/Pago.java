@@ -81,11 +81,9 @@ public class Pago implements Serializable {
     @Column(name = "tipo_mensaje_respuesta")
     private String tipo_mensaje_respuesta;
 
-    @Column(name = "documento_xml_firmado")
-    private String documento_xml_firmado;
-
-    @Column(name = "detalle_respuesta_hacienda")
-    private String detalle_respuesta_hacienda;
+    // documento_xml_firmado y detalle_respuesta_hacienda ya no se mapean: los XML se guardan como archivos
+    // (ver ArchivosXml y ServicioPago.obtenerXmlFirmado / obtenerRespuestaHacienda). Las columnas siguen en
+    // la BD solo con datos historicos hasta que se ejecute el script de borrado.
 
     @Column(name = "tipo_identificacion_proveedor")
     private String tipo_identificacion_proveedor;
