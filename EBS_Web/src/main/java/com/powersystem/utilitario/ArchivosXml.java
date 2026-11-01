@@ -110,6 +110,65 @@ public final class ArchivosXml {
         return archivo == null ? null : new String(Files.readAllBytes(archivo.toPath()), StandardCharsets.UTF_8);
     }
 
+    public static final int FACTURA = 1;
+    public static final int NOTA_CREDITO = 2;
+    public static final int NOTA_DEBITO = 3;
+
+    /** Fecha de la clave (ddMMyy en las posiciones 3 a 9, como arma la carpeta el servicio REST); null si no se puede leer. */
+    public static Date fechaDeClave(String clave) {
+        if (clave == null || clave.length() < 9) {
+            return null;
+        }
+        try {
+            return new SimpleDateFormat("ddMMyy").parse(clave.substring(3, 9));
+        } catch (java.text.ParseException e) {
+            return null;
+        }
+    }
+
+    /** Estado "enviada a Hacienda": la fila del historial que llevaba el XML firmado. */
+    private static boolean filaConXmlFirmado(int tipo, Long estado) {
+        return estado != null && ((tipo == FACTURA && estado == 6L) || (tipo == NOTA_CREDITO && estado == 10L) || (tipo == NOTA_DEBITO && estado == 39L));
+    }
+
+    /** Estados "aprobada" y "rechazada": las filas del historial que llevaban la respuesta de Hacienda. */
+    private static boolean filaConRespuesta(int tipo, Long estado) {
+        return estado != null && ((tipo == FACTURA && (estado == 3L || estado == 4L))
+                || (tipo == NOTA_CREDITO && (estado == 11L || estado == 12L))
+                || (tipo == NOTA_DEBITO && (estado == 40L || estado == 41L)));
+    }
+
+    /**
+     * Completa una fila del historial con el XML guardado como archivo cuando la BD ya no lo trae, con el mismo formato
+     * de siempre (XML firmado en base64 y respuesta de Hacienda en texto). Si la BD aun tiene el dato, lo conserva.
+     *
+     * @return {xml firmado en base64, respuesta de Hacienda}
+     */
+    public static String[] desdeArchivo(int tipo, Long estado, String rutaPadre, String clave, String consecutivo,
+            String firmadoBd, String respuestaBd) {
+        String firmado = firmadoBd == null ? "" : firmadoBd;
+        String respuesta = respuestaBd == null ? "" : respuestaBd;
+        if (consecutivo != null && rutaPadre != null) {
+            try {
+                if (firmado.trim().isEmpty() && filaConXmlFirmado(tipo, estado)) {
+                    File f = buscar(rutaPadre, consecutivo, SUFIJO_FIRMADO, fechaDeClave(clave));
+                    if (f != null) {
+                        firmado = java.util.Base64.getEncoder().encodeToString(leer(f));
+                    }
+                }
+                if (respuesta.trim().isEmpty() && filaConRespuesta(tipo, estado)) {
+                    File f = buscar(rutaPadre, consecutivo, SUFIJO_RESPUESTA, fechaDeClave(clave));
+                    if (f != null) {
+                        respuesta = leerTexto(f);
+                    }
+                }
+            } catch (IOException e) {
+                // si no se puede leer el archivo, queda lo que traiga la BD
+            }
+        }
+        return new String[]{firmado, respuesta};
+    }
+
     private static void validarNombre(String nombre) throws IOException {
         if (nombre == null || !NOMBRE_SEGURO.matcher(nombre).matches()) {
             throw new IOException("Nombre de archivo no permitido: " + nombre);

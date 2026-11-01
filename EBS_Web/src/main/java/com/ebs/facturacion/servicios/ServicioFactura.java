@@ -97,6 +97,9 @@ import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import lombok.extern.slf4j.Slf4j;
 import org.primefaces.omega.view.misc.CollectorView;
+import com.powersystem.utilitario.ArchivosXml;
+import com.ebs.parametros.servicios.ServicioParametro;
+import com.ebs.constantes.enums.ParametrosEnum;
 
 /**
  *
@@ -108,6 +111,13 @@ import org.primefaces.omega.view.misc.CollectorView;
 public class ServicioFactura extends ServicioBase {
 
     private static final long serialVersionUID = 1L;
+    @Inject
+    private ServicioParametro servicioParametro;
+
+    private String rutaXml() {
+        return servicioParametro.obtenerValorParametro(ParametrosEnum.RUTA_PADRE.getIdParametro()).getValor();
+    }
+
     @Inject
     private ServicioProducto servicioProducto;
     @Inject
@@ -3824,7 +3834,7 @@ public class ServicioFactura extends ServicioBase {
             }
         }
 
-        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado "
+        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO, P.CLAVE, P.NUMERO_CONSECUTIVO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado LEFT JOIN SEARMEDICA.FACTURA P ON P.ID_FACTURA = T1.ID_FACTURA "
                 + " WHERE T1.ID_FACTURA = :idFactura  "
                 + (estados.equals("") ? "" : " AND T1.ESTADO_FACTURA in(" + estados + ")");
         try {
@@ -3844,6 +3854,11 @@ public class ServicioFactura extends ServicioBase {
                 historico.setDocumento_xml_firmado(resultado[6] == null ? "" : resultado[6].toString());
                 historico.setEstado(resultado[7] == null ? "" : resultado[7].toString());
                 historico.setFecha(resultado[2] == null ? null : df.parse(resultado[2].toString()));
+                String[] xml = ArchivosXml.desdeArchivo(ArchivosXml.FACTURA, Long.valueOf(historico.getEstado_factura()), rutaXml(),
+                        resultado[8] == null ? null : resultado[8].toString(), resultado[9] == null ? null : resultado[9].toString(),
+                        historico.getDocumento_xml_firmado(), historico.getDetallerespuesta());
+                historico.setDocumento_xml_firmado(xml[0]);
+                historico.setDetallerespuesta(xml[1]);
                 listaResultados.add(historico);
             }
 
@@ -3863,7 +3878,7 @@ public class ServicioFactura extends ServicioBase {
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado "
+        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO, P.CLAVE, P.NUMERO_CONSECUTIVO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado LEFT JOIN SEARMEDICA.FACTURA P ON P.ID_FACTURA = T1.ID_FACTURA "
                 + " WHERE T1.ID_FACTURA = :idFactura  ";
         try {
 
@@ -3883,6 +3898,11 @@ public class ServicioFactura extends ServicioBase {
                 historico.setEstado(resultado[7] == null ? "" : resultado[7].toString());
                 historico.setFecha(resultado[2] == null ? null : df.parse(resultado[2].toString()));
                 historico.setLogin(resultado[3] == null ? null : resultado[3].toString());
+                String[] xml = ArchivosXml.desdeArchivo(ArchivosXml.FACTURA, Long.valueOf(historico.getEstado_factura()), rutaXml(),
+                        resultado[8] == null ? null : resultado[8].toString(), resultado[9] == null ? null : resultado[9].toString(),
+                        historico.getDocumento_xml_firmado(), historico.getDetallerespuesta());
+                historico.setDocumento_xml_firmado(xml[0]);
+                historico.setDetallerespuesta(xml[1]);
                 listaResultados.add(historico);
             }
 
@@ -3905,9 +3925,10 @@ public class ServicioFactura extends ServicioBase {
             estados = estados + (estados.equals("") ? estado : "," + estado);
         }
 
-        String sql = " SELECT ID_ANULACION, ESTADO_FACTURA, FECHA, LOGIN, RESPUESTA, DETALLERESPUESTA, DOCUMENTO_XML_FIRMADO "
-                + " FROM SEARMEDICA.FACTURA_ANULACION_HISTORICO_HACIENDA  "
-                + " WHERE ESTADO_FACTURA in(" + estados + ")  AND ID_ANULACION = :idAnulacion";
+        String sql = " SELECT T1.ID_ANULACION, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, P.CLAVE, P.NUMERO_CONSECUTIVO "
+                + " FROM SEARMEDICA.FACTURA_ANULACION_HISTORICO_HACIENDA T1 "
+                + " LEFT JOIN SEARMEDICA.FACTURA_ANULACION P ON P.ID_ANULACION = T1.ID_ANULACION "
+                + " WHERE T1.ESTADO_FACTURA in(" + estados + ")  AND T1.ID_ANULACION = :idAnulacion";
         try {
             List<Object[]> listaObjetos = (List<Object[]>) em.createNativeQuery(sql)
                     .setParameter("idAnulacion", idAnulacion)
@@ -3923,6 +3944,11 @@ public class ServicioFactura extends ServicioBase {
                 historico.setRespuesta(resultado[4] == null ? "" : resultado[4].toString());
                 historico.setDetallerespuesta(resultado[5] == null ? "" : resultado[5].toString());
                 historico.setDocumento_xml_firmado(resultado[6] == null ? "" : resultado[6].toString());
+                String[] xml = ArchivosXml.desdeArchivo(ArchivosXml.NOTA_CREDITO, historico.getEstado_factura(), rutaXml(),
+                        resultado[7] == null ? null : resultado[7].toString(), resultado[8] == null ? null : resultado[8].toString(),
+                        historico.getDocumento_xml_firmado(), historico.getDetallerespuesta());
+                historico.setDocumento_xml_firmado(xml[0]);
+                historico.setDetallerespuesta(xml[1]);
 
                 listaResultados.add(historico);
             }
