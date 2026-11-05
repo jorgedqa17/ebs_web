@@ -6,11 +6,11 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets">
 
     <p:panelGrid  id="panelBuscarProductos" columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >        
-        <p:outputLabel id="lblCodigoBarras" value="#{label['detalle.factura.codigo.barras']}"/>        
-        <p:inputText id="txtCodigoBarras" disabled="#{beanFactura.inhabilitarComponentes}" value="#{beanFactura.busquedaCodigoBarras}">
-            <p:ajax event="blur" listener="#{beanFactura.buscarProducto}" update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes :form_sisadmin:txtCodigoBarras"></p:ajax>
+        <p:outputLabel id="lblCodigoBarras" value="#{label['detalle.factura.codigo.barras']}"/>
+        <p:inputText id="txtCodigoBarras" disabled="#{beanFactura.inhabilitarComponentes}" value="#{beanFactura.busquedaCodigoBarras}"
+                     onkeypress="if(event.which==13||event.keyCode==13){document.getElementById('form_sisadmin:btnEscanearCodigoBarras').click();return false;}">
         </p:inputText>
-        <!-- <p:commandButton id="btnConsultaProductos"    
+        <!-- <p:commandButton id="btnConsultaProductos"
                           disabled="#{beanFactura.inhabilitarComponentes}"
                           oncomplete="PF('buscarProductoDialog').show();"                         
                           value="#{label['boton.buscar']}">
@@ -23,9 +23,13 @@
             id="buscarProductosPanel"             
             value="Buscar Producto">
             <f:ajax listener="#{beanFactura.mostrarPanelBuscarProducto}" render="panelBuscarProductoDetalle" />
-        </p:commandButton> 
+        </p:commandButton>
 
     </p:panelGrid>
+    <p:commandButton id="btnEscanearCodigoBarras" style="display:none"
+                      actionListener="#{beanFactura.buscarProducto}"
+                      update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes :form_sisadmin:txtCodigoBarras"
+                      oncomplete="document.getElementById('form_sisadmin:txtCodigoBarras').focus();" />
     <p:outputPanel  id="panelBuscarProductoDetalle">
         <p:panelGrid   columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
 

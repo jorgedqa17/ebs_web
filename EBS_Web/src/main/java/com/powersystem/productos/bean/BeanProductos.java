@@ -5,6 +5,7 @@
  */
 package com.powersystem.productos.bean;
 
+import com.ebs.constantes.enums.ParametrosEnum;
 import com.ebs.constantes.enums.TiposPrecios;
 import com.ebs.entidades.Impuesto;
 import com.ebs.entidades.Producto;
@@ -20,8 +21,10 @@ import com.ebs.exception.ExcepcionManager;
 import com.ebs.modelos.ModeloListaProductos;
 import com.ebs.modelos.ModeloTipoPrecio;
 import com.ebs.modelos.ProductoExistencia;
+import com.ebs.parametros.servicios.ServicioParametro;
 import com.powersystem.productos.servicios.ServicioProducto;
 import com.powersystem.utilitario.EtiquetasUtil;
+import com.powersystem.utilitario.ImagenesProducto;
 import com.powersystem.utilitario.JSFUtil;
 import com.powersystem.utilitario.MensajeUtil;
 import com.powersystem.utilitario.Utilitario;
@@ -40,6 +43,7 @@ import javax.inject.Inject;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.context.RequestContext;
+import org.primefaces.event.FileUploadEvent;
 
 @ManagedBean
 @ViewScoped
@@ -106,6 +110,8 @@ public class BeanProductos {
     private String codigoCabys;
     @Inject
     private ServicioProducto servicioProducto;
+    @Inject
+    private ServicioParametro servicioParametro;
     @Getter
     @Setter
     private boolean indCaduce;
@@ -157,6 +163,8 @@ public class BeanProductos {
     @Getter
     @Setter
     private List<TipoTarifaImpuesto> listaTiposTarifa;
+    @Getter
+    private List<String> listaImagenesProducto;
 
     public BeanProductos() {
     }
@@ -177,6 +185,7 @@ public class BeanProductos {
             exonerado = false;
             listaPreciosProducto = new ArrayList<>();
             listaExistencias = new ArrayList<>();
+            listaImagenesProducto = new ArrayList<>();
             productoPrcioNuevo = new ProductoPrecio();
             precio = new BigDecimal("0.0");
             modeloProductos = new ProductoLazyModel(servicioProducto);
@@ -216,6 +225,7 @@ public class BeanProductos {
             indCaduce = false;
             exonerado = false;
             listaPreciosProducto = new ArrayList<>();
+            listaImagenesProducto = new ArrayList<>();
             productoPrcioNuevo = new ProductoPrecio();
             precio = new BigDecimal("0.0");
             this.idTipoTarifa = 0L;
@@ -233,6 +243,7 @@ public class BeanProductos {
         indCaduce = false;
         exonerado = false;
         listaPreciosProducto = new ArrayList<>();
+        listaImagenesProducto = new ArrayList<>();
         productoPrcioNuevo = new ProductoPrecio();
         precio = new BigDecimal("0.0");
 
@@ -397,6 +408,52 @@ public class BeanProductos {
         }
     }
 
+    /** Carpeta base de las imágenes de productos (parámetro RUTA_IMAGENES_PRODUCTOS). */
+    private String rutaImagenesProductos() {
+        return servicioParametro.obtenerValorParametro(ParametrosEnum.RUTA_IMAGENES_PRODUCTOS.getIdParametro()).getValor();
+    }
+
+    /** Sube una imagen más del producto que se está editando: se guarda en archivo, en la BD se agrega su nombre al JSON. */
+    public void subirImagenProducto(FileUploadEvent event) {
+        try {
+            if (this.producto == null || this.producto.getId_producto() == null) {
+                MensajeUtil.agregarMensajeAdvertencia("Guarde el producto antes de subirle imágenes.");
+                return;
+            }
+            String extension = ImagenesProducto.extensionPermitida(event.getFile().getFileName());
+            if (extension == null) {
+                MensajeUtil.agregarMensajeAdvertencia("Solo se permiten imágenes JPG o PNG.");
+                return;
+            }
+            String nombreGuardado = ImagenesProducto.guardar(rutaImagenesProductos(), this.producto.getId_producto(),
+                    extension, event.getFile().getContents());
+            this.producto.setRuta_imagen(ImagenesProducto.agregarNombre(this.producto.getRuta_imagen(), nombreGuardado));
+            servicioProducto.modificarProducto(this.producto, null);
+            this.listaImagenesProducto = ImagenesProducto.listarNombres(this.producto.getRuta_imagen());
+            MensajeUtil.agregarMensajeInfo("Imagen guardada.");
+        } catch (IOException ex) {
+            MensajeUtil.agregarMensajeAdvertencia(ex.getMessage());
+        } catch (Exception ex) {
+            ExcepcionManager.manejarExcepcion(ex);
+        }
+    }
+
+    /** Elimina una imagen del producto que se está editando (BD primero, archivo físico después). */
+    public void eliminarImagenProducto(String nombreArchivo) {
+        try {
+            if (this.producto == null || this.producto.getId_producto() == null) {
+                return;
+            }
+            this.producto.setRuta_imagen(ImagenesProducto.quitarNombre(this.producto.getRuta_imagen(), nombreArchivo));
+            servicioProducto.modificarProducto(this.producto, null);
+            ImagenesProducto.eliminar(rutaImagenesProductos(), this.producto.getId_producto(), nombreArchivo);
+            this.listaImagenesProducto = ImagenesProducto.listarNombres(this.producto.getRuta_imagen());
+            MensajeUtil.agregarMensajeInfo("Imagen eliminada.");
+        } catch (Exception ex) {
+            ExcepcionManager.manejarExcepcion(ex);
+        }
+    }
+
     public void activarProducto(ModeloListaProductos productoSeleccionado) {
         try {
             this.producto = productoSeleccionado.getProducto();
@@ -456,6 +513,7 @@ public class BeanProductos {
             this.cantidadMinima = this.producto.getCantidad_minima();
             inhabilitaBotones = true;
             this.listaPreciosProducto = servicioProducto.obtenerPreciosParaLista(productoSeleccionado.getProducto().getId_producto());
+            this.listaImagenesProducto = ImagenesProducto.listarNombres(this.producto.getRuta_imagen());
 
         } catch (Exception ex) {
             ExcepcionManager.manejarExcepcion(ex);

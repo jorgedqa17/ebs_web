@@ -105,6 +105,38 @@
         </p:panelGrid>
 
         <br/><br/>
+        <h2>Imágenes del Producto</h2>
+        <h:outputLink value="#{request.contextPath}/xhtml/paginas/producto/catalogoProductos.xhtml"
+                       rendered="#{beanProductos.producto.id_producto != null}" style="display:block;margin-bottom:8px;">
+            <f:param name="codigo" value="#{beanProductos.producto.codigo_barras}"/>
+            <i class="fa fa-search"/> Ver este producto en el catálogo visual
+        </h:outputLink>
+        <p:outputPanel id="panelImagenesProducto">
+            <h:panelGroup layout="block" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+                <ui:repeat value="#{beanProductos.listaImagenesProducto}" var="nombreImagen">
+                    <h:panelGroup layout="block" style="text-align:center;border:1px solid #ddd;border-radius:6px;padding:6px;width:120px;">
+                        <h:graphicImage url="/imagenProducto?producto=#{beanProductos.producto.id_producto}&amp;archivo=#{nombreImagen}" width="100"/>
+                        <br/>
+                        <p:commandButton icon="ui-icon-trash" value="Eliminar" style="margin-top:4px;"
+                                          onclick="return confirm('¿Eliminar esta imagen?');"
+                                          actionListener="#{beanProductos.eliminarImagenProducto(nombreImagen)}"
+                                          update=":form_sisadmin:panelImagenesProducto :form_sisadmin:mensajes"/>
+                    </h:panelGroup>
+                </ui:repeat>
+                <p:outputLabel value="Sin imágenes" rendered="#{empty beanProductos.listaImagenesProducto}"/>
+            </h:panelGroup>
+            <p:fileUpload fileUploadListener="#{beanProductos.subirImagenProducto}"
+                          mode="advanced" auto="true" multiple="true" dragDropSupport="false"
+                          allowTypes="/(\.|\/)(jpe?g|png)$/"
+                          sizeLimit="2097152"
+                          label="Elegir imágenes" uploadLabel="Subir" cancelLabel="Cancelar"
+                          invalidSizeMessage="La imagen supera el tamaño máximo (2 MB)"
+                          invalidFileMessage="Solo se permiten imágenes JPG o PNG"
+                          update=":form_sisadmin:panelImagenesProducto :form_sisadmin:mensajes"
+                          disabled="#{beanProductos.inhabilitaBotones or beanProductos.producto.id_producto == null}"/>
+        </p:outputPanel>
+
+        <br/><br/>
         <h2>Información de los Precios del Producto</h2>
         <br/><br/>
         <p:panelGrid id="panelPrecios" columns="4" columnClasses="ui-grid-col-1,ui-grid-col-6,ui-grid-col-1,ui-grid-col-6" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">

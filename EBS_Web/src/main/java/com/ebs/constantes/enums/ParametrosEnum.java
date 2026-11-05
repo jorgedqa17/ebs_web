@@ -47,7 +47,11 @@ public enum ParametrosEnum {
     PASSWORD_HACIENDA(22L),
     API_URL_EXONERACION(25L),
     RUTA_PADRE(26L),
-    LINK_OBTENCION_CORREO_ELECTRONICO(27L);
+    LINK_OBTENCION_CORREO_ELECTRONICO(27L),
+    /**
+     * Carpeta donde se guardan las imágenes de productos (solo el nombre del archivo queda en la BD).
+     */
+    RUTA_IMAGENES_PRODUCTOS(28L);
 
     private final Long idParametro;
 

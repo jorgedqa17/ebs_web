@@ -369,6 +369,43 @@ public class ServicioProducto extends ServicioBase {
         return listaResultado;
     }
 
+    /**
+     * Descripción y precio de un tipo puntual para todos los productos activos, en 2 consultas (no una
+     * por producto). Usado por la exportación a Excel de precios (consulta/exportarPreciosProductos).
+     *
+     * @return List<Object[]> con columnas [descripcion, precio] (precio null si el producto no tiene
+     * precio de ese tipo)
+     */
+    public List<Object[]> listarProductosActivosConPrecio(Long idTipoPrecio) {
+        List<Object[]> listaResultado = new ArrayList<>();
+        try {
+            List<Object[]> productos = (List<Object[]>) em.createNativeQuery(
+                    " SELECT id_producto, descripcion FROM searmedica.producto "
+                    + " WHERE activo = 1 ORDER BY descripcion ").getResultList();
+
+            java.util.Map<Long, BigDecimal> precioPorProducto = new java.util.HashMap<>();
+            List<Object[]> precios = (List<Object[]>) em.createNativeQuery(
+                    " SELECT id_producto, precio FROM searmedica.producto_precios WHERE id_tipo = :idTipo ")
+                    .setParameter("idTipo", idTipoPrecio)
+                    .getResultList();
+            for (Object[] filaPrecio : precios) {
+                precioPorProducto.put(Long.parseLong(filaPrecio[0].toString()),
+                        filaPrecio[1] == null ? null : new BigDecimal(filaPrecio[1].toString()));
+            }
+
+            for (Object[] fila : productos) {
+                BigDecimal precio = precioPorProducto.get(Long.parseLong(fila[0].toString()));
+                listaResultado.add(new Object[]{fila[1].toString(), precio});
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
+                    "mensaje.error.listar.producto",
+                    "mensaje.error.listar.producto.desarrollador");
+        }
+        return listaResultado;
+    }
+
     // ---------------------------------------------------------------------------------------------
     // Lista de productos paginada (pantalla producto/listaProducto.xhtml). No carga precios: se piden
     // al abrir un producto con obtenerPreciosParaLista(). Evita guardar ~1000 productos y ~28000
@@ -451,7 +488,7 @@ public class ServicioProducto extends ServicioBase {
         String sql = " SELECT t1.id_producto, t1.id_unidad_medida, t2.descripcion as descripcion_unidad_medida, t1.descripcion, "
                 + " t1.ind_caduce, t1.ind_exonerado, t1.codigo_barras, t1.id_tipo_producto, t3.descripcion as descripcion_tipo_producto, "
                 + " t1.id_impuesto, t4.descripcion as descripcion_impuesto, t1.activo, t1.cantidad_minima, t1.id_tipo_tarifa_impuesto, "
-                + " t1.ind_exento, t1.codigo_cabys "
+                + " t1.ind_exento, t1.codigo_cabys, t1.ruta_imagen "
                 + FROM_PRODUCTOS_LISTA + condicionesProductosLista(filtros, parametros)
                 + " order by t1.descripcion asc, t1.id_producto asc ";
         Query q = em.createNativeQuery(sql);
@@ -475,6 +512,7 @@ public class ServicioProducto extends ServicioBase {
             productoEntidad.setId_tipo_tarifa_impuesto(fila[13] == null ? null : Long.parseLong(fila[13].toString()));
             productoEntidad.setInd_exento(fila[14] == null ? null : Integer.parseInt(fila[14].toString()));
             productoEntidad.setCodigo_cabys(fila[15] == null ? "" : String.valueOf(fila[15]));
+            productoEntidad.setRuta_imagen(fila[16] == null ? null : fila[16].toString());
             modelo.setDescripcionTipoProducto(fila[8].toString());
             productoEntidad.setId_impuesto(fila[9] == null ? null : Long.parseLong(fila[9].toString()));
             modelo.setDescripcionImpuesto(fila[10] == null ? "" : fila[10].toString());

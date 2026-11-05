@@ -35,8 +35,9 @@
                     </div>
 
                     <p:panelGrid columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
-                        <p:commandButton icon="fa fa-plus" value="Nuevo" actionListener="#{beanFactura.generaerNuevaFactura(false)}" 
-                                         action="#{beanFactura.nuevaFactura}" disabled="#{beanFactura.deshabilitaBotonNuevo}" update=":form_sisadmin"></p:commandButton>
+                        <p:commandButton icon="fa fa-plus" value="Nuevo" actionListener="#{beanFactura.generaerNuevaFactura(false)}"
+                                         action="#{beanFactura.nuevaFactura}" disabled="#{beanFactura.deshabilitaBotonNuevo}" update=":form_sisadmin"
+                                         oncomplete="var c=document.getElementById('form_sisadmin:txtCodigoBarras'); if(c) c.focus();"></p:commandButton>
                         <p:commandButton icon="fa fa-fw fa-edit" value="Editar" actionListener="#{beanFactura.editarFactura}" disabled="#{!beanFactura.deshabilitaBotonNuevo}"  update=":form_sisadmin"></p:commandButton>
 
                     </p:panelGrid>

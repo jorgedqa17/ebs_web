@@ -1367,6 +1367,19 @@ public class BeanFactura {
 
                 if (productoEncontrado != null) {
 
+                    // Si ya hay una línea editable de este mismo producto (p. ej. se escaneó el código de
+                    // barras dos veces), se suma la cantidad en esa línea en vez de crear una línea nueva.
+                    final Long idProductoEncontrado = productoEncontrado.getId_producto();
+                    ModeloProducto lineaExistente = this.listaProductoPorFacturar.stream()
+                            .filter(p -> p.isPermiteEliminar() && p.getId_producto().equals(idProductoEncontrado))
+                            .findFirst().orElse(null);
+                    if (lineaExistente != null) {
+                        lineaExistente.setCantidadAAgregar(lineaExistente.getCantidad() + 1D);
+                        this.generarLineaDetalleCantidadProducto(lineaExistente);
+                        busquedaCodigoBarras = "";
+                        return;
+                    }
+
                     ModeloProducto productoSeleccionadoLista = ModeloProducto.construirObjeto(productoEncontrado,
                             servicioProducto.obtenerUnidadMedidaProducto(productoEncontrado.getId_unidad_medida()),
                             servicioProducto.obtenerListaPreciosProducto(productoEncontrado.getId_producto()),

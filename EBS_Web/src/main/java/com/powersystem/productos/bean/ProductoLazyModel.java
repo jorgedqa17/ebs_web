@@ -17,15 +17,25 @@ public class ProductoLazyModel extends LazyDataModel<ModeloListaProductos> {
     private static final long serialVersionUID = 1L;
 
     private final ServicioProducto servicioProducto;
+    private final Map<String, String> filtrosFijos;
     private List<ModeloListaProductos> paginaActual;
 
     public ProductoLazyModel(ServicioProducto servicioProducto) {
+        this(servicioProducto, null);
+    }
+
+    /** @param filtrosFijos filtros adicionales que no vienen de las columnas del dataTable (p. ej. llegar ya filtrado a un producto puntual desde otra pantalla). */
+    public ProductoLazyModel(ServicioProducto servicioProducto, Map<String, String> filtrosFijos) {
         this.servicioProducto = servicioProducto;
+        this.filtrosFijos = filtrosFijos;
     }
 
     @Override
     public List<ModeloListaProductos> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
         Map<String, String> filtros = new HashMap<>();
+        if (filtrosFijos != null) {
+            filtros.putAll(filtrosFijos);
+        }
         if (filters != null) {
             for (Map.Entry<String, Object> f : filters.entrySet()) {
                 if (f.getValue() != null) {
