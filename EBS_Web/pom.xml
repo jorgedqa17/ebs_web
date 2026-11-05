@@ -383,7 +383,7 @@ ENCRIPCION
         <profile>
             <id>searmedica</id>
             <properties>
-                <reportes.dir>reportes sear</reportes.dir>
+                <reportes.dir>reportes_sear</reportes.dir>
             </properties>
         </profile>
         <profile>
