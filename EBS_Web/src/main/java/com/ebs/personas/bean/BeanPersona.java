@@ -74,7 +74,7 @@ public class BeanPersona {
     private List<TipoExoneracion> listaTipoExoneracion;
     @Getter
     @Setter
-    private List<ActividadEconomica> listaTiposActividadesEconomicas;
+    private ActividadEconomica actividadCache;
     @Getter
     @Setter
     private Long tipoIdentificacionSeleccionadaReceptor;
@@ -96,7 +96,7 @@ public class BeanPersona {
     private List<Provincia> listaProvincias;
     @Getter
     @Setter
-    private List<PersonaModelo> listaPersonas;
+    private ClienteMantenimientoLazyModel modeloPersonas;
     @Getter
     @Setter
     private List<PersonaModelo> listaPersonasSeleccionadas;
@@ -188,12 +188,11 @@ public class BeanPersona {
             tipoIdentificacionSeleccionadaReceptor = 0l;
             this.listaExoneraciones = new ArrayList<>();
             this.persona = new Persona();
-            listaPersonas = servicioPersona.obtenerTodasPersonasMantenimiento();
+            modeloPersonas = new ClienteMantenimientoLazyModel(servicioPersona); // paginado en la BD
             exoneracionUsuario = ExoneracionUsuario.builder()
                     .tipoDocumento(ExoneracionUsuario.TipoDocumento.builder().codigo(0L).build())
                     .build();
 
-            this.listaTiposActividadesEconomicas = this.servicioPersona.obtenerListaCodigosActividad();
             //Obtengo la lista tipos de cédulas
             this.listaTiposCedulas = servicioPersona.obtenerListaTiposIdentificacion();
             //Cargo las provincias
@@ -366,6 +365,25 @@ public class BeanPersona {
 
     }
 
+    public ActividadEconomica getActividadSeleccionada() {
+        if (idActvidadSeleccionada == null || idActvidadSeleccionada.equals(0L)) {
+            return null;
+        }
+        if (actividadCache == null || !idActvidadSeleccionada.equals(actividadCache.getIdCodigoActividad())) {
+            actividadCache = servicioPersona.obtenerActividadPorId(idActvidadSeleccionada);
+        }
+        return actividadCache;
+    }
+
+    public void setActividadSeleccionada(ActividadEconomica actividad) {
+        actividadCache = actividad;
+        idActvidadSeleccionada = actividad == null ? 0L : actividad.getIdCodigoActividad();
+    }
+
+    public List<ActividadEconomica> completarActividad(String texto) {
+        return servicioPersona.buscarActividades(texto, 20);
+    }
+
     public void seleccionarActividad(ValueChangeEvent evt) {
         idActvidadSeleccionada = Long.parseLong(evt.getNewValue() == null ? "0" : evt.getNewValue().toString());
 
@@ -524,7 +542,9 @@ public class BeanPersona {
         PersonaHacienda personaEncontrada = null;
         Parametro endPointConsultaPersonaHacienda = servicioParametro.obtenerValorParametro(ParametrosEnum.END_POINT_CONSULTA_PERSONA_HACIENDA.getIdParametro());
 
-        for (PersonaModelo personas : listaPersonas) {
+        // proceso masivo: necesita todos los clientes, se consultan solo aquí (no se guardan en la sesión)
+        List<ActividadEconomica> catalogoActividades = servicioPersona.obtenerListaCodigosActividad();
+        for (PersonaModelo personas : servicioPersona.obtenerTodasPersonasMantenimiento()) {
             if (personas.getPersona().getIdCodigoActividad() == null) {
                 personaEncontrada = utilitarioBusqueda.obtenerPersonaHacienda(personas.getPersona().getPersonaPK().getNumero_cedula(), endPointConsultaPersonaHacienda.getValor());
                 if (personaEncontrada != null) {
@@ -539,7 +559,7 @@ public class BeanPersona {
                             if (actividad.getEstado().equals("A")) {
                                 Persona persona = this.servicioPersona.obtenerPersonaPorIdentificacion(personas.getPersona().getPersonaPK().getNumero_cedula(), personas.getPersona().getPersonaPK().getId_tipo_cedula());
 
-                                ActividadEconomica tipo = this.listaTiposActividadesEconomicas.stream()
+                                ActividadEconomica tipo = catalogoActividades.stream()
                                         .filter(e -> e.getCodigoActividadCIIU3().equals(actividad.getCodigo())
                                         || e.getCodigoActividadCIIU4().equals(actividad.getCodigo()))
                                         .findFirst()

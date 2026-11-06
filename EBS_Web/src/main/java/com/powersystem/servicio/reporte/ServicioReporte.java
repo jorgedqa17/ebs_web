@@ -16,6 +16,8 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
@@ -42,6 +44,8 @@ import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 @Slf4j
 @Stateless
 public class ServicioReporte extends ServicioBase {
+
+    private static final ConcurrentMap<String, ReporteCompilado> REPORTES_COMPILADOS = new ConcurrentHashMap<>();
 
     @Getter
     @Setter
@@ -106,6 +110,7 @@ public class ServicioReporte extends ServicioBase {
 //    }
     public byte[] generarReporte(Reportes reporteGenerar, TiposMimeTypes formato, Map<String, Object> parametros, boolean tieneSubReportes) throws JRException {
         JasperPrint print = null;
+        Connection conection = null;
         try {
             String ruta = context.getRealPath("/WEB-INF/reportes") + File.separator;
             if (tieneSubReportes) {
@@ -113,18 +118,52 @@ public class ServicioReporte extends ServicioBase {
             }
             parametros.put("rutaImagen", ruta);
 
-            Connection conection = Utilitario.obtenerConexion();
-            JasperReport report = JasperCompileManager.compileReport(ruta + reporteGenerar.getJasper());
+            conection = Utilitario.obtenerConexion();
+            JasperReport report = compilar(ruta + reporteGenerar.getJasper());
             print = JasperFillManager.fillReport(report, parametros, conection);
             print.setName(reporteGenerar.getNombreReporte());
-            Utilitario.cerrarConexion(conection);
-        } catch (JRException | SQLException ex) {
+        } catch (JRException ex) {
             ex.printStackTrace();
             throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
                     "mensaje.generar.reporte",
                     "mensaje.generar.reporte.final");
+        } finally {
+            // Antes la conexión quedaba abierta (sin volver al pool) si el reporte fallaba
+            if (conection != null) {
+                try {
+                    Utilitario.cerrarConexion(conection);
+                } catch (SQLException ex) {
+                    log.warn("No se pudo cerrar la conexión del reporte", ex);
+                }
+            }
         }
         return exportar(print, formato);
+    }
+
+    /**
+     * Compila el .jrxml una sola vez y reutiliza el resultado mientras el
+     * archivo no cambie; compilar en cada petición es lo más costoso del reporte.
+     */
+    private JasperReport compilar(String archivo) throws JRException {
+        long modificado = new File(archivo).lastModified();
+        ReporteCompilado cacheado = REPORTES_COMPILADOS.get(archivo);
+        if (cacheado != null && cacheado.modificado == modificado) {
+            return cacheado.reporte;
+        }
+        JasperReport reporte = JasperCompileManager.compileReport(archivo);
+        REPORTES_COMPILADOS.put(archivo, new ReporteCompilado(modificado, reporte));
+        return reporte;
+    }
+
+    private static final class ReporteCompilado {
+
+        private final long modificado;
+        private final JasperReport reporte;
+
+        private ReporteCompilado(long modificado, JasperReport reporte) {
+            this.modificado = modificado;
+            this.reporte = reporte;
+        }
     }
 
     private byte[] exportar(JasperPrint jp, TiposMimeTypes formato) throws JRException {

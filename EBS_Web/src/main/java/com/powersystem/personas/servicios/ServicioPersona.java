@@ -46,6 +46,28 @@ public class ServicioPersona extends ServicioBase {
      * @param nombre
      * @return List<Persona>
      */
+    /**
+     * Búsqueda de actividades económicas por texto (código o descripción CIIU3/CIIU4), con límite. Reemplaza
+     * cargar y enviar al navegador las ~750 actividades en cada pantalla.
+     */
+    public List<ActividadEconomica> buscarActividades(String texto, int maximo) {
+        String t = texto == null ? "" : texto.trim().toUpperCase();
+        t = t.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return em.createQuery("SELECT a FROM ActividadEconomica a WHERE upper(a.codigoActividadCIIU4) LIKE :t ESCAPE '\\' "
+                + " OR upper(a.dscCIIU4) LIKE :t ESCAPE '\\' OR upper(a.codigoActividadCIIU3) LIKE :t ESCAPE '\\' "
+                + " OR upper(a.dscCIIU3) LIKE :t ESCAPE '\\' ORDER BY a.dscCIIU4, a.idCodigoActividad", ActividadEconomica.class)
+                .setParameter("t", "%" + t + "%")
+                .setMaxResults(maximo)
+                .getResultList();
+    }
+
+    public ActividadEconomica obtenerActividadPorId(Long idCodigoActividad) {
+        if (idCodigoActividad == null) {
+            return null;
+        }
+        return em.find(ActividadEconomica.class, idCodigoActividad);
+    }
+
     public List<ActividadEconomica> obtenerListaCodigosActividad() {
         List<ActividadEconomica> listaPersonas = new ArrayList<>();
         try {
@@ -730,10 +752,11 @@ public class ServicioPersona extends ServicioBase {
         Cliente cliente = null;
         try {
 
-            String sqlPersonaCliente = "SELECT pers FROM Persona pers WHERE  trim(COALESCE(pers.nombre,'') ||' '||COALESCE(pers.primer_apellido,'')||' '||COALESCE(pers.segundo_apellido,'')) LIKE '%" + nombre.toUpperCase().replace(" ", "%") + "%' ";
+            String sqlPersonaCliente = "SELECT pers FROM Persona pers WHERE  trim(COALESCE(pers.nombre,'') ||' '||COALESCE(pers.primer_apellido,'')||' '||COALESCE(pers.segundo_apellido,'')) LIKE :nombre ";
             String sqlCliente = "SELECT clit FROM Cliente clit WHERE clit.numero_cedula = :numero_cedula ";
 
             List<Persona> personasEncontradas = em.createQuery(sqlPersonaCliente, Persona.class)
+                    .setParameter("nombre", "%" + nombre.toUpperCase().replace(" ", "%") + "%")
                     .getResultList();
             for (Persona personaEncontrada : personasEncontradas) {
                 if (personaEncontrada != null) {
@@ -762,6 +785,98 @@ public class ServicioPersona extends ServicioBase {
         }
         return listaResultado;
 
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Clientes de la pantalla de mantenimiento, paginados y filtrados en la BD (misma consulta y mismas
+    // columnas que obtenerTodasPersonasMantenimiento(), que queda solo para procesos masivos).
+    // ---------------------------------------------------------------------------------------------
+    private static final String FROM_CLIENTES_MANTENIMIENTO
+            = " FROM searmedica.persona t1 inner join searmedica.cliente t2 on t1.numero_cedula = t2.numero_cedula ";
+
+    private String condicionesClientesMantenimiento(java.util.Map<String, String> filtros, java.util.Map<String, Object> parametros) {
+        StringBuilder where = new StringBuilder(" where 1 = 1 ");
+        int i = 0;
+        if (filtros != null) {
+            for (java.util.Map.Entry<String, String> f : filtros.entrySet()) {
+                String valor = f.getValue() == null ? "" : f.getValue().trim();
+                if (valor.isEmpty()) {
+                    continue;
+                }
+                String clave = f.getKey();
+                String columna;
+                if (clave.contains("numero_cedula")) {
+                    columna = "t1.numero_cedula";
+                } else if (clave.contains("nombreCompleto")) {
+                    columna = "(coalesce(t1.nombre, '') || ' ' || coalesce(t1.primer_apellido, '') || ' ' || coalesce(t1.segundo_apellido, ''))";
+                } else if (clave.contains("nombre_fantasia")) {
+                    columna = "t1.nombre_fantasia";
+                } else {
+                    continue;
+                }
+                String nombre = "f" + (i++);
+                where.append(" and upper(").append(columna).append(") like upper(:").append(nombre).append(") escape '\\' ");
+                parametros.put(nombre, "%" + escaparLikePersona(valor) + "%");
+            }
+        }
+        return where.toString();
+    }
+
+    public long contarClientesMantenimiento(java.util.Map<String, String> filtros) {
+        java.util.Map<String, Object> parametros = new java.util.HashMap<>();
+        String sql = "select count(*) " + FROM_CLIENTES_MANTENIMIENTO + condicionesClientesMantenimiento(filtros, parametros);
+        javax.persistence.Query q = em.createNativeQuery(sql);
+        parametros.forEach(q::setParameter);
+        return ((Number) q.getSingleResult()).longValue();
+    }
+
+    public List<PersonaModelo> listarClientesMantenimiento(int primero, int tamanno, java.util.Map<String, String> filtros) {
+        java.util.Map<String, Object> parametros = new java.util.HashMap<>();
+        String sql = " SELECT "
+                + " t1.numero_cedula, t1.id_tipo_cedula, t1.nombre, t1.primer_apellido, t1.segundo_apellido,  "
+                + " t1.correo_electronico, t1.direccion, t1.telefono_1, t1.telefono_2, t1.id_provincia, t1.id_canton, "
+                + " t1.id_distrito, t1.id_barrio, t1.es_persona_hacienda, t1.nombre_fantasia, t1.codigo_pais,  "
+                + " t1.es_activo, t1.es_exonerado, t1.es_exento, t2.id_cliente , t2.id_tipo_cliente ,t2.ind_requiere_transporte, t1.id_codigo_actividad, t1.exoneraciones  "
+                + FROM_CLIENTES_MANTENIMIENTO + condicionesClientesMantenimiento(filtros, parametros)
+                + " order by t1.nombre, t1.primer_apellido, t1.segundo_apellido, t1.numero_cedula, t1.id_tipo_cedula ";
+        javax.persistence.Query q = em.createNativeQuery(sql);
+        parametros.forEach(q::setParameter);
+        q.setFirstResult(primero);
+        q.setMaxResults(tamanno);
+        List<PersonaModelo> resultado = new ArrayList<>();
+        for (Object[] fila : (List<Object[]>) q.getResultList()) {
+            PersonaModelo personaModelo = new PersonaModelo();
+            Cliente cliente = new Cliente();
+            cliente.setId_cliente(Long.parseLong(fila[19].toString()));
+            cliente.setId_tipo_cliente(Long.parseLong(fila[20].toString()));
+            cliente.setInd_requiere_transporte(Integer.parseInt(fila[21].toString()));
+            cliente.setNumero_cedula(fila[0].toString());
+            personaModelo.setCliente(cliente);
+            Persona p = new Persona();
+            p.setPersonaPK(new PersonaPK(fila[0].toString(), Long.parseLong(fila[1].toString())));
+            p.setNombre(fila[2] == null ? "" : fila[2].toString());
+            p.setPrimer_apellido(fila[3] == null ? "" : fila[3].toString());
+            p.setSegundo_apellido(fila[4] == null ? "" : fila[4].toString());
+            p.setCorreo_electronico(fila[5] == null ? "" : fila[5].toString());
+            p.setDireccion(fila[6] == null ? "" : fila[6].toString());
+            p.setTelefono_1(fila[7] == null ? "" : fila[7].toString());
+            p.setTelefono_2(fila[8] == null ? "" : fila[8].toString());
+            p.setId_provincia(fila[9] == null ? null : Long.parseLong(fila[9].toString()));
+            p.setId_canton(fila[10] == null ? null : Long.parseLong(fila[10].toString()));
+            p.setId_distrito(fila[11] == null ? null : Long.parseLong(fila[11].toString()));
+            p.setId_barrio(fila[12] == null ? null : Long.parseLong(fila[12].toString()));
+            p.setEs_persona_hacienda(fila[13] == null ? null : Integer.parseInt(fila[13].toString()));
+            p.setNombre_fantasia(fila[14] == null ? "" : fila[14].toString());
+            p.setCodigo_pais(fila[15] == null ? null : fila[15].toString());
+            p.setEs_activo(fila[16] == null ? null : Integer.parseInt(fila[16].toString()));
+            p.setEs_exonerado(fila[17] == null ? null : Integer.parseInt(fila[17].toString()));
+            p.setEs_exento(fila[18] == null ? null : Integer.parseInt(fila[18].toString()));
+            p.setIdCodigoActividad(fila[22] == null ? null : Long.parseLong(fila[22].toString()));
+            p.setExoneraciones(fila[23] == null ? "" : fila[23].toString());
+            personaModelo.setPersona(p);
+            resultado.add(personaModelo);
+        }
+        return resultado;
     }
 
     public List<PersonaModelo> obtenerTodasPersonasMantenimiento() {
@@ -925,6 +1040,114 @@ public class ServicioPersona extends ServicioBase {
         }
         return listaResultado;
 
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Clientes de la pantalla de facturación, paginados y filtrados en la BD (reemplaza la carga de
+    // todos los clientes en la sesión con obtenerTodasPersonasAlias()). Mismas columnas, mismo
+    // criterio (activos con cliente y correo) y mismo nombre (alias del cliente si existe).
+    // Cambio: un cliente con varios correos aparece una sola vez (antes aparecía una vez por correo).
+    // ---------------------------------------------------------------------------------------------
+    private static final String NOMBRE_ALIAS_SQL
+            = "(case when t1.alias_cliente is null then t2.nombre else t1.alias_cliente end)";
+
+    private static final String FROM_CLIENTES_ALIAS
+            = " from SEARMEDICA.persona_correo T1 inner join SEARMEDICA.PERSONA T2 "
+            + " on T1.numero_cedula = T2.numero_cedula and T1.id_tipo_cedula = T2.id_tipo_cedula "
+            + " inner join SEARMEDICA.CLIENTE T3 on T2.numero_cedula = T3.numero_cedula ";
+
+    private static String escaparLikePersona(String texto) {
+        return texto.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
+
+    /**
+     * Claves de filtro (expresiones filterBy de la tabla): personaPK.numero_cedula, nombreCompleto,
+     * nombre_fantasia. Parámetros enlazados; contiene, sin distinguir mayúsculas.
+     */
+    private String condicionesClientesAlias(java.util.Map<String, String> filtros, java.util.Map<String, Object> parametros) {
+        // El ciclo original descartaba las filas con alguno de estos campos nulos
+        StringBuilder where = new StringBuilder(" where t2.es_activo = 1 and t2.numero_cedula is not null and t2.id_tipo_cedula is not null "
+                + " and " + NOMBRE_ALIAS_SQL + " is not null and t3.id_cliente is not null and t3.id_tipo_cliente is not null "
+                + " and t3.ind_requiere_transporte is not null ");
+        int i = 0;
+        if (filtros != null) {
+            for (java.util.Map.Entry<String, String> f : filtros.entrySet()) {
+                String valor = f.getValue() == null ? "" : f.getValue().trim();
+                if (valor.isEmpty()) {
+                    continue;
+                }
+                String clave = f.getKey();
+                String columna;
+                if (clave.contains("numero_cedula")) {
+                    columna = "t2.numero_cedula";
+                } else if (clave.contains("nombreCompleto")) {
+                    columna = "(" + NOMBRE_ALIAS_SQL + " || ' ' || coalesce(t2.primer_apellido, '') || ' ' || coalesce(t2.segundo_apellido, ''))";
+                } else if (clave.contains("nombre_fantasia")) {
+                    columna = "t2.nombre_fantasia";
+                } else {
+                    continue;
+                }
+                String nombre = "f" + (i++);
+                where.append(" and upper(").append(columna).append(") like upper(:").append(nombre).append(") escape '\\' ");
+                parametros.put(nombre, "%" + escaparLikePersona(valor) + "%");
+            }
+        }
+        return where.toString();
+    }
+
+    public long contarClientesAlias(java.util.Map<String, String> filtros) {
+        java.util.Map<String, Object> parametros = new java.util.HashMap<>();
+        String sql = "select count(*) from (select distinct t2.numero_cedula, t2.id_tipo_cedula "
+                + FROM_CLIENTES_ALIAS + condicionesClientesAlias(filtros, parametros) + ") z";
+        javax.persistence.Query q = em.createNativeQuery(sql);
+        parametros.forEach(q::setParameter);
+        return ((Number) q.getSingleResult()).longValue();
+    }
+
+    public List<PersonaModelo> listarClientesAlias(int primero, int tamanno, java.util.Map<String, String> filtros) {
+        java.util.Map<String, Object> parametros = new java.util.HashMap<>();
+        String sql = "select * from (select distinct on (t2.numero_cedula, t2.id_tipo_cedula) "
+                + " t2.numero_cedula, t2.id_tipo_cedula, " + NOMBRE_ALIAS_SQL + " nombre, t2.primer_apellido, "
+                + " t2.segundo_apellido, t1.correo_electronico, t2.direccion, t2.telefono_1, "
+                + " t2.telefono_2, t2.id_provincia, id_canton, t2.id_distrito, t2.id_barrio, "
+                + " t2.es_persona_hacienda, t2.nombre_fantasia, t2.codigo_pais, t2.es_activo, "
+                + " t3.id_cliente, t3.id_tipo_cliente, t3.ind_requiere_transporte, t2.es_exonerado, "
+                + " t2.es_exento, t2.id_codigo_actividad "
+                + FROM_CLIENTES_ALIAS + condicionesClientesAlias(filtros, parametros)
+                + " order by t2.numero_cedula, t2.id_tipo_cedula, t1.correo_electronico) x "
+                + " order by x.nombre, x.numero_cedula, x.id_tipo_cedula ";
+        javax.persistence.Query q = em.createNativeQuery(sql);
+        parametros.forEach(q::setParameter);
+        q.setFirstResult(primero);
+        q.setMaxResults(tamanno);
+        List<PersonaModelo> resultado = new ArrayList<>();
+        for (Object[] cliente : (List<Object[]>) q.getResultList()) {
+            PersonaModelo personaModelo = new PersonaModelo();
+            PersonaPK personaPK = new PersonaPK(cliente[0].toString(), Long.parseLong(cliente[1].toString()));
+            Persona persona = new Persona(personaPK,
+                    cliente[2].toString(),
+                    cliente[3] == null ? "" : cliente[3].toString(),
+                    cliente[4] == null ? "" : cliente[4].toString(),
+                    cliente[5] == null ? "" : cliente[5].toString(),
+                    cliente[6] == null ? "" : cliente[6].toString(),
+                    cliente[7] == null ? "" : cliente[7].toString(),
+                    cliente[8] == null ? "" : cliente[8].toString(),
+                    cliente[9] == null ? "" : cliente[9].toString(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    cliente[14] == null ? "" : cliente[14].toString(),
+                    1,
+                    cliente[20] == null ? 0 : Integer.parseInt(cliente[20].toString()),
+                    cliente[21] == null ? 0 : Integer.parseInt(cliente[21].toString()));
+            persona.setIdCodigoActividad(cliente[22] == null ? null : Long.parseLong(cliente[22].toString()));
+            personaModelo.setCliente(new Cliente(Long.parseLong(cliente[17].toString()), Integer.parseInt(cliente[19].toString()),
+                    Long.parseLong(cliente[18].toString()), cliente[0].toString()));
+            personaModelo.setPersona(persona);
+            resultado.add(personaModelo);
+        }
+        return resultado;
     }
 
     /**

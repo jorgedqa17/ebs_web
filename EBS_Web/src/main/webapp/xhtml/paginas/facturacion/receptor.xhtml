@@ -19,16 +19,16 @@
     </p:panelGrid>
     <div class="card" style="float: none;" >
         <p:panelGrid id="panelBuscarPersonal"  columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
-            <p:dataTable id="listaPersonas" value="#{beanFactura.listaPersonas}"
+            <p:dataTable id="listaPersonas" value="#{beanFactura.modeloPersonas}"
                          var="persona"
+                         lazy="true"
                          rendered="#{beanFactura.verPanelBuscarPersona}"
                          selectionMode="single"
-                         paginator="true" 
-                         rowKey="#{persona}"
+                         paginator="true"
+                         rowKey="#{persona.persona.personaPK.numero_cedula}|#{persona.persona.personaPK.id_tipo_cedula}"
                          reflow="true"
-                         paginatorPosition="bottom"                          
+                         paginatorPosition="bottom"
                          rows="10"
-                         filteredValue="#{beanFactura.listaPersonasFiltro}"
                          emptyMessage="#{label['tabla.vacia']}">
                 <p:ajax event="rowSelect" update=":form_sisadmin :form_sisadmin:idTablaProductos :form_sisadmin:btnVerModalEx :form_sisadmin:listaActividadEconocimcav2"                          
                         listener="#{beanFactura.buscarPersonaSeleccionTabla}"  />
@@ -130,20 +130,15 @@
         <p:inputText id="txtNombreFantasiaFactura" disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}" maxlength="100" value="#{beanFactura.nombreClienteFantasia}"></p:inputText>
 
         <p:outputLabel for="listaActividadEconocimcav2" id="actEconocv2" value="Actividad Económica:"/>
-        <p:selectOneMenu  converter="ConvertidorListaDesplegables"           
-                          valueChangeListener="#{beanFactura.seleccionarActividad}"
-                          value="#{beanFactura.idActvidadSeleccionada}" 
-                          id="listaActividadEconocimcav2"     
-                          disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}"
-                          filter="true" filterMatchMode="contains"
-                          effect="fold" >     
-            <p:ajax event="change"  />         
-            <f:selectItem  itemLabel="Seleccione" itemValue="0" />
-            <f:selectItems value="#{beanFactura.listaTiposActividadesEconomicas}"
-                           var="barrioP"
-                           itemLabel="#{barrioP.codigoActividadCIIU4}-#{barrioP.dscCIIU4} - #{barrioP.codigoActividadCIIU3} - #{barrioP.dscCIIU3}"
-                           itemValue="#{barrioP.idCodigoActividad}"/>
-        </p:selectOneMenu>
+        <p:autoComplete id="listaActividadEconocimcav2" value="#{beanFactura.actividadSeleccionada}"
+                        completeMethod="#{beanFactura.completarActividad}"
+                        var="act" itemValue="#{act}"
+                        itemLabel="#{act.codigoActividadCIIU4} - #{act.dscCIIU4} - #{act.codigoActividadCIIU3} - #{act.dscCIIU3}"
+                        converter="ConvertidorActividadEconomica"
+                        dropdown="true" forceSelection="true" queryDelay="300" scrollHeight="250" placeholder="Escriba el código o la descripción"
+                        disabled="#{beanFactura.inhabilitarComponentes  or beanFactura.puedeAgregarLineasNotaDebito}">
+            <p:ajax event="itemSelect" />
+        </p:autoComplete>
 
         <p:outputLabel />
         <p:outputLabel />

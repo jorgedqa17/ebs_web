@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition  template="/WEB-INF/template.xhtml"
+                 xmlns:p="http://primefaces.org/ui"
+                 xmlns:h="http://java.sun.com/jsf/html"
+                 xmlns:f="http://java.sun.com/jsf/core"
+                 xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <ui:define name="title">Catálogo de Productos</ui:define>
+
+    <f:metadata>
+        <f:viewParam name="codigo" value="#{beanCatalogoProductos.codigoBarras}"/>
+        <f:viewAction action="#{beanCatalogoProductos.buscarPorCodigoBarras}"/>
+    </f:metadata>
+
+    <ui:define name="head">
+        <style type="text/css">
+            .galeria-detalle img { height: 110px; object-fit: contain; margin: 6px; border: 1px solid #ddd; border-radius: 6px; padding: 4px; }
+        </style>
+    </ui:define>
+
+    <ui:define name="content">
+        <div class="card">
+            <p:commandButton value="Volver" icon="fa fa-arrow-left" type="button" onclick="history.back(); return false;"
+                              rendered="#{not empty beanCatalogoProductos.codigoBarras}" style="margin-bottom:10px;"/>
+            <h1>Catálogo de Productos</h1>
+
+            <p:dataTable id="tablaCatalogo" value="#{beanCatalogoProductos.modeloProductos}"
+                         var="producto"
+                         lazy="true"
+                         reflow="true"
+                         paginator="true"
+                         rowKey="#{producto.producto.id_producto}"
+                         paginatorPosition="bottom"
+                         rows="10"
+                         emptyMessage="#{label['tabla.vacia']}">
+
+                <p:column filterMatchMode="contains" filterBy="#{producto.producto.codigo_barras}" headerText="#{label['producto.id_producto']}">
+                    <h:outputText value="#{producto.producto.codigo_barras}"/>
+                </p:column>
+                <p:column filterMatchMode="contains" filterBy="#{producto.producto.descripcion}" headerText="#{label['producto.descripcion']}">
+                    <h:outputText value="#{producto.producto.descripcion}"/>
+                </p:column>
+                <p:column filterMatchMode="contains" filterBy="#{producto.descripcionTipoProducto}" headerText="#{label['producto.tipo.producto']}">
+                    <h:outputText value="#{producto.descripcionTipoProducto}"/>
+                </p:column>
+                <p:column filterMatchMode="exact" filterBy="#{producto.estado}" headerText="Estado">
+                    <h:outputText value="#{producto.estado}"/>
+                </p:column>
+                <p:column>
+                    <p:commandButton icon="ui-icon-search" value="Ver Detalle"
+                                      actionListener="#{beanCatalogoProductos.verDetalle(producto)}"
+                                      update=":form_sisadmin:panelDetalleProducto"
+                                      oncomplete="PF('dialogDetalleProducto').show()"/>
+                </p:column>
+            </p:dataTable>
+
+            <p:dialog header="Detalle del Producto" widgetVar="dialogDetalleProducto" modal="true"
+                      showEffect="fade" hideEffect="fade" resizable="false" width="700"
+                      appendTo="@(body)">
+                <h:panelGroup id="panelDetalleProducto" layout="block">
+                    <h:panelGroup layout="block" rendered="#{beanCatalogoProductos.productoDetalle != null}">
+                        <h2>#{beanCatalogoProductos.productoDetalle.producto.descripcion}</h2>
+                        <p>
+                            <b>Código: </b>#{beanCatalogoProductos.productoDetalle.producto.codigo_barras}
+                            &#160;&#160;
+                            <b>Tipo: </b>#{beanCatalogoProductos.productoDetalle.descripcionTipoProducto}
+                            &#160;&#160;
+                            <b>Estado: </b>#{beanCatalogoProductos.productoDetalle.estado}
+                        </p>
+
+                        <h3>Precios</h3>
+                        <p:dataTable value="#{beanCatalogoProductos.listaPreciosDetalle}" var="productoPrecio"
+                                      emptyMessage="Sin precios registrados.">
+                            <p:column headerText="#{label['producto.tipo.precio.tipo']}">
+                                <h:outputText value="#{productoPrecio.descripcion}"/>
+                            </p:column>
+                            <p:column headerText="#{label['producto.moneda']}">
+                                <h:outputText value="#{productoPrecio.descripcionTipoMoneda}"/>
+                            </p:column>
+                            <p:column headerText="#{label['producto.precio']}">
+                                <h:outputText value="#{productoPrecio.productoPrecio.precio}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <h3>Existencia en inventario</h3>
+                        <p:dataTable value="#{beanCatalogoProductos.listaExistenciaDetalle}" var="existencia"
+                                      emptyMessage="Sin existencia registrada.">
+                            <p:column headerText="#{label['producto.existencia.bodega']}">
+                                <h:outputText value="#{existencia.descripcion_bodega}"/>
+                            </p:column>
+                            <p:column headerText="#{label['producto.existencia.cantidad']}">
+                                <h:outputText value="#{existencia.cantidad}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <h3>Imágenes</h3>
+                        <h:panelGroup layout="block" styleClass="galeria-detalle">
+                            <ui:repeat value="#{beanCatalogoProductos.listaImagenesDetalle}" var="nombreImagen">
+                                <h:graphicImage url="/imagenProducto?producto=#{beanCatalogoProductos.productoDetalle.producto.id_producto}&amp;archivo=#{nombreImagen}"/>
+                            </ui:repeat>
+                            <p:outputLabel value="Este producto no tiene imágenes." rendered="#{empty beanCatalogoProductos.listaImagenesDetalle}"/>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </h:panelGroup>
+            </p:dialog>
+            <h:panelGroup rendered="#{beanCatalogoProductos.productoDetalle != null}">
+                <script type="text/javascript">
+                    $(function () { PF('dialogDetalleProducto').show(); });
+                </script>
+            </h:panelGroup>
+        </div>
+    </ui:define>
+</ui:composition>

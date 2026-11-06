@@ -11,7 +11,6 @@ import com.ebs.constantes.enums.ParametrosEnum;
 import com.ebs.entidades.CondicionImpuesto;
 import com.ebs.entidades.Pago;
 import com.ebs.entidades.PagoDetalle;
-import com.ebs.entidades.PagoXmlAceptado;
 import com.ebs.entidades.Parametro;
 import com.ebs.entidades.TipoActividad;
 import com.ebs.exception.ExcepcionManager;
@@ -19,12 +18,19 @@ import com.ebs.modelos.EstadosPagosModelo;
 import com.ebs.modelos.PersonaHacienda;
 import com.ebs.parametros.servicios.ServicioParametro;
 import com.powersystem.util.ServicioBase;
+import com.powersystem.utilitario.ArchivosXml;
 import com.powersystem.utilitario.Utilitario;
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -223,21 +229,16 @@ public class ServicioPago extends ServicioBase {
      */
     public void guardarPagos(List<Pago> listaDePagosProcesar) {
         try {
-            PagoXmlAceptado archivoPago = null;
             for (Pago pago : listaDePagosProcesar) {
-                archivoPago = new PagoXmlAceptado();
                 pago.setFecha_pago(fechaHoraBD());
                 pago.setNumero_consecutivo(construirNumeroConsecutivo(pago.getTipo_mensaje_respuesta()));
+                guardarXmlRecibido(pago);
                 guardar(pago);
                 System.out.println("Procesando factura numero: " + pago.getClave_comprobante_pago());
                 pago.getListaPagoDetalle().forEach(elementoDetalle -> {
                     elementoDetalle.setId_pago(pago.getId_pago());
                     guardar(elementoDetalle);
                 });
-
-                archivoPago.setId_pago(pago.getId_pago());
-                archivoPago.setXml_aceptado(pago.getXmlAceptado());
-                guardar(archivoPago);
             }
         } catch (Exception ex) {
             throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
@@ -249,21 +250,15 @@ public class ServicioPago extends ServicioBase {
 
     public void guardarPagoNuevo(Pago pago) {
         try {
-            PagoXmlAceptado archivoPago = null;
-
-            archivoPago = new PagoXmlAceptado();
             pago.setFecha_pago(fechaHoraBD());
             pago.setNumero_consecutivo(construirNumeroConsecutivo(pago.getTipo_mensaje_respuesta()));
+            guardarXmlRecibido(pago);
             guardar(pago);
             System.out.println("Procesando factura numero: " + pago.getClave_comprobante_pago());
             pago.getListaPagoDetalle().forEach(elementoDetalle -> {
                 elementoDetalle.setId_pago(pago.getId_pago());
                 guardar(elementoDetalle);
             });
-
-            archivoPago.setId_pago(pago.getId_pago());
-            archivoPago.setXml_aceptado(pago.getXmlAceptado());
-            guardar(archivoPago);
 
         } catch (Exception ex) {
             throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
@@ -305,79 +300,84 @@ public class ServicioPago extends ServicioBase {
 
     }
 
-    /*
-select t1.id_pago, t1.clave_comprobante_pago 
-FROM searmedica.pago t1 left join searmedica.pago_xml_aceptado t2
-on t1.id_pago  = t2.id_pago 
-where t2.xml_aceptado is null
-order by t1.id_pago asc
-
-    
+    /**
+     * Guarda el XML recibido del proveedor como archivo plano en la carpeta de documentos
+     * ({@code yy/mm/dd/<consecutivo>_recibido.xml}); ya no se guarda en la base de datos.
+     * Si no se puede escribir se lanza el error y el pago no se guarda, para no perder el XML recibido.
      */
-    public void guardarXML(Long id, StringBuilder archivo) {
-        try {
-            guardar(new PagoXmlAceptado(id, archivo.toString()));
-            System.out.println("XML Guardardo");
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void guardarXmlRecibido(Pago pago) throws IOException {
+        if (pago.getXmlAceptado() == null || pago.getXmlAceptado().trim().isEmpty()) {
+            return;
         }
-
+        byte[] xml = Base64.getMimeDecoder().decode(pago.getXmlAceptado());
+        ArchivosXml.guardar(rutaPadre(), pago.getFecha_pago(), pago.getNumero_consecutivo() + ArchivosXml.SUFIJO_RECIBIDO, xml);
     }
 
-    public String obtenerXML(Long idPago) {
-        String listaResultado = null;
-        try {
-            String sql = " select t1.id_pago, t2.xml_aceptado "
-                    + " FROM searmedica.pago t1 inner join searmedica.pago_xml_aceptado t2 "
-                    + " on t1.id_pago  = t2.id_pago "
-                    + " where t1.id_pago = " + idPago
-                    + " order by t1.id_pago asc ";
-
-            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql).getResultList();
-
-            for (Object[] fila : lista) {
-
-                listaResultado = fila[1].toString();;
-            }
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
-                    "mensaje.error.seleccionar.estado.pagos",
-                    "mensaje.error.seleccionar.estado.pagos");
-        }
-        return listaResultado;
-
+    private String rutaPadre() {
+        return servicioParametro.obtenerValorParametro(ParametrosEnum.RUTA_PADRE.getIdParametro()).getValor();
     }
 
-    public List<String[]> obtenerPagosTodos() {
-        List<String[]> listaResultado = null;
+    /**
+     * XML firmado que se envió a Hacienda. Se lee del archivo ({@code yy/mm/dd/<consecutivo>_firmado.xml},
+     * en la carpeta del día de envío); mientras la columna vieja de la BD tenga dato se usa de respaldo.
+     */
+    public byte[] obtenerXmlFirmado(Pago pago) {
         try {
-            String sql = " select t1.id_pago, t1.clave_comprobante_pago \n"
-                    + " FROM searmedica.pago t1 left join searmedica.pago_xml_aceptado t2 \n"
-                    + " on t1.id_pago  = t2.id_pago \n"
-                    + " where t2.xml_aceptado is not null \n"
-                    + " order by t1.id_pago asc ";
-
-            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql).getResultList();
-            String[] array = null;
-            listaResultado = new ArrayList<>();
-            for (Object[] fila : lista) {
-                array = new String[3];
-                array[0] = fila[0].toString();
-                array[1] = fila[1].toString();
-                // array[2] = fila[2].toString();
-                listaResultado.add(array);
+            File archivo = ArchivosXml.buscar(rutaPadre(), pago.getNumero_consecutivo(), ArchivosXml.SUFIJO_FIRMADO,
+                    fechaDeEmision(pago), pago.getFecha_pago());
+            if (archivo != null) {
+                return ArchivosXml.leer(archivo);
             }
-
         } catch (Exception ex) {
-            ex.printStackTrace();
-            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
-                    "mensaje.error.seleccionar.estado.pagos",
-                    "mensaje.error.seleccionar.estado.pagos");
+            log.error("No se pudo leer el XML firmado del pago {}", pago.getId_pago(), ex);
         }
-        return listaResultado;
+        String enBd = columnaVieja(pago.getId_pago(), "documento_xml_firmado");
+        return enBd == null || enBd.isEmpty() ? null : Base64.getMimeDecoder().decode(enBd);
+    }
 
+    /**
+     * Respuesta de Hacienda (XML en texto). Se lee de {@code yy/mm/dd/<consecutivo>_respuesta.xml}; mientras
+     * la columna vieja de la BD tenga dato se usa de respaldo.
+     */
+    public String obtenerRespuestaHacienda(Pago pago) {
+        try {
+            File archivo = ArchivosXml.buscar(rutaPadre(), pago.getNumero_consecutivo(), ArchivosXml.SUFIJO_RESPUESTA,
+                    fechaDeEmision(pago), pago.getFecha_pago());
+            if (archivo != null) {
+                return ArchivosXml.leerTexto(archivo);
+            }
+        } catch (Exception ex) {
+            log.error("No se pudo leer la respuesta de Hacienda del pago {}", pago.getId_pago(), ex);
+        }
+        String enBd = columnaVieja(pago.getId_pago(), "detalle_respuesta_hacienda");
+        return enBd == null || enBd.isEmpty() ? null : enBd;
+    }
+
+    /** Fecha en que se envió el pago (campo de texto RFC 3339 con la hora de envío); null si no se puede leer. */
+    private Date fechaDeEmision(Pago pago) {
+        String texto = pago.getFecha_emision();
+        if (texto == null || texto.length() < 10) {
+            return null;
+        }
+        try {
+            return new SimpleDateFormat("yyyy-MM-dd").parse(texto.substring(0, 10));
+        } catch (java.text.ParseException ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Respaldo temporal: lee de una fila la columna vieja que se va a eliminar. Si la columna ya no existe
+     * devuelve null en lugar de fallar.
+     */
+    private String columnaVieja(Long idPago, String columna) {
+        try {
+            List<?> filas = em.createNativeQuery("select " + columna + " from searmedica.pago where id_pago = :id")
+                    .setParameter("id", idPago).getResultList();
+            return filas.isEmpty() || filas.get(0) == null ? null : filas.get(0).toString();
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public List<String[]> obtenerPagosTodosSinDeta() {
@@ -397,35 +397,6 @@ order by t1.id_pago asc
                 array[0] = fila[0].toString();
                 array[1] = fila[1].toString();
                 // array[2] = fila[2].toString();
-                listaResultado.add(array);
-            }
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,
-                    "mensaje.error.seleccionar.estado.pagos",
-                    "mensaje.error.seleccionar.estado.pagos");
-        }
-        return listaResultado;
-
-    }
-
-    public List<String[]> obtenerPagosSinARchivos() {
-        List<String[]> listaResultado = null;
-        try {
-            String sql = " select t1.id_pago, t1.clave_comprobante_pago \n"
-                    + " FROM searmedica.pago t1 left join searmedica.pago_xml_aceptado t2\n"
-                    + " on t1.id_pago  = t2.id_pago \n"
-                    + " where t2.xml_aceptado is null\n"
-                    + " order by t1.id_pago asc";
-
-            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql).getResultList();
-            String[] array = null;
-            listaResultado = new ArrayList<>();
-            for (Object[] fila : lista) {
-                array = new String[2];
-                array[0] = fila[0].toString();
-                array[1] = fila[1].toString();
                 listaResultado.add(array);
             }
 
@@ -513,7 +484,9 @@ order by t1.id_pago asc
         List<Pago> resultado = null;
 
         try {
-            String sql_where = "";
+            // Condiciones con parámetros nombrados: los valores vienen de filtros de pantalla (texto libre)
+            List<String> condiciones = new ArrayList<>();
+            Map<String, Object> parametros = new HashMap<>();
             String sql
                     = " SELECT T1.ID_PAGO, T1.NUMERO_CONSECUTIVO,T1.CLAVE_COMPROBANTE_PAGO, CASE "
                     + " WHEN (T1.tipo_mensaje_respuesta = '05') THEN 'ACEPTADO' "
@@ -525,27 +498,39 @@ order by t1.id_pago asc
                     + " ON T1.ID_ESTADO = T2.ID_ESTADO ";
             if (pagoConsulta != null) {
                 if (pagoConsulta.getId_pago() != null) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.ID_PAGO = " + pagoConsulta.getId_pago() : " AND T1.ID_PAGO = " + pagoConsulta.getId_pago());
+                    condiciones.add("T1.ID_PAGO = :idPago");
+                    parametros.put("idPago", pagoConsulta.getId_pago());
                 }
                 if (pagoConsulta.getNumero_consecutivo() != null) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.NUMERO_CONSECUTIVO = '" + pagoConsulta.getNumero_consecutivo() + "'" : " AND T1.NUMERO_CONSECUTIVO = '" + pagoConsulta.getNumero_consecutivo() + "'");
+                    condiciones.add("T1.NUMERO_CONSECUTIVO = :numeroConsecutivo");
+                    parametros.put("numeroConsecutivo", pagoConsulta.getNumero_consecutivo());
                 }
                 if (pagoConsulta.getClave_comprobante_pago() != null) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.CLAVE_COMPROBANTE_PAGO = '" + pagoConsulta.getClave_comprobante_pago() + "'" : " AND T1.CLAVE_COMPROBANTE_PAGO = '" + pagoConsulta.getClave_comprobante_pago() + "'");
+                    condiciones.add("T1.CLAVE_COMPROBANTE_PAGO = :clavePago");
+                    parametros.put("clavePago", pagoConsulta.getClave_comprobante_pago());
                 }
                 if (pagoConsulta.getMensaje() != null && !pagoConsulta.getMensaje().equals("0")) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.mensaje = '" + pagoConsulta.getMensaje() + "'" : " AND T1.mensaje = '" + pagoConsulta.getMensaje() + "'");
+                    condiciones.add("T1.mensaje = :mensaje");
+                    parametros.put("mensaje", pagoConsulta.getMensaje());
                 }
                 if (pagoConsulta.getId_estado() != null && !pagoConsulta.getId_estado().equals(0)) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.id_estado = " + pagoConsulta.getId_estado() : " AND T1.id_estado = " + pagoConsulta.getId_estado());
+                    condiciones.add("T1.id_estado = :idEstado");
+                    parametros.put("idEstado", pagoConsulta.getId_estado());
                 }
                 if (pagoConsulta.getFecha_pago() != null) {
                     DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE TO_DATE(TO_CHAR(T1.FECHA_PAGO,'DD/MM/YYYY'),'DD/MM/YYYY')= TO_DATE('" + df.format(pagoConsulta.getFecha_pago()) + "','DD/MM/YYYY') " : " AND TO_DATE(TO_CHAR(T1.FECHA_PAGO,'DD/MM/YYYY'),'DD/MM/YYYY')= TO_DATE('" + df.format(pagoConsulta.getFecha_pago()) + "','DD/MM/YYYY')  ");
+                    condiciones.add("TO_DATE(TO_CHAR(T1.FECHA_PAGO,'DD/MM/YYYY'),'DD/MM/YYYY') = TO_DATE(:fechaPago,'DD/MM/YYYY')");
+                    parametros.put("fechaPago", df.format(pagoConsulta.getFecha_pago()));
                 }
             }
-            sql = sql + sql_where;
-            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql).getResultList();
+            if (!condiciones.isEmpty()) {
+                sql = sql + " WHERE " + String.join(" AND ", condiciones);
+            }
+            javax.persistence.Query consulta = em.createNativeQuery(sql);
+            for (Map.Entry<String, Object> parametro : parametros.entrySet()) {
+                consulta.setParameter(parametro.getKey(), parametro.getValue());
+            }
+            List<Object[]> lista = (List<Object[]>) consulta.getResultList();
             Pago pago = null;
             resultado = new ArrayList<>();
 

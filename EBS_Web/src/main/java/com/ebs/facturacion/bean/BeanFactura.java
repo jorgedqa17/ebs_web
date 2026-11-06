@@ -234,7 +234,7 @@ public class BeanFactura {
     private Long idActvidadSeleccionada;
     @Getter
     @Setter
-    private List<ActividadEconomica> listaTiposActividadesEconomicas;
+    private ActividadEconomica actividadCache;
     @Getter
     @Setter
     private List<PersonaCorreo> listaPersonasCorreo;
@@ -406,7 +406,7 @@ public class BeanFactura {
     private List<Usuario> listaUsuariosAgentes;
     @Getter
     @Setter
-    private List<PersonaModelo> listaPersonas;
+    private ClienteLazyModel modeloPersonas;
 
     @Getter
     @Setter
@@ -525,6 +525,29 @@ public class BeanFactura {
         return resultado;
     }
 
+    /**
+     * Actividad económica elegida. El navegador ya no recibe las ~750 actividades: se buscan con el
+     * autocompletar (completarActividad) y aquí solo se resuelve la actividad actual por su id.
+     */
+    public ActividadEconomica getActividadSeleccionada() {
+        if (idActvidadSeleccionada == null || idActvidadSeleccionada.equals(0L)) {
+            return null;
+        }
+        if (actividadCache == null || !idActvidadSeleccionada.equals(actividadCache.getIdCodigoActividad())) {
+            actividadCache = servicioPersona.obtenerActividadPorId(idActvidadSeleccionada);
+        }
+        return actividadCache;
+    }
+
+    public void setActividadSeleccionada(ActividadEconomica actividad) {
+        actividadCache = actividad;
+        idActvidadSeleccionada = actividad == null ? 0L : actividad.getIdCodigoActividad();
+    }
+
+    public List<ActividadEconomica> completarActividad(String texto) {
+        return servicioPersona.buscarActividades(texto, 20);
+    }
+
     public void seleccionarActividad(ValueChangeEvent evt) {
         idActvidadSeleccionada = Long.parseLong(evt.getNewValue() == null ? "0" : evt.getNewValue().toString());
 
@@ -557,6 +580,8 @@ public class BeanFactura {
         reservarEnInventario = true;
         esFacturaProvieneNOtaCredito = false;
         puedeAgregarLineasNotaDebito = false;
+        idActvidadSeleccionada = 0L;
+        actividadCache = null;
         edicionFacturaPuedeGenerarConsec = true;
 
         verPanelNuevaPersona = false;
@@ -621,7 +646,6 @@ public class BeanFactura {
             puedeAgregarLineasNotaDebito = false;
             edicionFacturaPuedeGenerarConsec = true;
             vuelto = new BigDecimal(0.0);
-            this.listaTiposActividadesEconomicas = this.servicioPersona.obtenerListaCodigosActividad();
 
             verPanelNuevaPersona = false;
             verPanelBuscarProducto = false;
@@ -630,7 +654,7 @@ public class BeanFactura {
             clienteSeleccionado = null;
             this.agenteSeleccionado = "0";
             listaTiposFacturas = servicioFactura.obtenerTiposFacturas();
-            listaPersonas = servicioPersona.obtenerTodasPersonasAlias();//obtenerTodasPersonas();
+            modeloPersonas = new ClienteLazyModel(servicioPersona); // consulta paginada, no carga todos los clientes
             listaTiposTarifa = servicioProducto.obtenerListaTiposTarifas();
 
             numeroConsecutivo = "";
@@ -1342,6 +1366,19 @@ public class BeanFactura {
                 productoEncontrado = servicioProducto.obtenerProductoPorCodigoBarras(busquedaCodigoBarras);
 
                 if (productoEncontrado != null) {
+
+                    // Si ya hay una línea editable de este mismo producto (p. ej. se escaneó el código de
+                    // barras dos veces), se suma la cantidad en esa línea en vez de crear una línea nueva.
+                    final Long idProductoEncontrado = productoEncontrado.getId_producto();
+                    ModeloProducto lineaExistente = this.listaProductoPorFacturar.stream()
+                            .filter(p -> p.isPermiteEliminar() && p.getId_producto().equals(idProductoEncontrado))
+                            .findFirst().orElse(null);
+                    if (lineaExistente != null) {
+                        lineaExistente.setCantidadAAgregar(lineaExistente.getCantidad() + 1D);
+                        this.generarLineaDetalleCantidadProducto(lineaExistente);
+                        busquedaCodigoBarras = "";
+                        return;
+                    }
 
                     ModeloProducto productoSeleccionadoLista = ModeloProducto.construirObjeto(productoEncontrado,
                             servicioProducto.obtenerUnidadMedidaProducto(productoEncontrado.getId_unidad_medida()),
@@ -2133,6 +2170,8 @@ public class BeanFactura {
         personaReceptor = new ModeloPersona();
         this.identificacionReceptor = "";
         this.tipoIdentificacionSeleccionadaReceptor = 0l;
+        this.idActvidadSeleccionada = 0L;
+        this.actividadCache = null;
 
         this.listaProductoPorFacturar.forEach(elemento -> {
             elemento.setPersonaAsociada(null);

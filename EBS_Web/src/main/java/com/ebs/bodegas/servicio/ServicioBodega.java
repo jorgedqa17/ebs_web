@@ -57,12 +57,8 @@ public class ServicioBodega extends ServicioBase {
         try {
             consulta = em.createNativeQuery("select b.* from searmedica.bodega b where b.id_bodega = ?1", Bodega.class);
             consulta.setParameter(1, idBodega);
-            Object preliminar = consulta.getSingleResult();
-            if (preliminar == null) {
-                resultado = null;
-            } else {
-                resultado = (Bodega) consulta.getSingleResult();
-            }
+            // Una sola consulta: antes se ejecutaba getSingleResult() dos veces por bodega
+            resultado = (Bodega) consulta.getSingleResult();
         } catch (Exception e) {
             resultado = null;
         }

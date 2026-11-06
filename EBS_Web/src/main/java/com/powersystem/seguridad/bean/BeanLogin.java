@@ -16,6 +16,7 @@ import com.ebs.facturacion.servicios.ServicioFactura;
 import com.powersystem.personas.servicios.ServicioPersona;
 import com.powersystem.seguridad.servicios.ServicioLogin;
 import com.powersystem.seguridad.servicios.ServicioPermisos;
+import com.powersystem.seguridad.util.LimiteIntentos;
 import com.powersystem.utilitario.EtiquetasUtil;
 import com.powersystem.utilitario.JSFUtil;
 import com.powersystem.utilitario.MensajeUtil;
@@ -29,8 +30,10 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -135,10 +138,27 @@ public class BeanLogin {
 
             if (usuario != null && !usuario.equals("")) {
                 if (password != null && !password.equals("")) {
+                    String ip = LimiteIntentos.ipCliente();
+                    long segundosBloqueado = LimiteIntentos.segundosBloqueado(ip, usuario);
+                    if (segundosBloqueado > 0) {
+                        // No se consulta la BD ni se revisa la contraseña mientras dure el bloqueo
+                        MensajeUtil.agregarMensajeAdvertencia(LimiteIntentos.mensajeBloqueo(segundosBloqueado));
+                        return;
+                    }
                     //Si logra encontrar el usaurio y las contraseñas coinciden permite continuar con el proceso
                     Usuario user = servicio.iniciarSesion(usuario, password);
+                    if (user == null) {
+                        LimiteIntentos.registrarFallo(ip, usuario);
+                    } else {
+                        LimiteIntentos.registrarExito(usuario);
+                    }
                     if (user != null) {
                         user.setPassword("");
+                        // Nuevo id de sesión al ingresar: evita que un id de sesión conocido de antes del login siga valiendo (session fixation)
+                        Object peticion = FacesContext.getCurrentInstance().getExternalContext().getRequest();
+                        if (peticion instanceof HttpServletRequest && ((HttpServletRequest) peticion).getSession(false) != null) {
+                            ((HttpServletRequest) peticion).changeSessionId();
+                        }
                         JSFUtil.guardarEnSesion("Usuario", user);
 
                         //Obtengo los permisos del usuario sobre las fucionalidades de las pantallas

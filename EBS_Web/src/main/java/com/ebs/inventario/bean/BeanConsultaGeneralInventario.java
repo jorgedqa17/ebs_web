@@ -22,8 +22,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
@@ -193,9 +195,20 @@ public class BeanConsultaGeneralInventario {
 
         List<Inventario> lista = servicioInventario.obtenerInventarioGeneral(filtroInventario);
         listaGeneralInventario.clear();
+        // Bodegas y productos se cargan de una vez (antes: 2 consultas por cada fila de inventario)
+        Map<Long, Bodega> bodegasPorId = new HashMap<>();
+        for (Bodega b : servicioBodega.obtenerListaBodegas()) {
+            bodegasPorId.putIfAbsent(b.getBodegaPK().getId_bodega(), b);
+        }
+        Set<Long> idsProductos = new HashSet<>();
+        lista.forEach(p -> idsProductos.add(p.getIdProducto()));
+        Map<Long, Producto> productosPorId = new HashMap<>();
+        for (Producto pr : servicioProducto.obtenerProductosPorIds(idsProductos)) {
+            productosPorId.put(pr.getId_producto(), pr);
+        }
         lista.forEach((p -> {
-            Bodega bodega = servicioBodega.obtenerBodega(p.getIdBodega());
-            Producto producto = servicioProducto.obtenerProducto(p.getIdProducto());
+            Bodega bodega = bodegasPorId.get(p.getIdBodega());
+            Producto producto = productosPorId.get(p.getIdProducto());
             listaGeneralInventario.add(new InventarioGeneral(p, bodega, producto));
         }));
     }

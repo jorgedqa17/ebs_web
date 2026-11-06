@@ -13,7 +13,7 @@
                           id="listaTiposFactura" 
                           disabled="#{beanFactura.inhabilitarComponentes or beanFactura.puedeAgregarLineasNotaDebito}"
                           effect="fold" >     
-            <p:ajax event="change" update="form_sisadmin" />      
+            <p:ajax event="change" update=":form_sisadmin:idTablaProductos :form_sisadmin:mensajes" />      
             <f:selectItem itemLabel="Seleccione" itemValue="0" />
             <f:selectItems value="#{beanFactura.listaTiposFacturas}"
                            var="tipFactura"

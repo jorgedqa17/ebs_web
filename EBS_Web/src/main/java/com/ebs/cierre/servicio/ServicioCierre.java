@@ -33,15 +33,22 @@ public class ServicioCierre extends ServicioBase {
         List<Cierre> resultado = new ArrayList<>();
         List<ConsultaCierre> lista = new ArrayList<>();
         StringBuilder hilera = new StringBuilder();
-        DateFormat formato = new SimpleDateFormat("dd/mm/yyyy");
-        
+        // "dd/MM/yyyy": antes decía "mm" (minutos) en vez de "MM" (mes), así que el filtro por fecha armaba una fecha inválida
+        DateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
+
         hilera.append("SELECT ci.* FROM searmedica.CIERRE ci ");
-        String filtro = fechaCierre == null ? usuario.isEmpty() ? "" : "WHERE LOWER(LOGIN) LIKE LOWER('%" + usuario + "%')"
-                : " WHERE FECHA_GENERACION_CIERRE = to_date('" + formato.format(fechaCierre) + "', 'DD/MM/YYYY')";
+        String filtro = fechaCierre == null ? usuario.isEmpty() ? "" : "WHERE LOWER(LOGIN) LIKE LOWER(:usuario)"
+                : " WHERE FECHA_GENERACION_CIERRE = to_date(:fechaCierre, 'DD/MM/YYYY')";
         hilera.append(filtro);
         hilera.append(" ORDER BY FECHA_GENERACION_CIERRE");
 
-        resultado = em.createNativeQuery(hilera.toString(), Cierre.class).getResultList();
+        javax.persistence.Query consulta = em.createNativeQuery(hilera.toString(), Cierre.class);
+        if (fechaCierre != null) {
+            consulta.setParameter("fechaCierre", formato.format(fechaCierre));
+        } else if (!usuario.isEmpty()) {
+            consulta.setParameter("usuario", "%" + usuario + "%");
+        }
+        resultado = consulta.getResultList();
         for(Cierre dato : resultado){
             lista.add(new ConsultaCierre(dato));
         }        

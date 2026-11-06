@@ -6,11 +6,11 @@
                 xmlns:ui="http://java.sun.com/jsf/facelets">
 
     <p:panelGrid  id="panelBuscarProductos" columns="2" columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;" >        
-        <p:outputLabel id="lblCodigoBarras" value="#{label['detalle.factura.codigo.barras']}"/>        
-        <p:inputText id="txtCodigoBarras" disabled="#{beanFactura.inhabilitarComponentes}" value="#{beanFactura.busquedaCodigoBarras}">
-            <p:ajax event="blur" listener="#{beanFactura.buscarProducto}" update="form_sisadmin"></p:ajax>
+        <p:outputLabel id="lblCodigoBarras" value="#{label['detalle.factura.codigo.barras']}"/>
+        <p:inputText id="txtCodigoBarras" disabled="#{beanFactura.inhabilitarComponentes}" value="#{beanFactura.busquedaCodigoBarras}"
+                     onkeypress="if(event.which==13||event.keyCode==13){document.getElementById('form_sisadmin:btnEscanearCodigoBarras').click();return false;}">
         </p:inputText>
-        <!-- <p:commandButton id="btnConsultaProductos"    
+        <!-- <p:commandButton id="btnConsultaProductos"
                           disabled="#{beanFactura.inhabilitarComponentes}"
                           oncomplete="PF('buscarProductoDialog').show();"                         
                           value="#{label['boton.buscar']}">
@@ -23,14 +23,18 @@
             id="buscarProductosPanel"             
             value="Buscar Producto">
             <f:ajax listener="#{beanFactura.mostrarPanelBuscarProducto}" render="panelBuscarProductoDetalle" />
-        </p:commandButton> 
+        </p:commandButton>
 
     </p:panelGrid>
+    <p:commandButton id="btnEscanearCodigoBarras" style="display:none"
+                      actionListener="#{beanFactura.buscarProducto}"
+                      update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes :form_sisadmin:txtCodigoBarras"
+                      oncomplete="document.getElementById('form_sisadmin:txtCodigoBarras').focus();" />
     <p:outputPanel  id="panelBuscarProductoDetalle">
         <p:panelGrid   columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
 
             <p:inputText rendered="#{beanFactura.verPanelBuscarProducto}" id="txtDescripcionProductoBusqueda" value="#{beanFactura.nombreProducto}" >
-                <p:ajax event="keyup" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+                <p:ajax event="keyup" delay="400" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
             </p:inputText>
             <p:dataTable rendered="#{beanFactura.verPanelBuscarProducto}" id="tablaProductoDescripcion"
                          value="#{beanFactura.listaProductosBusqueda}"                   
@@ -42,7 +46,7 @@
                          selectionMode="single"
                          rows="10"                     
                          emptyMessage="#{label['tabla.vacia']}">
-                <p:ajax event="rowSelect" update=":form_sisadmin:idTablaProductos :form_sisadmin :form_sisadmin:mensajes :form_sisadmin:txtDescripcionProductoBusqueda "   
+                <p:ajax event="rowSelect" update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes :form_sisadmin:panelBuscarProductoDetalle"
                         listener="#{beanFactura.onRowSelectBusquedaProductosDescripcion}"  />
                 <p:column style="text-align: left;" headerText="#{label['producto.descripcion']}">
                     <p:outputLabel id="descripcionProductoBusqueda" value="#{productoBusqueda.descripcion}"></p:outputLabel>
@@ -97,7 +101,7 @@
                                   id="listaTiposTarifa"   
                                   disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar or producto.producto.ind_exento eq 1}"
                                   effect="fold" > 
-                    <p:ajax event="change" update=":form_sisadmin" listener="#{beanFactura.seleccionarTipoTarifa(producto)}" />
+                    <p:ajax event="change" update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes" listener="#{beanFactura.seleccionarTipoTarifa(producto)}" />
                     <f:selectItems value="#{beanFactura.listaTiposTarifa}"
                                    var="tarifa"
                                    itemLabel="#{tarifa.descripcion}"
@@ -111,7 +115,7 @@
                     id="listaTiposPrecioDetalleFactura"   
                     disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar}"
                     effect="fold" > 
-                    <p:ajax event="change" update=":form_sisadmin" listener="#{beanFactura.seleccionarTipoPrecioProducto(producto)}" />
+                    <p:ajax event="change" update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes" listener="#{beanFactura.seleccionarTipoPrecioProducto(producto)}" />
                     <f:selectItems value="#{beanFactura.listaPrecios}"
                                    var="TipoPrecio"
                                    itemLabel="#{TipoPrecio.descripcion.toString().trim()}"
@@ -211,7 +215,7 @@
                                  disabled="#{beanFactura.inhabilitarComponentes or !producto.permiteEliminar}"
                                  icon="ui-icon-trash" 
                                  actionListener="#{beanFactura.eliminarRegistroTablaProducto(producto)}" 
-                                 update="idTablaProductos  :form_sisadmin:panelSummay :form_sisadmin">                    
+                                 update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes">                    
                 </p:commandButton>
             </p:column>
         </p:dataTable>
@@ -396,7 +400,7 @@
             <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
                 <p:outputLabel id="lblDescripcionProductoModal" value="#{label['producto.nombre.producto.busqueda']}"/>
                 <p:inputText id="txtDescripcionProductoBusquedaMOdal" value="#{beanFactura.nombreProducto}" style="width: 97%;">
-                    <p:ajax event="keyup" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+                    <p:ajax event="keyup" delay="400" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
                 </p:inputText>
 
                 <p:dataTable id="tablaProductoDescripcionModal"

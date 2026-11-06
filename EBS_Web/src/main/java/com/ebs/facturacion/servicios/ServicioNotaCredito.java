@@ -30,6 +30,9 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import lombok.extern.slf4j.Slf4j;
+import com.powersystem.utilitario.ArchivosXml;
+import com.ebs.parametros.servicios.ServicioParametro;
+import com.ebs.constantes.enums.ParametrosEnum;
 
 /**
  *
@@ -39,6 +42,13 @@ import lombok.extern.slf4j.Slf4j;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class ServicioNotaCredito extends ServicioBase {
+
+    @Inject
+    private ServicioParametro servicioParametro;
+
+    private String rutaXml() {
+        return servicioParametro.obtenerValorParametro(ParametrosEnum.RUTA_PADRE.getIdParametro()).getValor();
+    }
 
     @Inject
     private ServicioFactura servicioFactura;
@@ -222,10 +232,11 @@ public class ServicioNotaCredito extends ServicioBase {
         try {
             StringBuilder consulta = new StringBuilder()
                     .append(" SELECT T1.id_anulacion, T1.estado_factura, T1.fecha, T1.login, T1.respuesta,   ")
-                    .append(" T1.detallerespuesta, T1.documento_xml_firmado, T1.codigo_respuesta, T2.DESCRIPCION  ")
+                    .append(" T1.detallerespuesta, T1.documento_xml_firmado, T1.codigo_respuesta, T2.DESCRIPCION, P.CLAVE, P.NUMERO_CONSECUTIVO  ")
                     .append(" FROM SEARMEDICA.factura_anulacion_historico_hacienda T1   ")
                     .append(" INNER JOIN SEARMEDICA.ESTADOS T2  ")
                     .append(" ON T1.estado_factura = T2.ID_ESTADO  ")
+                    .append(" LEFT JOIN SEARMEDICA.FACTURA_ANULACION P ON P.ID_ANULACION = T1.ID_ANULACION ")
                     .append(" WHERE T1.id_anulacion = :idNotaCredito  ")
                     .append(" ORDER BY T1.FECHA DESC  ");
 
@@ -248,6 +259,12 @@ public class ServicioNotaCredito extends ServicioBase {
                 historico.setId_anulacion(objeto[0] == null ? null : Long.parseLong(objeto[0].toString()));
                 historico.setLogin(objeto[3] == null ? null : objeto[3].toString());
                 historico.setRespuesta(objeto[4] == null ? null : objeto[4].toString());
+                // el XML firmado y la respuesta de Hacienda se leen de los archivos cuando la BD ya no los trae
+                String[] xml = ArchivosXml.desdeArchivo(ArchivosXml.NOTA_CREDITO, historico.getEstado_factura(), rutaXml(),
+                        objeto[9] == null ? null : objeto[9].toString(), objeto[10] == null ? null : objeto[10].toString(),
+                        historico.getDocumento_xml_firmado(), historico.getDetallerespuesta());
+                historico.setDocumento_xml_firmado(xml[0]);
+                historico.setDetallerespuesta(xml[1]);
                 resultado.add(historico);
             }
 

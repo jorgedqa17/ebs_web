@@ -97,6 +97,9 @@ import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import lombok.extern.slf4j.Slf4j;
 import org.primefaces.omega.view.misc.CollectorView;
+import com.powersystem.utilitario.ArchivosXml;
+import com.ebs.parametros.servicios.ServicioParametro;
+import com.ebs.constantes.enums.ParametrosEnum;
 
 /**
  *
@@ -108,6 +111,13 @@ import org.primefaces.omega.view.misc.CollectorView;
 public class ServicioFactura extends ServicioBase {
 
     private static final long serialVersionUID = 1L;
+    @Inject
+    private ServicioParametro servicioParametro;
+
+    private String rutaXml() {
+        return servicioParametro.obtenerValorParametro(ParametrosEnum.RUTA_PADRE.getIdParametro()).getValor();
+    }
+
     @Inject
     private ServicioProducto servicioProducto;
     @Inject
@@ -175,7 +185,7 @@ public class ServicioFactura extends ServicioBase {
                 + "on t10.id_motivo_anulacion = t12.id_motivo_anulacion left join searmedica.bodega t13 "
                 + "on t1.id_bodega = t13.id_bodega "
                 + "where t1.id_factura =  " + idFactura
-                + "and t2.es_para_nota_credito = 0";
+                + " and t2.es_para_nota_credito = 0";
 
         List<FacturaImpresion> listaFacturaImpresion = new ArrayList<>();
         FacturaImpresion facturaLinea = null;
@@ -373,8 +383,10 @@ public class ServicioFactura extends ServicioBase {
     public Factura obtenerFacturaPorNumeroConsecutivo(String numeroConsecutivo) {
         Factura resultado = null;
         try {
-            String sql = "SELECT e FROM Factura e WHERE e.numero_consecutivo LIKE '" + numeroConsecutivo + "%' ";
-            resultado = em.createQuery(sql, Factura.class).getSingleResult();
+            String sql = "SELECT e FROM Factura e WHERE e.numero_consecutivo LIKE :numeroConsecutivo ";
+            resultado = em.createQuery(sql, Factura.class)
+                    .setParameter("numeroConsecutivo", numeroConsecutivo + "%")
+                    .getSingleResult();
 
         } catch (NoResultException nex) {
             //nex.printStackTrace();
@@ -449,17 +461,23 @@ public class ServicioFactura extends ServicioBase {
             StringBuilder sql = new StringBuilder()
                     .append("Select f FROM Factura f");
 
+            // Antes se concatenaban sin espacio ("FacturaWHERE"...) y sin parámetros; ahora van como parámetros nombrados
             if (!clave.trim().equals("") && !consecutivo.trim().equals("")) {
-                sql.append("WHERE f.clave  like '%").append(clave.trim()).append("%'").
-                        append("AND f.numero_consecutivo  like '%").append(consecutivo.trim()).append("%'");
-
+                sql.append(" WHERE f.clave like :clave")
+                        .append(" AND f.numero_consecutivo like :consecutivo");
             } else if (!clave.trim().equals("")) {
-                sql.append("WHERE f.clave  like '%").append(clave.trim()).append("%'");
+                sql.append(" WHERE f.clave like :clave");
             } else if (!consecutivo.trim().equals("")) {
-                sql.append("WHERE f.numero_consecutivo  like '%").append(consecutivo.trim()).append("%'");
+                sql.append(" WHERE f.numero_consecutivo like :consecutivo");
             }
-            resultado = em.createQuery(sql.toString(), Factura.class)
-                    .getResultList();
+            javax.persistence.TypedQuery<Factura> consultaFacturas = em.createQuery(sql.toString(), Factura.class);
+            if (!clave.trim().equals("")) {
+                consultaFacturas.setParameter("clave", "%" + clave.trim() + "%");
+            }
+            if (!consecutivo.trim().equals("")) {
+                consultaFacturas.setParameter("consecutivo", "%" + consecutivo.trim() + "%");
+            }
+            resultado = consultaFacturas.getResultList();
 
         } catch (NoResultException nex) {
             nex.printStackTrace();
@@ -1253,7 +1271,7 @@ public class ServicioFactura extends ServicioBase {
             }
             if (fecha != null) {
                 if (!fecha.equals("")) {
-                    filtroFecha = " and to_char(t1.fecha_factura,'dd/mm/yyyy') = '" + fecha + "' ";
+                    filtroFecha = " and to_char(t1.fecha_factura,'dd/mm/yyyy') = :fecha ";
                 }
             }
             if (idFactura != null) {
@@ -1261,7 +1279,11 @@ public class ServicioFactura extends ServicioBase {
             }
             sql = sql + filtroIdTipoFactura + filtroNotaCredito + filtroFecha + filtroIdFactura;
 
-            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql).setParameter("login", login).getResultList();
+            javax.persistence.Query consultaBusqueda = em.createNativeQuery(sql).setParameter("login", login);
+            if (!filtroFecha.isEmpty()) {
+                consultaBusqueda.setParameter("fecha", fecha);
+            }
+            List<Object[]> lista = (List<Object[]>) consultaBusqueda.getResultList();
 
             resultado = new ArrayList<>();
             FacturaBusquedaModelo facturaModelo = null;
@@ -2004,7 +2026,8 @@ public class ServicioFactura extends ServicioBase {
         boolean resultado = false;
 
         try {
-            Object objeto = (Object) em.createNativeQuery("SELECT COUNT(1) FROM SEARMEDICA.factura_nota_debito WHERE NUMERO_CONSECUTIVO like '%" + numeroConsecutivo + "'")
+            Object objeto = (Object) em.createNativeQuery("SELECT COUNT(1) FROM SEARMEDICA.factura_nota_debito WHERE NUMERO_CONSECUTIVO like :numeroConsecutivo")
+                    .setParameter("numeroConsecutivo", "%" + numeroConsecutivo)
                     .getSingleResult();
             if (Integer.parseInt(objeto.toString()) >= 1) {
                 resultado = true;
@@ -2025,7 +2048,8 @@ public class ServicioFactura extends ServicioBase {
         boolean resultado = false;
 
         try {
-            Object objeto = (Object) em.createNativeQuery("SELECT COUNT(1) FROM SEARMEDICA.FACTURA_ANULACION WHERE NUMERO_CONSECUTIVO like '%" + numeroConsecutivo + "'")
+            Object objeto = (Object) em.createNativeQuery("SELECT COUNT(1) FROM SEARMEDICA.FACTURA_ANULACION WHERE NUMERO_CONSECUTIVO like :numeroConsecutivo")
+                    .setParameter("numeroConsecutivo", "%" + numeroConsecutivo)
                     .getSingleResult();
             if (Integer.parseInt(objeto.toString()) >= 1) {
                 resultado = true;
@@ -2046,7 +2070,8 @@ public class ServicioFactura extends ServicioBase {
         boolean resultado = false;
 
         try {
-            Object objeto = (Object) em.createNativeQuery("SELECT COUNT(1) FROM SEARMEDICA.FACTURA WHERE NUMERO_CONSECUTIVO like '%" + numeroConsecutivo + "'")
+            Object objeto = (Object) em.createNativeQuery("SELECT COUNT(1) FROM SEARMEDICA.FACTURA WHERE NUMERO_CONSECUTIVO like :numeroConsecutivo")
+                    .setParameter("numeroConsecutivo", "%" + numeroConsecutivo)
                     .getSingleResult();
             if (Integer.parseInt(objeto.toString()) >= 1) {
                 resultado = true;
@@ -2440,14 +2465,17 @@ public class ServicioFactura extends ServicioBase {
                     .append(idMedioPago.equals(0l) ? "" : " AND T1.ID_MEDIO_PAGO = " + idMedioPago)
                     .append(idTipoFactura.equals(0l) ? "" : " AND T1.id_tipo_factura = " + idTipoFactura)
                     .append(idBodega.equals(0l) ? "" : " AND T1.id_bodega = " + idBodega)
-                    .append(usuario == null ? "" : " AND T1.login ='" + usuario.trim() + "'")
+                    .append(usuario == null ? "" : " AND T1.login = :usuario ")
                     .append(idEstado == 0 ? "" : " AND T1.ESTADO_FACTURA = " + idEstado)
                     .append(" order by t1.numero_consecutivo desc ");
 
-            List<Object[]> listaObjetos = (List<Object[]>) em.createNativeQuery(consulta.toString())
+            javax.persistence.Query consultaFacturasPeriodo = em.createNativeQuery(consulta.toString())
                     .setParameter("fechaInicio", df.format(fechaInicio)) //obtenerFechaEnddMMYYYY(fechaInicio))
-                    .setParameter("fechaFinal", df.format(fechaFinal))//obtenerFechaEnddMMYYYY(fechaFinal))
-                    .getResultList();
+                    .setParameter("fechaFinal", df.format(fechaFinal));//obtenerFechaEnddMMYYYY(fechaFinal))
+            if (usuario != null) {
+                consultaFacturasPeriodo.setParameter("usuario", usuario.trim());
+            }
+            List<Object[]> listaObjetos = (List<Object[]>) consultaFacturasPeriodo.getResultList();
             ConsultaFacturasModelo factura = null;
             for (Object[] objeto : listaObjetos) {
 
@@ -2585,9 +2613,10 @@ public class ServicioFactura extends ServicioBase {
                     .append(" on t1.id_tipo_factura = t9.id_tipo_factura left join searmedica.factura_anulacion t10 ")
                     .append(" on t1.id_anulacion = t10.id_anulacion left join searmedica.bodega t11 ")
                     .append(" on t1.id_bodega = t11.id_bodega")
-                    .append(" where t1.numero_consecutivo like '%" + numeroConsecutivo + "' and t1.factura_cancelada = 0 order by t1.numero_consecutivo desc, t1.id_tipo_factura asc ");
+                    .append(" where t1.numero_consecutivo like :numeroConsecutivo and t1.factura_cancelada = 0 order by t1.numero_consecutivo desc, t1.id_tipo_factura asc ");
 
             List<Object[]> objetoResultado = (List<Object[]>) em.createNativeQuery(consulta.toString())
+                    .setParameter("numeroConsecutivo", "%" + numeroConsecutivo)
                     .getResultList();
 
             for (Object[] objeto : objetoResultado) {
@@ -2654,9 +2683,10 @@ public class ServicioFactura extends ServicioBase {
                     .append(" on t1.id_tipo_factura = t9.id_tipo_factura left join searmedica.factura_anulacion t10 ")
                     .append(" on t1.id_anulacion = t10.id_anulacion left join searmedica.bodega t11 ")
                     .append(" on t1.id_bodega = t11.id_bodega")
-                    .append(" where t1.numero_consecutivo like '%" + numeroConsecutivo + "' order by t1.numero_consecutivo desc, t1.id_tipo_factura asc ");
+                    .append(" where t1.numero_consecutivo like :numeroConsecutivo order by t1.numero_consecutivo desc, t1.id_tipo_factura asc ");
 
             Object[] objeto = (Object[]) em.createNativeQuery(consulta.toString())
+                    .setParameter("numeroConsecutivo", "%" + numeroConsecutivo)
                     .getSingleResult();
             if (objeto != null) {
                 resultado = new ConsultaFacturasModelo();
@@ -3551,8 +3581,9 @@ public class ServicioFactura extends ServicioBase {
                     .append("ON T1.ID_MEDIO_PAGO = T2.ID_MEDIO_PAGO ")
                     .append("WHERE  TO_DATE(TO_CHAR(t1.FECHA,'DD/MM/YYYY'),'DD/MM/YYYY') BETWEEN TO_DATE(:fechaInicio2,'DD/MM/YYYY') AND TO_DATE(:fechaFinal2,'DD/MM/YYY')   ")
                     .append("AND t1.login = :login2 ")
-                    .append("AND T1.ID_ESTADO =  ").append(EstadoRecibo.PAGADO.getEstadoRecibo())
-                    .append("AND T1.IND_TOMAR_CIERRE =  ").append(TomarEnCuentaCierre.TOMAR_EN_CUENTA.getIndicador())
+                    // espacio después de cada número: PostgreSQL 15+ rechaza "28AND" (trailing junk after numeric literal)
+                    .append("AND T1.ID_ESTADO =  ").append(EstadoRecibo.PAGADO.getEstadoRecibo()).append(" ")
+                    .append("AND T1.IND_TOMAR_CIERRE =  ").append(TomarEnCuentaCierre.TOMAR_EN_CUENTA.getIndicador()).append(" ")
                     .append("AND NOT EXISTS (  SELECT  1  FROM  searmedica.cierre_recibo t6  WHERE t6.id_recibo = t1.id_recibo  )  ")
                     .append(" ) tb  ")
                     .append(" GROUP BY  ")
@@ -3824,7 +3855,7 @@ public class ServicioFactura extends ServicioBase {
             }
         }
 
-        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado "
+        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO, P.CLAVE, P.NUMERO_CONSECUTIVO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado LEFT JOIN SEARMEDICA.FACTURA P ON P.ID_FACTURA = T1.ID_FACTURA "
                 + " WHERE T1.ID_FACTURA = :idFactura  "
                 + (estados.equals("") ? "" : " AND T1.ESTADO_FACTURA in(" + estados + ")");
         try {
@@ -3844,6 +3875,11 @@ public class ServicioFactura extends ServicioBase {
                 historico.setDocumento_xml_firmado(resultado[6] == null ? "" : resultado[6].toString());
                 historico.setEstado(resultado[7] == null ? "" : resultado[7].toString());
                 historico.setFecha(resultado[2] == null ? null : df.parse(resultado[2].toString()));
+                String[] xml = ArchivosXml.desdeArchivo(ArchivosXml.FACTURA, Long.valueOf(historico.getEstado_factura()), rutaXml(),
+                        resultado[8] == null ? null : resultado[8].toString(), resultado[9] == null ? null : resultado[9].toString(),
+                        historico.getDocumento_xml_firmado(), historico.getDetallerespuesta());
+                historico.setDocumento_xml_firmado(xml[0]);
+                historico.setDetallerespuesta(xml[1]);
                 listaResultados.add(historico);
             }
 
@@ -3863,7 +3899,7 @@ public class ServicioFactura extends ServicioBase {
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado "
+        String sql = " SELECT T1.ID_FACTURA, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, T2.DESCRIPCION AS ESTADO, P.CLAVE, P.NUMERO_CONSECUTIVO FROM SEARMEDICA.FACTURA_HISTORICO_HACIENDA T1 LEFT JOIN SEARMEDICA.ESTADOS T2 ON T1.ESTADO_FACTURA = T2.id_estado LEFT JOIN SEARMEDICA.FACTURA P ON P.ID_FACTURA = T1.ID_FACTURA "
                 + " WHERE T1.ID_FACTURA = :idFactura  ";
         try {
 
@@ -3883,6 +3919,11 @@ public class ServicioFactura extends ServicioBase {
                 historico.setEstado(resultado[7] == null ? "" : resultado[7].toString());
                 historico.setFecha(resultado[2] == null ? null : df.parse(resultado[2].toString()));
                 historico.setLogin(resultado[3] == null ? null : resultado[3].toString());
+                String[] xml = ArchivosXml.desdeArchivo(ArchivosXml.FACTURA, Long.valueOf(historico.getEstado_factura()), rutaXml(),
+                        resultado[8] == null ? null : resultado[8].toString(), resultado[9] == null ? null : resultado[9].toString(),
+                        historico.getDocumento_xml_firmado(), historico.getDetallerespuesta());
+                historico.setDocumento_xml_firmado(xml[0]);
+                historico.setDetallerespuesta(xml[1]);
                 listaResultados.add(historico);
             }
 
@@ -3905,9 +3946,10 @@ public class ServicioFactura extends ServicioBase {
             estados = estados + (estados.equals("") ? estado : "," + estado);
         }
 
-        String sql = " SELECT ID_ANULACION, ESTADO_FACTURA, FECHA, LOGIN, RESPUESTA, DETALLERESPUESTA, DOCUMENTO_XML_FIRMADO "
-                + " FROM SEARMEDICA.FACTURA_ANULACION_HISTORICO_HACIENDA  "
-                + " WHERE ESTADO_FACTURA in(" + estados + ")  AND ID_ANULACION = :idAnulacion";
+        String sql = " SELECT T1.ID_ANULACION, T1.ESTADO_FACTURA, T1.FECHA, T1.LOGIN, T1.RESPUESTA, T1.DETALLERESPUESTA, T1.DOCUMENTO_XML_FIRMADO, P.CLAVE, P.NUMERO_CONSECUTIVO "
+                + " FROM SEARMEDICA.FACTURA_ANULACION_HISTORICO_HACIENDA T1 "
+                + " LEFT JOIN SEARMEDICA.FACTURA_ANULACION P ON P.ID_ANULACION = T1.ID_ANULACION "
+                + " WHERE T1.ESTADO_FACTURA in(" + estados + ")  AND T1.ID_ANULACION = :idAnulacion";
         try {
             List<Object[]> listaObjetos = (List<Object[]>) em.createNativeQuery(sql)
                     .setParameter("idAnulacion", idAnulacion)
@@ -3923,6 +3965,11 @@ public class ServicioFactura extends ServicioBase {
                 historico.setRespuesta(resultado[4] == null ? "" : resultado[4].toString());
                 historico.setDetallerespuesta(resultado[5] == null ? "" : resultado[5].toString());
                 historico.setDocumento_xml_firmado(resultado[6] == null ? "" : resultado[6].toString());
+                String[] xml = ArchivosXml.desdeArchivo(ArchivosXml.NOTA_CREDITO, historico.getEstado_factura(), rutaXml(),
+                        resultado[7] == null ? null : resultado[7].toString(), resultado[8] == null ? null : resultado[8].toString(),
+                        historico.getDocumento_xml_firmado(), historico.getDetallerespuesta());
+                historico.setDocumento_xml_firmado(xml[0]);
+                historico.setDetallerespuesta(xml[1]);
 
                 listaResultados.add(historico);
             }

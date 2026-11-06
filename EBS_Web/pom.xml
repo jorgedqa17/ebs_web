@@ -17,6 +17,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Carpeta de plantillas Jasper (bajo WEB-INF) que se empaqueta como WEB-INF/reportes. Se cambia con los perfiles searmedica / jorge -->
+        <reportes.dir>reportes</reportes.dir>
     </properties>
 
     <dependencies>
@@ -212,12 +214,9 @@ ENCRIPCION
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.56</version>
         </dependency>
-        <!-- Hibernate Core Entity Manager -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>4.3.1.Final</version>
-        </dependency>
+        <!-- hibernate-entitymanager 4.3.1 se quitó: hibernate-core 5.2.2 ya incluye JPA y ambos JARs traen
+             org.hibernate.jpa.boot.spi.Bootstrap; en Linux (orden de JARs arbitrario) ganaba el viejo y
+             fallaba con NoClassDefFoundError ...ClassLoaderServiceImpl$Work -->
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
@@ -345,19 +344,57 @@ ENCRIPCION
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.6</version>
                 <configuration>
+                    <warSourceExcludes>WEB-INF/reportes/**,WEB-INF/reportes_sear/**</warSourceExcludes>
                     <webResources>
                         <resource>
                             <directory>${project.build.sourceDirectory}</directory>
                             <targetPath>sources</targetPath>
                         </resource>
-                     
                     </webResources>
                 </configuration>
+            </plugin>
+            <!-- Copia la carpeta de reportes del perfil activo a WEB-INF/reportes del war (ver propiedad reportes.dir) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copiar-reportes</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/reportes</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp/WEB-INF/${reportes.dir}</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
         
     <profiles>
+        <profile>
+            <id>searmedica</id>
+            <properties>
+                <reportes.dir>reportes_sear</reportes.dir>
+            </properties>
+        </profile>
+        <profile>
+            <id>jorge</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <reportes.dir>reportes</reportes.dir>
+            </properties>
+        </profile>
         <profile>
             <id>distribute</id>
             <build>

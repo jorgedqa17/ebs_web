@@ -73,6 +73,13 @@ public class Producto implements Serializable {
     @Column(name = "id_tipo_tarifa_impuesto")
     private Long id_tipo_tarifa_impuesto;
 
+    /**
+     * Solo el nombre del archivo (p. ej. "4521.jpg"), nunca la ruta completa. La carpeta base sale del
+     * parámetro RUTA_IMAGENES_PRODUCTOS (ver ImagenesProducto).
+     */
+    @Column(name = "ruta_imagen")
+    private String ruta_imagen;
+
     @Transient
     private Persona personaAsociada;
 

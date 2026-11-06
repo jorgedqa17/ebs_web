@@ -15,12 +15,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  *
  * @author Jorge GBSYS
  */
 @Data
+@ToString(exclude = "password") // el hash de la contraseña no debe salir en logs ni en el HTML si un componente imprime el objeto
 @Entity
 @Table(name = "usuario", schema = "searmedica")
 public class Usuario implements Serializable {
