@@ -3,6 +3,12 @@
 
     <session-config>
         <session-timeout>30</session-timeout>
+        <!-- La cookie de sesión no se lee desde JavaScript (HttpOnly) y solo viaja por HTTPS (Secure); el id no va en la URL -->
+        <cookie-config>
+            <http-only>true</http-only>
+            <secure>true</secure>
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
     </session-config>
     <welcome-file-list>
         <welcome-file>login.xhtml</welcome-file>
@@ -50,6 +56,16 @@
         <param-value>true</param-value>
     </context-param>
  
+    <!-- Exige sesión iniciada en toda la aplicación (va primero, antes de procesar cualquier petición) -->
+    <filter>
+        <filter-name>Filtro Autenticacion</filter-name>
+        <filter-class>com.powersystem.seguridad.filtro.FiltroAutenticacion</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Filtro Autenticacion</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
     <!-- Funcionamietno del componente FileUpload-->
     <filter>
         <filter-name>PrimeFaces FileUpload Filter</filter-name>

@@ -7,6 +7,7 @@ package com.ebs.usuario.cambiocontrasenna.bean;
 
 import com.ebs.exception.ExcepcionManager;
 import com.powersystem.seguridad.servicios.ServicioLogin;
+import com.powersystem.seguridad.util.LimiteIntentos;
 import com.powersystem.utilitario.EtiquetasUtil;
 import com.powersystem.utilitario.JSFUtil;
 import com.powersystem.utilitario.MensajeUtil;
@@ -84,10 +85,24 @@ public class BeanCambioContrasenna {
     public void cambiarContrasena() {
         try {
             if (this.validarIngresoInformacion()) {
+                // Esta pantalla es pública y compara la contraseña actual: se limita igual que el login
+                String ip = LimiteIntentos.ipCliente();
+                long segundosBloqueado = LimiteIntentos.segundosBloqueado(ip, usuario);
+                if (segundosBloqueado > 0) {
+                    MensajeUtil.agregarMensajeAdvertencia(LimiteIntentos.mensajeBloqueo(segundosBloqueado));
+                    return;
+                }
                 boolean existeUsuario = servicioLogin.validarExistenciaUsuario(usuario);
+                if (!existeUsuario) {
+                    LimiteIntentos.registrarFallo(ip, usuario);
+                }
                 if (existeUsuario) {
                     boolean contrasennaActualCorrecta = servicioLogin.validarContrasennasCoinciden(usuario, contrasennaAnterior);
+                    if (!contrasennaActualCorrecta) {
+                        LimiteIntentos.registrarFallo(ip, usuario);
+                    }
                     if (contrasennaActualCorrecta) {
+                        LimiteIntentos.registrarExito(usuario);
                         servicioLogin.cambiarContrasennaUsuario(usuario, contrasenna);
                         MensajeUtil.agregarMensajeInfo(EtiquetasUtil.obtenerMensaje("mensaje.validacon.cambiar.contrasenna.exito"));
                         verBotonGuardar = false;

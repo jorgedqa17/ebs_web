@@ -752,10 +752,11 @@ public class ServicioPersona extends ServicioBase {
         Cliente cliente = null;
         try {
 
-            String sqlPersonaCliente = "SELECT pers FROM Persona pers WHERE  trim(COALESCE(pers.nombre,'') ||' '||COALESCE(pers.primer_apellido,'')||' '||COALESCE(pers.segundo_apellido,'')) LIKE '%" + nombre.toUpperCase().replace(" ", "%") + "%' ";
+            String sqlPersonaCliente = "SELECT pers FROM Persona pers WHERE  trim(COALESCE(pers.nombre,'') ||' '||COALESCE(pers.primer_apellido,'')||' '||COALESCE(pers.segundo_apellido,'')) LIKE :nombre ";
             String sqlCliente = "SELECT clit FROM Cliente clit WHERE clit.numero_cedula = :numero_cedula ";
 
             List<Persona> personasEncontradas = em.createQuery(sqlPersonaCliente, Persona.class)
+                    .setParameter("nombre", "%" + nombre.toUpperCase().replace(" ", "%") + "%")
                     .getResultList();
             for (Persona personaEncontrada : personasEncontradas) {
                 if (personaEncontrada != null) {

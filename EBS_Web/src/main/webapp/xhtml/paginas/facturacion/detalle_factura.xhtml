@@ -34,7 +34,7 @@
         <p:panelGrid   columnClasses="ui-grid-col-16" columns="1" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
 
             <p:inputText rendered="#{beanFactura.verPanelBuscarProducto}" id="txtDescripcionProductoBusqueda" value="#{beanFactura.nombreProducto}" >
-                <p:ajax event="keyup" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+                <p:ajax event="keyup" delay="400" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
             </p:inputText>
             <p:dataTable rendered="#{beanFactura.verPanelBuscarProducto}" id="tablaProductoDescripcion"
                          value="#{beanFactura.listaProductosBusqueda}"                   
@@ -46,7 +46,7 @@
                          selectionMode="single"
                          rows="10"                     
                          emptyMessage="#{label['tabla.vacia']}">
-                <p:ajax event="rowSelect" update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes :form_sisadmin:txtDescripcionProductoBusqueda"   
+                <p:ajax event="rowSelect" update=":form_sisadmin:idTablaProductos :form_sisadmin:panelSummay :form_sisadmin:mensajes :form_sisadmin:panelBuscarProductoDetalle"
                         listener="#{beanFactura.onRowSelectBusquedaProductosDescripcion}"  />
                 <p:column style="text-align: left;" headerText="#{label['producto.descripcion']}">
                     <p:outputLabel id="descripcionProductoBusqueda" value="#{productoBusqueda.descripcion}"></p:outputLabel>
@@ -400,7 +400,7 @@
             <p:panelGrid columns="1" columnClasses="ui-grid-col-16" layout="grid" styleClass="ui-panelgrid-blank" style="border:0px none; background-color:transparent;">
                 <p:outputLabel id="lblDescripcionProductoModal" value="#{label['producto.nombre.producto.busqueda']}"/>
                 <p:inputText id="txtDescripcionProductoBusquedaMOdal" value="#{beanFactura.nombreProducto}" style="width: 97%;">
-                    <p:ajax event="keyup" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
+                    <p:ajax event="keyup" delay="400" listener="#{beanFactura.buscarProductoPorDescripcion}" update="tablaProductoDescripcion"></p:ajax>
                 </p:inputText>
 
                 <p:dataTable id="tablaProductoDescripcionModal"

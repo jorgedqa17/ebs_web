@@ -28,7 +28,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -482,7 +484,9 @@ public class ServicioPago extends ServicioBase {
         List<Pago> resultado = null;
 
         try {
-            String sql_where = "";
+            // Condiciones con parámetros nombrados: los valores vienen de filtros de pantalla (texto libre)
+            List<String> condiciones = new ArrayList<>();
+            Map<String, Object> parametros = new HashMap<>();
             String sql
                     = " SELECT T1.ID_PAGO, T1.NUMERO_CONSECUTIVO,T1.CLAVE_COMPROBANTE_PAGO, CASE "
                     + " WHEN (T1.tipo_mensaje_respuesta = '05') THEN 'ACEPTADO' "
@@ -494,27 +498,39 @@ public class ServicioPago extends ServicioBase {
                     + " ON T1.ID_ESTADO = T2.ID_ESTADO ";
             if (pagoConsulta != null) {
                 if (pagoConsulta.getId_pago() != null) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.ID_PAGO = " + pagoConsulta.getId_pago() : " AND T1.ID_PAGO = " + pagoConsulta.getId_pago());
+                    condiciones.add("T1.ID_PAGO = :idPago");
+                    parametros.put("idPago", pagoConsulta.getId_pago());
                 }
                 if (pagoConsulta.getNumero_consecutivo() != null) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.NUMERO_CONSECUTIVO = '" + pagoConsulta.getNumero_consecutivo() + "'" : " AND T1.NUMERO_CONSECUTIVO = '" + pagoConsulta.getNumero_consecutivo() + "'");
+                    condiciones.add("T1.NUMERO_CONSECUTIVO = :numeroConsecutivo");
+                    parametros.put("numeroConsecutivo", pagoConsulta.getNumero_consecutivo());
                 }
                 if (pagoConsulta.getClave_comprobante_pago() != null) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.CLAVE_COMPROBANTE_PAGO = '" + pagoConsulta.getClave_comprobante_pago() + "'" : " AND T1.CLAVE_COMPROBANTE_PAGO = '" + pagoConsulta.getClave_comprobante_pago() + "'");
+                    condiciones.add("T1.CLAVE_COMPROBANTE_PAGO = :clavePago");
+                    parametros.put("clavePago", pagoConsulta.getClave_comprobante_pago());
                 }
                 if (pagoConsulta.getMensaje() != null && !pagoConsulta.getMensaje().equals("0")) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.mensaje = '" + pagoConsulta.getMensaje() + "'" : " AND T1.mensaje = '" + pagoConsulta.getMensaje() + "'");
+                    condiciones.add("T1.mensaje = :mensaje");
+                    parametros.put("mensaje", pagoConsulta.getMensaje());
                 }
                 if (pagoConsulta.getId_estado() != null && !pagoConsulta.getId_estado().equals(0)) {
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE T1.id_estado = " + pagoConsulta.getId_estado() : " AND T1.id_estado = " + pagoConsulta.getId_estado());
+                    condiciones.add("T1.id_estado = :idEstado");
+                    parametros.put("idEstado", pagoConsulta.getId_estado());
                 }
                 if (pagoConsulta.getFecha_pago() != null) {
                     DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-                    sql_where = sql_where + (sql_where.equals("") ? " WHERE TO_DATE(TO_CHAR(T1.FECHA_PAGO,'DD/MM/YYYY'),'DD/MM/YYYY')= TO_DATE('" + df.format(pagoConsulta.getFecha_pago()) + "','DD/MM/YYYY') " : " AND TO_DATE(TO_CHAR(T1.FECHA_PAGO,'DD/MM/YYYY'),'DD/MM/YYYY')= TO_DATE('" + df.format(pagoConsulta.getFecha_pago()) + "','DD/MM/YYYY')  ");
+                    condiciones.add("TO_DATE(TO_CHAR(T1.FECHA_PAGO,'DD/MM/YYYY'),'DD/MM/YYYY') = TO_DATE(:fechaPago,'DD/MM/YYYY')");
+                    parametros.put("fechaPago", df.format(pagoConsulta.getFecha_pago()));
                 }
             }
-            sql = sql + sql_where;
-            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql).getResultList();
+            if (!condiciones.isEmpty()) {
+                sql = sql + " WHERE " + String.join(" AND ", condiciones);
+            }
+            javax.persistence.Query consulta = em.createNativeQuery(sql);
+            for (Map.Entry<String, Object> parametro : parametros.entrySet()) {
+                consulta.setParameter(parametro.getKey(), parametro.getValue());
+            }
+            List<Object[]> lista = (List<Object[]>) consulta.getResultList();
             Pago pago = null;
             resultado = new ArrayList<>();
 

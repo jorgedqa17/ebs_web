@@ -84,6 +84,10 @@ public class ServicioInventario extends ServicioBase {
      */
     public Integer verificarExistenciaInventario(Long idBodega) {
         Integer resultado = 0;
+        if (idBodega == null) {
+            // sin bodega en sesión: Hibernate mandaba el null como bytea y PostgreSQL fallaba con "bigint = bytea"
+            return resultado;
+        }
         try {
             StringBuilder sql = new StringBuilder()
                     .append(" SELECT COUNT(1) FROM ( ")
@@ -166,6 +170,17 @@ GROUP  BY T1.ID_PRODUCTO,T1.ID_BODEGA ) TB INNER JOIN SEARMEDICA.PRODUCTO T3
 ON TB.ID_PRODUCTO = T3.ID_PRODUCTO  
 AND TB.TOTAL_EXISTENCIA < T3.CANTIDAD_MINIMA
      */
+    /**
+     * Valida que una lista de ids venga como "1,2,3" antes de armarla dentro de un IN (...): IN con cantidad variable
+     * no se parametriza fácil y los llamadores la arman con ids numéricos, así que se rechaza cualquier otra cosa.
+     */
+    private static String soloIds(String ids) {
+        if (ids == null || !ids.matches("\\s*\\d+(\\s*,\\s*\\d+)*\\s*")) {
+            throw new IllegalArgumentException("Lista de ids inválida");
+        }
+        return ids;
+    }
+
     public List<EnviosSucursalesModelo> obtenerListaProductosAEnviar(String fecha, String fecha2, String idBodegas) {
         List<EnviosSucursalesModelo> listaResultado = null;
         EnviosSucursalesModelo envio = null;
@@ -180,13 +195,16 @@ AND TB.TOTAL_EXISTENCIA < T3.CANTIDAD_MINIMA
                     + " on t1.id_factura = t2.id_factura inner join searmedica.producto t3 "
                     + " on t2.id_producto = t3.id_producto inner join searmedica.usuario t4 "
                     + " on t1.login = t4.login  "
-                    + " where to_date(to_char(t1.fecha_factura,'dd/mm/yyyy'),'dd/mm/yyyy') between to_date('" + fecha + "','DD/MM/YYYY')  and to_date( '" + fecha2 + "','DD/MM/YYYY') "
-                    + " and t1.id_bodega in ( " + idBodegas + " ) "
+                    + " where to_date(to_char(t1.fecha_factura,'dd/mm/yyyy'),'dd/mm/yyyy') between to_date(:fecha,'DD/MM/YYYY')  and to_date(:fecha2,'DD/MM/YYYY') "
+                    + " and t1.id_bodega in ( " + soloIds(idBodegas) + " ) "
                     + " and t1.numero_consecutivo is not null "
                     + " and t4.es_usuario_bodega  = 1 "
                     + " group by t1.login, t3.descripcion ";
 
-            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql).getResultList();
+            List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql)
+                    .setParameter("fecha", fecha)
+                    .setParameter("fecha2", fecha2)
+                    .getResultList();
 
             envio = new EnviosSucursalesModelo();
             listaResultado = new ArrayList<>();
@@ -233,7 +251,7 @@ AND TB.TOTAL_EXISTENCIA < T3.CANTIDAD_MINIMA
                     .append(" ON T2.ID_BODEGA_ORIGEN = T3.ID_BODEGA  ")
                     .append(" LEFT JOIN SEARMEDICA.INVENTARIO_INGRESO_TIPO T4  ")
                     .append(" ON T2.ID_INVENTARIO_INGRESO_TIPO = T4.ID_INVENTARIO_INGRESO_TIPO  ")
-                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(ids).append(") ")
+                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(soloIds(ids)).append(") ")
                     .append(" UNION ALL  ")
                     .append(" SELECT   ")
                     .append(" 02 AS ORDENAMIENTO, 'SOLICITUD' AS TIPO_GESTION,  T1.ID_PRODUCTO, T1.CANTIDAD, TO_DATE(TO_CHAR(T2.FECHAREGISTRO,'DD/MM/YYYY'),'DD/MM/YYYY') AS FECHAREGISTRO,  ")
@@ -245,7 +263,7 @@ AND TB.TOTAL_EXISTENCIA < T3.CANTIDAD_MINIMA
                     .append(" ON T2.ID_BODEGA_ORIGEN = T3.ID_BODEGA  ")
                     .append(" LEFT JOIN SEARMEDICA.BODEGA T4  ")
                     .append(" ON T1.ID_BODEGA_DESTINO = T4.ID_BODEGA  ")
-                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(ids).append(") ")
+                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(soloIds(ids)).append(") ")
                     .append(" UNION ALL   ")
                     .append(" SELECT  ")
                     .append(" 03 AS ORDENAMIENTO, 'SALIDA' AS TIPO_GESTION, T1.ID_PRODUCTO, T1.CANTIDAD, TO_DATE(TO_CHAR(T1.FECHAREGISTRO,'DD/MM/YYYY'),'DD/MM/YYYY') AS FECHAREGISTRO, ")
@@ -258,7 +276,7 @@ AND TB.TOTAL_EXISTENCIA < T3.CANTIDAD_MINIMA
                     .append(" ON T1.ID_INVENTARIO_SALIDA = T2.ID_INVENTARIO_SALIDA LEFT JOIN SEARMEDICA.BODEGA T3 ")
                     .append(" ON T1.ID_BODEGA_DESTINO = T3.ID_BODEGA LEFT JOIN SEARMEDICA.FACTURA T4")
                     .append(" ON T1.ID_FACTURA = T4.ID_FACTURA")
-                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(ids).append(")")
+                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(soloIds(ids)).append(")")
                     .append(" UNION ALL ")
                     .append(" SELECT 04 AS ORDENAMIENTO ,T1.gestion AS TIPO_GESTION,T1.id_producto, T1.cantidad, T1.fecha AS FECHAREGISTRO,  ")
                     .append(" T1.login as LOGIN, T2.DESCRIPCION AS BODEGA_ORIGEN, T3.DESCRIPCION AS BODEGA_DESTINO,T1.tipo AS TIPO, ")
@@ -266,7 +284,7 @@ AND TB.TOTAL_EXISTENCIA < T3.CANTIDAD_MINIMA
                     .append(" FROM searmedica.trazabilidad_producto T1 LEFT JOIN SEARMEDICA.BODEGA T2 ")
                     .append(" ON T1.ID_BODEGA_DESTINO = T2.ID_BODEGA LEFT JOIN  SEARMEDICA.BODEGA T3 ")
                     .append(" ON T1.ID_BODEGA_DESTINO = T3.ID_BODEGA")
-                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(ids).append(")")
+                    .append(" WHERE T1.ID_PRODUCTO IN ").append("(").append(soloIds(ids)).append(")")
                     .append(") ")
                     .append(" TB LEFT JOIN SEARMEDICA.PRODUCTO T5 ")
                     .append(" ON TB.ID_PRODUCTO = T5.ID_PRODUCTO ")
@@ -1118,9 +1136,12 @@ AND TB.TOTAL_EXISTENCIA < T3.CANTIDAD_MINIMA
         hilera.append(" and inv.id_producto = ");
         hilera.append(idProducto);
         hilera.append(" and inv.numerolote ");
-        hilera.append((numeroLote == null ? " is null" : "= '" + numeroLote + "'"));
+        hilera.append((numeroLote == null ? " is null" : "= :numeroLote"));
 
         Query consulta = em.createNativeQuery(hilera.toString());
+        if (numeroLote != null) {
+            consulta.setParameter("numeroLote", numeroLote);
+        }
         try {
             List<Date> datos = consulta.getResultList();
             resultado = datos;

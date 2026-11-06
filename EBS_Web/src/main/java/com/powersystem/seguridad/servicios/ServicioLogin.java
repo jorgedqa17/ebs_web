@@ -27,8 +27,11 @@ public class ServicioLogin extends ServicioBase {
     public boolean validarExistenciaUsuario(String usuario) {
         boolean resultado = false;
         try {
-            String select = " SELECT 1 FROM SEARMEDICA.USUARIO WHERE upper(login) =  '" + usuario.toUpperCase().trim() + "'";
-            Object objeto = (Object) em.createNativeQuery(select).getSingleResult();
+            // Parametrizada: este método se llama desde cambiarcontrasenna.xhtml, que es pública (antes del login).
+            String select = " SELECT 1 FROM SEARMEDICA.USUARIO WHERE upper(login) = ?1";
+            Object objeto = (Object) em.createNativeQuery(select)
+                    .setParameter(1, usuario.toUpperCase().trim())
+                    .getSingleResult();
             if (objeto != null) {
                 resultado = true;
             }
@@ -51,7 +54,7 @@ public class ServicioLogin extends ServicioBase {
                     .setParameter("login", usuario.toUpperCase())
                     .getSingleResult();
 
-            String passwordEncriptado = Encriptador.encriptarCadena(nuevaContrsenna);
+            String passwordEncriptado = Encriptador.claveParaGuardar(nuevaContrsenna);
             usuarioEncontrado.setPassword(passwordEncriptado);
             actualizar(usuarioEncontrado);
         } catch (NoResultException nex) {
@@ -72,14 +75,9 @@ public class ServicioLogin extends ServicioBase {
             Usuario usuarioEncontrado = em.createQuery(hql, Usuario.class)
                     .setParameter("login", usuario.toUpperCase())
                     .getSingleResult();
-            //Encripto el password
-            String passwordEncriptado = Encriptador.encriptarCadena(password);
-            //Verifico si trajo resultado
-            if (usuarioEncontrado != null) {
-                //Verifico el password
-                if (usuarioEncontrado.getPassword().trim().equals(passwordEncriptado)) {
-                    resultado = true;
-                }
+            //Verifico el password (acepta el formato nuevo y el SHA-256 antiguo)
+            if (usuarioEncontrado != null && Encriptador.verificar(password, usuarioEncontrado.getPassword())) {
+                resultado = true;
             }
         } catch (NoResultException nex) {
 
@@ -173,23 +171,31 @@ public class ServicioLogin extends ServicioBase {
         Usuario resultado = null;
         try {
 
-            String hql = "SELECT usu FROM Usuario usu WHERE UPPER(usu.login) = :login AND usu.password =:password AND usu.activo=1";
-            //Encripto el password
-            String passwordEncriptado = Encriptador.encriptarCadena(password);
-            //Verifico si trajo resultado
-            //Obtengo la información de usuario
-            resultado = em.createQuery(hql, Usuario.class)
+            // La clave ya no se compara dentro del SQL: con hash con sal hay que verificarla en Java contra lo guardado.
+            String hql = "SELECT usu FROM Usuario usu WHERE UPPER(usu.login) = :login AND usu.activo=1";
+            List<Usuario> candidatos = em.createQuery(hql, Usuario.class)
                     .setParameter("login", usuario.toUpperCase())
-                    .setParameter("password", passwordEncriptado)
-                    .getSingleResult();
-            //Verifico el1] password
-            if (resultado != null && resultado.getPassword().trim().equals(passwordEncriptado)) {
-
-                pasaVerificacion = true;
+                    .getResultList();
+            for (Usuario candidato : candidatos) {
+                if (Encriptador.verificar(password, candidato.getPassword())) {
+                    resultado = candidato;
+                    pasaVerificacion = true;
+                    // Primer ingreso con una clave en el formato antiguo: se reemplaza por el nuevo (con sal)
+                    if (Encriptador.usarFormatoNuevo() && Encriptador.esFormatoAntiguo(candidato.getPassword())) {
+                        candidato.setPassword(Encriptador.hashSeguro(password));
+                    }
+                    break;
+                }
+            }
+            if (!pasaVerificacion) {
+                // misma excepción de siempre para el caso "usuario o clave incorrectos" (se maneja abajo)
+                throw new NoResultException("usuario o clave incorrectos");
             }
 
         } catch (NoResultException nex) {
-            nex.printStackTrace();
+            // usuario o contraseña incorrectos: no es un error del sistema, no se vuelca la traza (inflaba el contador SEVERE)
+            log.warn("Intento de inicio de sesión fallido para el usuario '{}'",
+                    usuario == null ? "" : usuario.replaceAll("[\\p{Cntrl}]", "_"));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ExcepcionManager.lanzarExcepcionServicio(getClass(), log, ex,

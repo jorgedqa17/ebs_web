@@ -54,11 +54,12 @@ public class ServicioProducto extends ServicioBase {
                     + " ON T1.ID_PRODUCTO = T2.ID_PRODUCTO "
                     + " WHERE T1.CANTEXISTENCIA > 0 "
                     + " AND T1.ACTIVO = 1 "
-                    + " AND TRIM(UPPER(T2.CODIGO_BARRAS)) = '" + codigoBarras.toUpperCase() + "'  "
+                    + " AND TRIM(UPPER(T2.CODIGO_BARRAS)) = :codigoBarras  "
                     + " AND T1.ID_BODEGA = :bodega "
                     + " AND T2.ACTIVO = 1 ";
 
             resultado = (Producto) em.createNativeQuery(sql, Producto.class)
+                    .setParameter("codigoBarras", codigoBarras.toUpperCase())
                     .setParameter("bodega", idBodega).getSingleResult();
 
         } catch (NoResultException nex) {
@@ -985,12 +986,13 @@ public class ServicioProducto extends ServicioBase {
                         + " ON T1.ID_PRODUCTO = T2.ID_PRODUCTO "
                         + " WHERE T1.CANTEXISTENCIA > 0 "
                         + " AND T1.ACTIVO = 1 "
-                        + " AND upper(T2.DESCRIPCION) LIKE '%" + nombreProducto.toUpperCase() + "%'  "
+                        + " AND upper(T2.DESCRIPCION) LIKE :nombreProducto  "
                         + " AND T1.ID_BODEGA = :bodega "
                         + " AND T2.ACTIVO = 1 "
                         + " ORDER BY T2.DESCRIPCION ASC ";
 
                 List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql)
+                        .setParameter("nombreProducto", "%" + nombreProducto.toUpperCase() + "%")
                         .setParameter("bodega", idBodega)
                         .getResultList();
 
@@ -1024,9 +1026,10 @@ public class ServicioProducto extends ServicioBase {
         ModeloProducto modeloProducto = null;
         try {
             if (nombreProducto != null) {
-                String sql = "SELECT codigo_barras, descripcion, id_producto FROM searmedica.producto where upper(descripcion) like '%" + nombreProducto.toUpperCase() + "%' and activo = 1 order by descripcion asc";
+                String sql = "SELECT codigo_barras, descripcion, id_producto FROM searmedica.producto where upper(descripcion) like ?1 and activo = 1 order by descripcion asc";
 
                 List<Object[]> lista = (List<Object[]>) em.createNativeQuery(sql)
+                        .setParameter(1, "%" + nombreProducto.toUpperCase() + "%")
                         .getResultList();
 
                 for (Object[] producto : lista) {
