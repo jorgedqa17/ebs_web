@@ -104,6 +104,15 @@
 
         </p:panelGrid>
 
+        <br/>
+        <h2>Descripción detallada</h2>
+        <p:outputLabel for="txtDescripcionLarga" value="Texto opcional que se muestra desplegable en el catálogo (máx. 2000 caracteres)"/>
+        <p:inputTextarea id="txtDescripcionLarga" value="#{beanProductos.producto.descripcion_larga}"
+                         rows="5" maxlength="2000" autoResize="true" counter="contadorDescripcionLarga"
+                         counterTemplate="{0} caracteres restantes" disabled="#{beanProductos.inhabilitaBotones}"
+                         style="width:100%;"/>
+        <h:outputText id="contadorDescripcionLarga" style="color:#777;font-size:12px;"/>
+
         <br/><br/>
         <h2>Imágenes del Producto</h2>
         <h:outputLink value="#{request.contextPath}/xhtml/paginas/producto/catalogoProductos.xhtml"

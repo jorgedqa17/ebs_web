@@ -22,6 +22,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultMenuModel;
+import com.powersystem.utilitario.IconosMenu;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.primefaces.model.menu.MenuModel;
 
@@ -52,11 +53,12 @@ public class BeanMenu {
                     for (Pantalla pantalla : listaNodos) {
                         if (pantalla.getId_padre_pantalla().equals(0)) {
                             DefaultSubMenu nodoPadre = new DefaultSubMenu(pantalla.getDescripcion());
+                            nodoPadre.setIcon(IconosMenu.para(pantalla.getIcono(), pantalla.getDescripcion(), true));
                             for (Pantalla pantallaHija : obtenerListaNodosHijos(listaNodos, pantalla.getId_pantalla())) {
                                 DefaultMenuItem nodoH = new DefaultMenuItem(pantallaHija.getDescripcion());
                                 //nodoH.setUrl(pantallaHija.getUrl());
                                 nodoH.setOutcome(pantallaHija.getUrl());
-                                nodoH.setIcon(pantallaHija.getIcono());
+                                nodoH.setIcon(IconosMenu.para(pantallaHija.getIcono(), pantallaHija.getDescripcion(), false));
                                 nodoH.setId(pantalla.getId_pantalla().toString());
                                 nodoH.setValue(pantallaHija.getDescripcion());
                                 nodoPadre.addElement(nodoH);

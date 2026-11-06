@@ -447,6 +447,30 @@ public class ServicioProducto extends ServicioBase {
                     continue;
                 }
                 String clave = f.getKey();
+                if (clave.equals("id_producto")) {
+                    // coincidencia exacta por id (catálogo: abrir el detalle de un producto puntual)
+                    String nombre = "f" + (i++);
+                    where.append(" and t1.id_producto = :").append(nombre).append(' ');
+                    try {
+                        parametros.put(nombre, Long.valueOf(valor));
+                    } catch (NumberFormatException ex) {
+                        parametros.put(nombre, -1L);
+                    }
+                    continue;
+                }
+                if (clave.equals("busqueda")) {
+                    // buscador único del catálogo: cada palabra debe aparecer en la descripción o en el código
+                    for (String palabra : valor.split("\\s+")) {
+                        if (palabra.isEmpty()) {
+                            continue;
+                        }
+                        String nombre = "f" + (i++);
+                        where.append(" and (upper(t1.descripcion) like upper(:").append(nombre).append(") escape '\\' ")
+                                .append(" or upper(t1.codigo_barras) like upper(:").append(nombre).append(") escape '\\') ");
+                        parametros.put(nombre, "%" + escaparLike(palabra) + "%");
+                    }
+                    continue;
+                }
                 if (clave.contains("estado")) {
                     // coincidencia exacta con el texto que muestra la columna
                     if (valor.equalsIgnoreCase("Activo")) {
@@ -489,7 +513,7 @@ public class ServicioProducto extends ServicioBase {
         String sql = " SELECT t1.id_producto, t1.id_unidad_medida, t2.descripcion as descripcion_unidad_medida, t1.descripcion, "
                 + " t1.ind_caduce, t1.ind_exonerado, t1.codigo_barras, t1.id_tipo_producto, t3.descripcion as descripcion_tipo_producto, "
                 + " t1.id_impuesto, t4.descripcion as descripcion_impuesto, t1.activo, t1.cantidad_minima, t1.id_tipo_tarifa_impuesto, "
-                + " t1.ind_exento, t1.codigo_cabys, t1.ruta_imagen "
+                + " t1.ind_exento, t1.codigo_cabys, t1.ruta_imagen, t1.descripcion_larga "
                 + FROM_PRODUCTOS_LISTA + condicionesProductosLista(filtros, parametros)
                 + " order by t1.descripcion asc, t1.id_producto asc ";
         Query q = em.createNativeQuery(sql);
@@ -514,6 +538,7 @@ public class ServicioProducto extends ServicioBase {
             productoEntidad.setInd_exento(fila[14] == null ? null : Integer.parseInt(fila[14].toString()));
             productoEntidad.setCodigo_cabys(fila[15] == null ? "" : String.valueOf(fila[15]));
             productoEntidad.setRuta_imagen(fila[16] == null ? null : fila[16].toString());
+            productoEntidad.setDescripcion_larga(fila[17] == null ? null : fila[17].toString());
             modelo.setDescripcionTipoProducto(fila[8].toString());
             productoEntidad.setId_impuesto(fila[9] == null ? null : Long.parseLong(fila[9].toString()));
             modelo.setDescripcionImpuesto(fila[10] == null ? "" : fila[10].toString());
@@ -546,6 +571,75 @@ public class ServicioProducto extends ServicioBase {
             listaPrecios.add(precio);
         }
         return listaPrecios;
+    }
+
+    /**
+     * Completa, con una consulta de precios y una de existencias para toda la página (no una por fila),
+     * los datos que muestra el catálogo: precio General y/o Por Mayor, existencia total y primera imagen.
+     * Los ids son Long de la propia BD, por eso se concatenan en el IN sin riesgo de inyección.
+     */
+    public void completarDatosCatalogo(List<ModeloListaProductos> pagina, boolean conPrecioGeneral, boolean conPrecioPorMayor) {
+        if (pagina == null || pagina.isEmpty()) {
+            return;
+        }
+        java.util.Map<Long, ModeloListaProductos> porId = new java.util.HashMap<>();
+        StringBuilder ids = new StringBuilder();
+        for (ModeloListaProductos m : pagina) {
+            Long id = m.getProducto().getId_producto();
+            porId.put(id, m);
+            if (ids.length() > 0) {
+                ids.append(',');
+            }
+            ids.append(id.longValue());
+            List<String> imagenes = com.powersystem.utilitario.ImagenesProducto.listarNombres(m.getProducto().getRuta_imagen());
+            m.setPrimeraImagen(imagenes.isEmpty() ? null : imagenes.get(0));
+        }
+
+        if (conPrecioGeneral || conPrecioPorMayor) {
+            List<String> tipos = new ArrayList<>();
+            if (conPrecioGeneral) {
+                tipos.add(String.valueOf(com.ebs.constantes.enums.TiposPrecios.GENERAL.getTipoPrecio()));
+            }
+            if (conPrecioPorMayor) {
+                tipos.add(String.valueOf(com.ebs.constantes.enums.TiposPrecios.POR_MAYOR.getTipoPrecio()));
+            }
+            String sqlPrecios = " select t1.id_producto, t1.id_tipo, t1.precio, t3.descripcion "
+                    + " from searmedica.producto_precios t1 inner join searmedica.tipo_moneda t3 on t1.id_moneda = t3.id_moneda "
+                    + " where t1.id_producto in (" + ids + ") and t1.id_tipo in (" + String.join(",", tipos) + ") ";
+            for (Object[] fila : (List<Object[]>) em.createNativeQuery(sqlPrecios).getResultList()) {
+                ModeloListaProductos m = porId.get(Long.parseLong(fila[0].toString()));
+                if (m == null || fila[2] == null) {
+                    continue;
+                }
+                BigDecimal precio = new BigDecimal(fila[2].toString());
+                String moneda = fila[3] == null ? "" : fila[3].toString();
+                long tipo = Long.parseLong(fila[1].toString());
+                if (tipo == com.ebs.constantes.enums.TiposPrecios.GENERAL.getTipoPrecio()) {
+                    m.setPrecioGeneral(precio);
+                    m.setMonedaGeneral(moneda);
+                } else if (tipo == com.ebs.constantes.enums.TiposPrecios.POR_MAYOR.getTipoPrecio()) {
+                    m.setPrecioPorMayor(precio);
+                    m.setMonedaPorMayor(moneda);
+                }
+            }
+        }
+
+        // Mismo criterio que obtenerExistenciaProducto: inventario activo.
+        String sqlExistencia = " select id_producto, sum(cantexistencia) from searmedica.inventario "
+                + " where activo = 1 and id_producto in (" + ids + ") group by id_producto ";
+        for (Object[] fila : (List<Object[]>) em.createNativeQuery(sqlExistencia).getResultList()) {
+            ModeloListaProductos m = porId.get(Long.parseLong(fila[0].toString()));
+            if (m != null && fila[1] != null) {
+                m.setExistenciaTotal(new BigDecimal(fila[1].toString()).intValue());
+            }
+        }
+    }
+
+    /** Hay existencia (inventario activo > 0) del producto en cualquier bodega. */
+    public boolean hayExistencia(Long idProducto) {
+        Object total = em.createNativeQuery(" select coalesce(sum(cantexistencia), 0) from searmedica.inventario where activo = 1 and id_producto = :idProducto ")
+                .setParameter("idProducto", idProducto).getSingleResult();
+        return new BigDecimal(total.toString()).signum() > 0;
     }
 
     public List<ModeloTipoPrecio> obtenerPreciosProductos(Long idProducto) {

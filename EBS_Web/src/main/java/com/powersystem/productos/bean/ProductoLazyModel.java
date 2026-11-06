@@ -19,6 +19,8 @@ public class ProductoLazyModel extends LazyDataModel<ModeloListaProductos> {
     private final ServicioProducto servicioProducto;
     private final Map<String, String> filtrosFijos;
     private List<ModeloListaProductos> paginaActual;
+    private String ultimaClaveFiltros;
+    private int ultimoConteo = -1;
 
     public ProductoLazyModel(ServicioProducto servicioProducto) {
         this(servicioProducto, null);
@@ -43,7 +45,14 @@ public class ProductoLazyModel extends LazyDataModel<ModeloListaProductos> {
                 }
             }
         }
-        setRowCount((int) servicioProducto.contarProductosLista(filtros));
+        // El total solo cambia si cambian los filtros: al pedir los bloques siguientes (first > 0) se
+        // reutiliza en vez de volver a contar en la BD por cada bloque.
+        String claveFiltros = new java.util.TreeMap<>(filtros).toString();
+        if (first == 0 || ultimoConteo < 0 || !claveFiltros.equals(ultimaClaveFiltros)) {
+            ultimoConteo = (int) servicioProducto.contarProductosLista(filtros);
+            ultimaClaveFiltros = claveFiltros;
+        }
+        setRowCount(ultimoConteo);
         paginaActual = servicioProducto.listarProductosLista(first, pageSize, filtros);
         return paginaActual;
     }

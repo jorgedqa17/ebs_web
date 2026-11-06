@@ -68,6 +68,21 @@ public class ServicioPermisos extends ServicioBase {
         }
     }
 
+    /** Ids de los perfiles (usuario_perfiles) del usuario con ese login. */
+    public List<Long> obtenerPerfilesUsuario(String login) {
+        List<Long> perfiles = new ArrayList<>();
+        if (login == null) {
+            return perfiles;
+        }
+        String sql = " select t2.id_perfil from searmedica.usuario t1 "
+                + " inner join searmedica.usuario_perfiles t2 on t1.id_usuario = t2.id_usuario "
+                + " where t1.login = :login ";
+        for (Object fila : em.createNativeQuery(sql).setParameter("login", login).getResultList()) {
+            perfiles.add(Long.parseLong(fila.toString()));
+        }
+        return perfiles;
+    }
+
     /*
 
      */

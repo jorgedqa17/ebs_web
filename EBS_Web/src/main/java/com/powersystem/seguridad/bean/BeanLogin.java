@@ -15,6 +15,7 @@ import com.ebs.entidades.Usuario;
 import com.ebs.facturacion.servicios.ServicioFactura;
 import com.powersystem.personas.servicios.ServicioPersona;
 import com.powersystem.seguridad.servicios.ServicioLogin;
+import com.ebs.constantes.enums.VistaCatalogo;
 import com.powersystem.seguridad.servicios.ServicioPermisos;
 import com.powersystem.seguridad.util.LimiteIntentos;
 import com.powersystem.utilitario.EtiquetasUtil;
@@ -112,7 +113,7 @@ public class BeanLogin {
                         .filter(predicate -> predicate.getBodegaPK().getId_bodega().equals(idBodegaSeleccionada))
                         .findAny().get());
 
-                JSFUtil.redireccionarPagina("/xhtml/paginas/index.xhtml");
+                JSFUtil.redireccionarPagina(paginaInicial());
             } else {
                 MensajeUtil.agregarMensajeAdvertencia("Debe seleccionar la bodega");
             }
@@ -121,6 +122,23 @@ public class BeanLogin {
             ExcepcionManager.manejarExcepcion(ex);
             MensajeUtil.agregarMensajeError(EtiquetasUtil.obtenerEtiqueta("mensaje.error.login"));
         }
+    }
+
+    /**
+     * Primera pantalla después de ingresar. Agentes y tiendas (que desde el teléfono solo consultan el
+     * catálogo) entran directo a él: se evita cargar el tablero, con sus consultas de inventario y pedidos.
+     * El resto entra al tablero como siempre.
+     */
+    private String paginaInicial() {
+        try {
+            Usuario actual = (Usuario) JSFUtil.obtenerDeSesion("Usuario");
+            if (actual != null && VistaCatalogo.deUsuario(servicioPermisos.obtenerPerfilesUsuario(actual.getLogin())).isRestringida()) {
+                return "/xhtml/paginas/producto/catalogoProductos.xhtml";
+            }
+        } catch (Exception ex) {
+            // ante cualquier falla se usa la pantalla de siempre
+        }
+        return "/xhtml/paginas/index.xhtml";
     }
 
     public void redirigirCambioContrasena() throws IOException {
@@ -173,7 +191,7 @@ public class BeanLogin {
                         } else {
                             JSFUtil.guardarEnSesion("bodega", this.listaBodegasUsuario.stream()
                                     .filter(predicate -> predicate.getBodegaPK().getId_bodega().equals(servicio.obtenerUsuarioBodega(Utilitario.obtenerUsuario().getId_usuario()))).findAny().get());
-                            JSFUtil.redireccionarPagina("/xhtml/paginas/index.xhtml");
+                            JSFUtil.redireccionarPagina(paginaInicial());
                         }
 
                     } else {

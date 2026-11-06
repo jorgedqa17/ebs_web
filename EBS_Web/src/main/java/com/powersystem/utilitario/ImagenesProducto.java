@@ -1,7 +1,13 @@
 package com.powersystem.utilitario;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -94,6 +100,80 @@ public final class ImagenesProducto {
             return;
         }
         new File(carpetaProducto(rutaBase, idProducto), nombreArchivo).delete();
+        archivoMiniatura(rutaBase, idProducto, nombreArchivo).delete();
+    }
+
+    /** Lado mayor de la miniatura, en píxeles. */
+    private static final int LADO_MINIATURA = 200;
+
+    /** {@code <rutaBase>/<id_producto>/mini/<archivo>.jpg}; el nombre ya se validó antes de llamar. */
+    private static File archivoMiniatura(String rutaBase, Long idProducto, String nombreArchivo) {
+        return new File(new File(carpetaProducto(rutaBase, idProducto), "mini"), nombreArchivo + ".jpg");
+    }
+
+    /**
+     * Miniatura (JPEG, máx. 200 px) de la imagen. Se genera la primera vez que se pide y se guarda en
+     * la subcarpeta "mini" del producto; después solo se lee ese archivo chico. Si no se puede generar
+     * (formato raro, error de disco) devuelve la imagen original. Null si la imagen no existe.
+     */
+    public static byte[] leerMiniatura(String rutaBase, Long idProducto, String nombreArchivo) {
+        if (rutaBase == null || idProducto == null || nombreArchivo == null || nombreArchivo.isEmpty()
+                || !NOMBRE_SEGURO.matcher(nombreArchivo).matches()) {
+            return null;
+        }
+        File original = new File(carpetaProducto(rutaBase, idProducto), nombreArchivo);
+        if (!original.isFile()) {
+            return null;
+        }
+        File mini = archivoMiniatura(rutaBase, idProducto, nombreArchivo);
+        try {
+            if (mini.isFile() && mini.lastModified() >= original.lastModified()) {
+                return Files.readAllBytes(mini.toPath());
+            }
+            BufferedImage img = ImageIO.read(original);
+            if (img == null) {
+                return leer(rutaBase, idProducto, nombreArchivo);
+            }
+            double escala = Math.min(1.0, (double) LADO_MINIATURA / Math.max(img.getWidth(), img.getHeight()));
+            int ancho = Math.max(1, (int) Math.round(img.getWidth() * escala));
+            int alto = Math.max(1, (int) Math.round(img.getHeight() * escala));
+            // RGB con fondo blanco: JPEG no tiene transparencia (PNG con alfa saldría negro).
+            BufferedImage salida = new BufferedImage(ancho, alto, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = salida.createGraphics();
+            try {
+                g.setColor(Color.WHITE);
+                g.fillRect(0, 0, ancho, alto);
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g.drawImage(img, 0, 0, ancho, alto, null);
+            } finally {
+                g.dispose();
+            }
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            if (!ImageIO.write(salida, "jpg", bytes)) {
+                return leer(rutaBase, idProducto, nombreArchivo);
+            }
+            byte[] datos = bytes.toByteArray();
+            File dirMini = mini.getParentFile();
+            if (dirMini.isDirectory() || dirMini.mkdirs() || dirMini.isDirectory()) {
+                File temporal = new File(dirMini, mini.getName() + "." + System.nanoTime() + ".tmp");
+                try {
+                    Files.write(temporal.toPath(), datos);
+                    try {
+                        Files.move(temporal.toPath(), mini.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                    } catch (IOException atomicoNoSoportado) {
+                        Files.move(temporal.toPath(), mini.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (IOException noSeGuardo) {
+                    // no es grave: se sirve la miniatura generada y se reintenta la próxima vez
+                } finally {
+                    Files.deleteIfExists(temporal.toPath());
+                }
+            }
+            return datos;
+        } catch (IOException | RuntimeException e) {
+            return leer(rutaBase, idProducto, nombreArchivo);
+        }
     }
 
     /** Lee los bytes de la imagen, o null si no existe o el nombre no es válido. */

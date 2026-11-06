@@ -25,6 +25,24 @@ public class ImagenProductoServlet extends HttpServlet {
     @Inject
     private ServicioParametro servicioParametro;
 
+    /**
+     * La carpeta base casi nunca cambia y cada imagen del catálogo la pide: se recuerda 60 s en lugar de
+     * consultar la BD por cada foto (un bloque de 20 productos son 20 consultas iguales).
+     */
+    private static final long VIGENCIA_RUTA_MS = 60_000L;
+    private volatile String rutaBaseCache;
+    private volatile long rutaBaseVence;
+
+    private String rutaBase() {
+        String ruta = rutaBaseCache;
+        if (ruta == null || System.currentTimeMillis() > rutaBaseVence) {
+            ruta = servicioParametro.obtenerValorParametro(ParametrosEnum.RUTA_IMAGENES_PRODUCTOS.getIdParametro()).getValor();
+            rutaBaseCache = ruta;
+            rutaBaseVence = System.currentTimeMillis() + VIGENCIA_RUTA_MS;
+        }
+        return ruta;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession sesion = request.getSession(false);
@@ -40,16 +58,28 @@ public class ImagenProductoServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        String rutaBase = servicioParametro.obtenerValorParametro(ParametrosEnum.RUTA_IMAGENES_PRODUCTOS.getIdParametro()).getValor();
-        byte[] datos = ImagenesProducto.leer(rutaBase, idProducto, archivo);
+        String rutaBase = rutaBase();
+        boolean miniatura = "1".equals(request.getParameter("mini"));
+        byte[] datos = miniatura
+                ? ImagenesProducto.leerMiniatura(rutaBase, idProducto, archivo)
+                : ImagenesProducto.leer(rutaBase, idProducto, archivo);
         if (datos == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        response.setContentType(archivo.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
+        // La miniatura siempre es JPEG, salvo que no se haya podido generar y se sirva el original png.
+        boolean png = archivo.toLowerCase().endsWith(".png") && (!miniatura || esPng(datos));
+        response.setContentType(png ? "image/png" : "image/jpeg");
         response.setContentLength(datos.length);
-        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        // Cada archivo tiene nombre único (timestamp_uuid), así que su contenido no cambia: el navegador del
+        // teléfono la guarda 30 días y no vuelve a pedirla (private: nunca en cachés compartidas).
+        response.setHeader("Cache-Control", "private, max-age=2592000, immutable");
         response.getOutputStream().write(datos);
         response.getOutputStream().flush();
+    }
+
+    /** Firma de archivo PNG (0x89 'P' 'N' 'G'). */
+    private static boolean esPng(byte[] datos) {
+        return datos.length > 4 && (datos[0] & 0xFF) == 0x89 && datos[1] == 'P' && datos[2] == 'N' && datos[3] == 'G';
     }
 }

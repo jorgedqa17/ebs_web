@@ -12,102 +12,361 @@
         <f:viewAction action="#{beanCatalogoProductos.buscarPorCodigoBarras}"/>
     </f:metadata>
 
+    <!--
+        Catálogo pensado para teléfono: lista de tarjetas con scroll continuo (p:dataScroller lazy, carga
+        20 productos más al acercarse al final) y detalle en la misma página, sin ventana modal. El
+        acomodo usa la grilla responsive de la plantilla (ui-g / ui-g-* / ui-md-* / ui-lg-*):
+        en teléfono foto + datos arriba y precio/existencia abajo; en tablet y PC todo en una fila.
+    -->
     <ui:define name="head">
         <style type="text/css">
-            .galeria-detalle img { height: 110px; object-fit: contain; margin: 6px; border: 1px solid #ddd; border-radius: 6px; padding: 4px; }
+            #catalogoLista .ui-datascroller .ui-datascroller-content { border: 0 none; padding: 0; background: transparent; }
+            #catalogoLista .ui-datascroller-list > li { border: 0 none; padding: 0; }
+
+            .cat-buscador { position: -webkit-sticky; position: sticky; top: 50px; z-index: 20; background: #f4f4f7; padding: 8px 0; }
+            .cat-buscador input { font-size: 16px !important; padding: 10px !important; }
+
+            a.cat-item { display: block; color: inherit; text-decoration: none; background: #fff; border-radius: 8px;
+                         margin: 0 0 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,.12); -webkit-tap-highlight-color: rgba(3,136,229,.15); }
+            a.cat-item:hover, a.cat-item:focus { box-shadow: 0 2px 6px rgba(3,136,229,.35); }
+            a.cat-item .ui-g { padding: 0; }
+
+            .cat-foto { text-align: center; }
+            .cat-foto img { width: 100%; max-width: 110px; height: 90px; object-fit: contain; border-radius: 6px; background: #fff; }
+            .cat-sin-foto { display: inline-block; width: 100%; max-width: 110px; height: 90px; line-height: 90px; text-align: center;
+                            border: 1px dashed #ccc; border-radius: 6px; color: #bbb; font-size: 32px; }
+
+            .cat-desc { font-weight: bold; font-size: 15px; line-height: 1.3; word-break: break-word; }
+            .cat-sub { color: #777; font-size: 13px; margin-top: 4px; word-break: break-word; }
+            .cat-precio { font-size: 18px; font-weight: bold; color: #0388e5; }
+            .cat-precio-secundario { font-size: 14px; }
+            .cat-etiqueta { color: #777; font-size: 12px; }
+            .cat-derecha { text-align: right; }
+            .cat-ver { color: #0388e5; font-size: 13px; }
+
+            .stock-si { display: inline-block; color: #1b7a3a; background: #e3f4e8; font-weight: bold; font-size: 13px; padding: 2px 8px; border-radius: 10px; }
+            .stock-no { display: inline-block; color: #b3261e; background: #fbe6e4; font-weight: bold; font-size: 13px; padding: 2px 8px; border-radius: 10px; }
+            .cat-vacio { text-align: center; color: #777; padding: 30px 10px; }
+
+            .cat-detalles { border: 1px solid #ddd; border-radius: 8px; background: #fafafa; margin-bottom: 10px; }
+            .cat-detalles summary { cursor: pointer; padding: 12px; font-weight: bold; color: #0388e5; list-style: none; outline: none;
+                                    -webkit-tap-highlight-color: rgba(3,136,229,.15); }
+            .cat-detalles summary::-webkit-details-marker { display: none; }
+            .cat-detalles summary:after { content: "▾"; float: right; transition: transform .2s; }
+            .cat-detalles[open] summary:after { transform: rotate(180deg); }
+            .cat-detalles-texto { padding: 0 12px 12px 12px; white-space: pre-line; word-break: break-word; line-height: 1.5; }
+
+            .cat-galeria a { display: block; margin-bottom: 10px; }
+            .cat-galeria img { width: 100%; max-height: 360px; object-fit: contain; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+            .cat-fila { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid #eee; }
+            .cat-fila:last-child { border-bottom: 0 none; }
+            .cat-fila .valor { font-weight: bold; text-align: right; margin-left: 10px; }
+
+            /* Teléfono: precio/existencia en una franja bajo la foto, alineados a los lados. */
+            @media (max-width: 40em) {
+                .cat-derecha { text-align: left; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f0f0f0; }
+                .cat-ver { display: none; }
+                .cat-foto img, .cat-sin-foto { height: 80px; line-height: 80px; }
+                .card.cat-encabezado h1 { font-size: 20px; margin: 0; }
+            }
         </style>
+        <script type="text/javascript">
+            //<![CDATA[
+            /*
+             * Lista y detalle en la misma página. Al abrir el detalle se oculta la lista (sin perder lo ya
+             * cargado ni la posición de scroll) y se agrega una entrada al historial, para que el botón
+             * "atrás" del teléfono regrese a la lista en vez de salir de la pantalla.
+             */
+            var CatalogoUI = {
+                abierto: false,
+                ultimaTecla: 0,
+                ultimoTexto: '',
+                scrollY: 0,
+                /* Con datos móviles lentos no se busca por cada letra: desde 3 caracteres, o al borrar todo. Enter/escáner siempre busca. */
+                buscarAlEscribir: function () {
+                    var campo = document.getElementById('form_sisadmin:txtBusqueda');
+                    var texto = campo ? campo.value.trim() : '';
+                    // Enter (pistola lectora) ya buscó por su cuenta; teclas que no cambian el texto (flechas, Shift...) no buscan.
+                    if (this.ultimaTecla === 13 || texto === this.ultimoTexto) {
+                        return false;
+                    }
+                    if (texto.length !== 0 && texto.length < 3) {
+                        return false;
+                    }
+                    this.ultimoTexto = texto;
+                    return true;
+                },
+                ver: function (idProducto) {
+                    pedirDetalle([{name: 'idProducto', value: idProducto}]);
+                },
+                mostrar: function () {
+                    this.scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+                    this.pausarScroller();
+                    this.abierto = true;
+                    $('#catalogoLista').hide();
+                    $('#catalogoDetalle').show();
+                    window.scrollTo(0, 0);
+                },
+                abrir: function () {
+                    if (this.abierto) {
+                        window.scrollTo(0, 0);
+                        return;
+                    }
+                    this.mostrar();
+                    if (window.history && history.pushState) {
+                        history.pushState({catalogoDetalle: true}, '');
+                    }
+                },
+                abrirInicial: function () {
+                    this.mostrar();
+                },
+                ocultar: function () {
+                    this.abierto = false;
+                    $('#catalogoDetalle').hide();
+                    $('#catalogoLista').show();
+                    window.scrollTo(0, this.scrollY);
+                    this.enfocarBuscador();
+                },
+                /* Con pistola lectora (PC) el cursor debe estar en el buscador; en teléfono no, para no abrir el teclado solo. */
+                enfocarBuscador: function () {
+                    if (!('ontouchstart' in window)) {
+                        $(document.getElementById('form_sisadmin:txtBusqueda')).focus();
+                    }
+                },
+                cerrar: function () {
+                    if (!this.abierto) {
+                        return;
+                    }
+                    if (window.history && history.state && history.state.catalogoDetalle) {
+                        history.back(); // dispara popstate, que oculta el detalle
+                    } else {
+                        this.ocultar();
+                    }
+                },
+                /* Con la lista oculta la página queda corta y el dataScroller cargaría bloques sin parar. */
+                pausarScroller: function () {
+                    var w = PF('scrollerCatalogo');
+                    if (w && !w.pausaCatalogo) {
+                        var original = w.shouldLoad;
+                        w.shouldLoad = function () {
+                            return !CatalogoUI.abierto && original.call(this);
+                        };
+                        w.pausaCatalogo = true;
+                    }
+                }
+            };
+            $(function () { CatalogoUI.enfocarBuscador(); });
+            window.addEventListener('popstate', function () {
+                if (CatalogoUI.abierto) {
+                    CatalogoUI.ocultar();
+                }
+            });
+            //]]>
+        </script>
     </ui:define>
 
     <ui:define name="content">
-        <div class="card">
-            <p:commandButton value="Volver" icon="fa fa-arrow-left" type="button" onclick="history.back(); return false;"
-                              rendered="#{not empty beanCatalogoProductos.codigoBarras}" style="margin-bottom:10px;"/>
-            <h1>Catálogo de Productos</h1>
+        <div class="ui-fluid">
+            <div class="ui-g">
+                <div class="ui-g-12">
 
-            <p:dataTable id="tablaCatalogo" value="#{beanCatalogoProductos.modeloProductos}"
-                         var="producto"
-                         lazy="true"
-                         reflow="true"
-                         paginator="true"
-                         rowKey="#{producto.producto.id_producto}"
-                         paginatorPosition="bottom"
-                         rows="10"
-                         emptyMessage="#{label['tabla.vacia']}">
+                    <!-- ===================== LISTA ===================== -->
+                    <div id="catalogoLista">
+                        <div class="card cat-encabezado">
+                            <p:commandButton value="Volver" icon="fa fa-arrow-left" type="button" onclick="history.back(); return false;"
+                                             rendered="#{not empty beanCatalogoProductos.codigoBarras}" style="margin-bottom:10px; width:auto;"/>
+                            <h1>Catálogo de Productos</h1>
+                        </div>
 
-                <p:column filterMatchMode="contains" filterBy="#{producto.producto.codigo_barras}" headerText="#{label['producto.id_producto']}">
-                    <h:outputText value="#{producto.producto.codigo_barras}"/>
-                </p:column>
-                <p:column filterMatchMode="contains" filterBy="#{producto.producto.descripcion}" headerText="#{label['producto.descripcion']}">
-                    <h:outputText value="#{producto.producto.descripcion}"/>
-                </p:column>
-                <p:column filterMatchMode="contains" filterBy="#{producto.descripcionTipoProducto}" headerText="#{label['producto.tipo.producto']}">
-                    <h:outputText value="#{producto.descripcionTipoProducto}"/>
-                </p:column>
-                <p:column filterMatchMode="exact" filterBy="#{producto.estado}" headerText="Estado">
-                    <h:outputText value="#{producto.estado}"/>
-                </p:column>
-                <p:column>
-                    <p:commandButton icon="ui-icon-search" value="Ver Detalle"
-                                      actionListener="#{beanCatalogoProductos.verDetalle(producto)}"
-                                      update=":form_sisadmin:panelDetalleProducto"
-                                      oncomplete="PF('dialogDetalleProducto').show()"/>
-                </p:column>
-            </p:dataTable>
+                        <div class="cat-buscador">
+                            <!--
+                                Sirve para escribir y para la pistola lectora de códigos de barras (teclado que escribe el código y
+                                manda Enter): Enter busca de inmediato y deja el texto seleccionado para que el siguiente escaneo
+                                lo reemplace en vez de agregarse al anterior. Al escribir a mano busca al dejar de teclear (700 ms, desde 3 caracteres).
+                            -->
+                            <p:inputText id="txtBusqueda" value="#{beanCatalogoProductos.busqueda}"
+                                         placeholder="Buscar o escanear código de barras"
+                                         autocomplete="off"
+                                         onfocus="this.select();"
+                                         onkeydown="CatalogoUI.ultimaTecla = event.keyCode; if (event.keyCode == 13) { event.preventDefault(); CatalogoUI.ultimoTexto = this.value.trim(); buscarYa(); this.select(); return false; }">
+                                <p:ajax event="keyup" delay="700" onstart="return CatalogoUI.buscarAlEscribir();" listener="#{beanCatalogoProductos.buscar}" update="panelLista"/>
+                            </p:inputText>
+                            <p:remoteCommand name="buscarYa" process="txtBusqueda" actionListener="#{beanCatalogoProductos.buscar}"
+                                             update="panelLista"/>
+                        </div>
 
-            <p:dialog header="Detalle del Producto" widgetVar="dialogDetalleProducto" modal="true"
-                      showEffect="fade" hideEffect="fade" resizable="false" width="700"
-                      appendTo="@(body)">
-                <h:panelGroup id="panelDetalleProducto" layout="block">
-                    <h:panelGroup layout="block" rendered="#{beanCatalogoProductos.productoDetalle != null}">
-                        <h2>#{beanCatalogoProductos.productoDetalle.producto.descripcion}</h2>
-                        <p>
-                            <b>Código: </b>#{beanCatalogoProductos.productoDetalle.producto.codigo_barras}
-                            &#160;&#160;
-                            <b>Tipo: </b>#{beanCatalogoProductos.productoDetalle.descripcionTipoProducto}
-                            &#160;&#160;
-                            <b>Estado: </b>#{beanCatalogoProductos.productoDetalle.estado}
-                        </p>
+                        <p:outputPanel id="panelLista" layout="block">
+                            <p:dataScroller id="scrollerCatalogo" widgetVar="scrollerCatalogo"
+                                            value="#{beanCatalogoProductos.modeloProductos}" var="producto"
+                                            lazy="true" chunkSize="20" buffer="20">
+                                <a href="#" class="cat-item" onclick="CatalogoUI.ver(#{producto.producto.id_producto}); return false;">
+                                    <div class="ui-g">
+                                        <div class="ui-g-4 ui-md-2 cat-foto">
+                                            <h:panelGroup rendered="#{not empty producto.primeraImagen}">
+                                                <img src="#{request.contextPath}/imagenProducto?producto=#{producto.producto.id_producto}&amp;archivo=#{producto.primeraImagen}&amp;mini=1"
+                                                     alt="#{producto.producto.descripcion}" loading="lazy"/>
+                                            </h:panelGroup>
+                                            <h:panelGroup rendered="#{empty producto.primeraImagen}">
+                                                <span class="cat-sin-foto fa fa-picture-o"></span>
+                                            </h:panelGroup>
+                                        </div>
 
-                        <h3>Precios</h3>
-                        <p:dataTable value="#{beanCatalogoProductos.listaPreciosDetalle}" var="productoPrecio"
-                                      emptyMessage="Sin precios registrados.">
-                            <p:column headerText="#{label['producto.tipo.precio.tipo']}">
-                                <h:outputText value="#{productoPrecio.descripcion}"/>
-                            </p:column>
-                            <p:column headerText="#{label['producto.moneda']}">
-                                <h:outputText value="#{productoPrecio.descripcionTipoMoneda}"/>
-                            </p:column>
-                            <p:column headerText="#{label['producto.precio']}">
-                                <h:outputText value="#{productoPrecio.productoPrecio.precio}"/>
-                            </p:column>
-                        </p:dataTable>
+                                        <div class="ui-g-8 ui-md-6">
+                                            <div class="cat-desc">#{producto.producto.descripcion}</div>
+                                            <div class="cat-sub">
+                                                #{producto.producto.codigo_barras} · #{producto.descripcionTipoProducto}
+                                            </div>
+                                        </div>
 
-                        <h3>Existencia en inventario</h3>
-                        <p:dataTable value="#{beanCatalogoProductos.listaExistenciaDetalle}" var="existencia"
-                                      emptyMessage="Sin existencia registrada.">
-                            <p:column headerText="#{label['producto.existencia.bodega']}">
-                                <h:outputText value="#{existencia.descripcion_bodega}"/>
-                            </p:column>
-                            <p:column headerText="#{label['producto.existencia.cantidad']}">
-                                <h:outputText value="#{existencia.cantidad}"/>
-                            </p:column>
-                        </p:dataTable>
+                                        <div class="ui-g-12 ui-md-4 cat-derecha">
+                                            <!-- Agente / Tienda: un solo precio -->
+                                            <h:panelGroup layout="block" rendered="#{not beanCatalogoProductos.vistaCompleta}">
+                                                <h:outputText styleClass="cat-precio" value="#{beanCatalogoProductos.precioVista(producto)}"
+                                                              rendered="#{beanCatalogoProductos.precioVista(producto) != null}">
+                                                    <f:convertNumber pattern="#,##0.00"/>
+                                                </h:outputText>
+                                                <h:outputText styleClass="cat-etiqueta" value=" #{beanCatalogoProductos.monedaVista(producto)}"
+                                                              rendered="#{beanCatalogoProductos.precioVista(producto) != null}"/>
+                                                <h:outputText styleClass="cat-etiqueta" value="Sin precio"
+                                                              rendered="#{beanCatalogoProductos.precioVista(producto) == null}"/>
+                                            </h:panelGroup>
+                                            <!-- Personal interno: General y Por Mayor -->
+                                            <h:panelGroup layout="block" rendered="#{beanCatalogoProductos.vistaCompleta}">
+                                                <div>
+                                                    <span class="cat-etiqueta">General </span>
+                                                    <h:outputText styleClass="cat-precio" value="#{producto.precioGeneral}" rendered="#{producto.precioGeneral != null}">
+                                                        <f:convertNumber pattern="#,##0.00"/>
+                                                    </h:outputText>
+                                                    <h:outputText styleClass="cat-etiqueta" value=" #{producto.monedaGeneral}" rendered="#{producto.precioGeneral != null}"/>
+                                                    <h:outputText styleClass="cat-etiqueta" value="-" rendered="#{producto.precioGeneral == null}"/>
+                                                </div>
+                                                <div>
+                                                    <span class="cat-etiqueta">Por Mayor </span>
+                                                    <h:outputText styleClass="cat-precio-secundario" value="#{producto.precioPorMayor}" rendered="#{producto.precioPorMayor != null}">
+                                                        <f:convertNumber pattern="#,##0.00"/>
+                                                    </h:outputText>
+                                                    <h:outputText styleClass="cat-etiqueta" value=" #{producto.monedaPorMayor}" rendered="#{producto.precioPorMayor != null}"/>
+                                                    <h:outputText styleClass="cat-etiqueta" value="-" rendered="#{producto.precioPorMayor == null}"/>
+                                                </div>
+                                            </h:panelGroup>
 
-                        <h3>Imágenes</h3>
-                        <h:panelGroup layout="block" styleClass="galeria-detalle">
-                            <ui:repeat value="#{beanCatalogoProductos.listaImagenesDetalle}" var="nombreImagen">
-                                <h:graphicImage url="/imagenProducto?producto=#{beanCatalogoProductos.productoDetalle.producto.id_producto}&amp;archivo=#{nombreImagen}"/>
-                            </ui:repeat>
-                            <p:outputLabel value="Este producto no tiene imágenes." rendered="#{empty beanCatalogoProductos.listaImagenesDetalle}"/>
-                        </h:panelGroup>
+                                            <div style="margin-top:4px;">
+                                                <h:outputText styleClass="#{producto.disponible ? 'stock-si' : 'stock-no'}"
+                                                              value="Existencia: #{producto.existenciaTotal}"
+                                                              rendered="#{beanCatalogoProductos.vistaCompleta}"/>
+                                                <h:outputText styleClass="stock-si" value="Disponible"
+                                                              rendered="#{not beanCatalogoProductos.vistaCompleta and producto.disponible}"/>
+                                                <h:outputText styleClass="stock-no" value="Agotado"
+                                                              rendered="#{not beanCatalogoProductos.vistaCompleta and not producto.disponible}"/>
+                                                <span class="cat-ver"> &#160;Ver <i class="fa fa-chevron-right"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </p:dataScroller>
+                            <h:panelGroup layout="block" styleClass="cat-vacio"
+                                          rendered="#{beanCatalogoProductos.modeloProductos.rowCount eq 0}">
+                                No se encontraron productos.
+                            </h:panelGroup>
+                        </p:outputPanel>
+                    </div>
+
+                    <!-- ===================== DETALLE (misma página, sin modal) ===================== -->
+                    <div id="catalogoDetalle" style="display:none;">
+                        <div class="card">
+                            <p:commandButton value="Volver al catálogo" icon="fa fa-arrow-left" type="button"
+                                             onclick="CatalogoUI.cerrar(); return false;" style="width:auto; margin-bottom:10px;"/>
+
+                            <h:panelGroup id="panelDetalleProducto" layout="block">
+                                <h:panelGroup layout="block" styleClass="cat-vacio" rendered="#{beanCatalogoProductos.productoDetalle == null}">
+                                    El producto no está disponible.
+                                </h:panelGroup>
+
+                                <h:panelGroup layout="block" rendered="#{beanCatalogoProductos.productoDetalle != null}">
+                                    <h2 style="margin-top:0;">#{beanCatalogoProductos.productoDetalle.producto.descripcion}</h2>
+                                    <div class="cat-sub" style="margin-bottom:10px;">
+                                        Código #{beanCatalogoProductos.productoDetalle.producto.codigo_barras}
+                                        · #{beanCatalogoProductos.productoDetalle.descripcionTipoProducto}
+                                    </div>
+
+                                    <!-- Descripción detallada (opcional): desplegable, cerrada por defecto para no alargar la pantalla en el teléfono. -->
+                                    <h:panelGroup rendered="#{not empty beanCatalogoProductos.productoDetalle.producto.descripcion_larga}">
+                                        <details class="cat-detalles">
+                                            <summary>Descripción del producto</summary>
+                                            <div class="cat-detalles-texto"><h:outputText value="#{beanCatalogoProductos.productoDetalle.producto.descripcion_larga}"/></div>
+                                        </details>
+                                    </h:panelGroup>
+
+                                    <div class="ui-g">
+                                        <!-- Fotos: en teléfono van primero y a todo el ancho -->
+                                        <div class="ui-g-12 ui-md-6 cat-galeria">
+                                            <ui:repeat value="#{beanCatalogoProductos.listaImagenesDetalle}" var="nombreImagen">
+                                                <!-- Abre la imagen original en otra pestaña para poder ampliarla en el teléfono. -->
+                                                <a href="#{request.contextPath}/imagenProducto?producto=#{beanCatalogoProductos.productoDetalle.producto.id_producto}&amp;archivo=#{nombreImagen}"
+                                                   target="_blank" rel="noopener">
+                                                    <img src="#{request.contextPath}/imagenProducto?producto=#{beanCatalogoProductos.productoDetalle.producto.id_producto}&amp;archivo=#{nombreImagen}"
+                                                         alt="#{beanCatalogoProductos.productoDetalle.producto.descripcion}" loading="lazy"/>
+                                                </a>
+                                            </ui:repeat>
+                                            <h:panelGroup layout="block" styleClass="cat-vacio" rendered="#{empty beanCatalogoProductos.listaImagenesDetalle}">
+                                                <span class="fa fa-picture-o" style="font-size:40px;"></span><br/>
+                                                Este producto no tiene imágenes.
+                                            </h:panelGroup>
+                                        </div>
+
+                                        <div class="ui-g-12 ui-md-6">
+                                            <h3 style="margin-top:0;">#{beanCatalogoProductos.vistaCompleta ? 'Precios' : 'Precio'}</h3>
+                                            <ui:repeat value="#{beanCatalogoProductos.listaPreciosDetalle}" var="productoPrecio">
+                                                <div class="cat-fila">
+                                                    <span>#{productoPrecio.descripcion}</span>
+                                                    <span class="valor">
+                                                        <h:outputText value="#{productoPrecio.productoPrecio.precio}">
+                                                            <f:convertNumber pattern="#,##0.00"/>
+                                                        </h:outputText>
+                                                        #{productoPrecio.descripcionTipoMoneda}
+                                                    </span>
+                                                </div>
+                                            </ui:repeat>
+                                            <h:panelGroup layout="block" styleClass="cat-etiqueta" rendered="#{empty beanCatalogoProductos.listaPreciosDetalle}">
+                                                Sin precio registrado.
+                                            </h:panelGroup>
+
+                                            <h3>Existencia</h3>
+                                            <h:panelGroup layout="block" rendered="#{beanCatalogoProductos.vistaCompleta}">
+                                                <ui:repeat value="#{beanCatalogoProductos.listaExistenciaDetalle}" var="existencia">
+                                                    <div class="cat-fila">
+                                                        <span>#{existencia.descripcion_bodega}</span>
+                                                        <span class="valor">#{existencia.cantidad}</span>
+                                                    </div>
+                                                </ui:repeat>
+                                                <h:panelGroup layout="block" styleClass="cat-etiqueta" rendered="#{empty beanCatalogoProductos.listaExistenciaDetalle}">
+                                                    Sin existencia registrada.
+                                                </h:panelGroup>
+                                            </h:panelGroup>
+                                            <h:panelGroup layout="block" rendered="#{not beanCatalogoProductos.vistaCompleta}">
+                                                <h:outputText styleClass="stock-si" value="Disponible" rendered="#{beanCatalogoProductos.disponibleDetalle}"/>
+                                                <h:outputText styleClass="stock-no" value="Agotado" rendered="#{not beanCatalogoProductos.disponibleDetalle}"/>
+                                            </h:panelGroup>
+                                        </div>
+                                    </div>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                        </div>
+                    </div>
+
+                    <p:remoteCommand name="pedirDetalle" process="@this"
+                                     actionListener="#{beanCatalogoProductos.verDetalleSolicitado}"
+                                     update="panelDetalleProducto"
+                                     oncomplete="CatalogoUI.abrir()"/>
+
+                    <!-- Llegó con ?codigo= desde la ficha del producto: abrir su detalle directo. -->
+                    <h:panelGroup rendered="#{not empty beanCatalogoProductos.codigoBarras and beanCatalogoProductos.productoDetalle != null}">
+                        <script type="text/javascript">
+                            $(function () { CatalogoUI.abrirInicial(); });
+                        </script>
                     </h:panelGroup>
-                </h:panelGroup>
-            </p:dialog>
-            <h:panelGroup rendered="#{beanCatalogoProductos.productoDetalle != null}">
-                <script type="text/javascript">
-                    $(function () { PF('dialogDetalleProducto').show(); });
-                </script>
-            </h:panelGroup>
+                </div>
+            </div>
         </div>
     </ui:define>
 </ui:composition>

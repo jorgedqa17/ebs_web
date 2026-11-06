@@ -80,6 +80,10 @@ public class Producto implements Serializable {
     @Column(name = "ruta_imagen")
     private String ruta_imagen;
 
+    /** Texto libre de hasta 2000 caracteres (detalles, usos, presentación); se muestra desplegable en el catálogo. */
+    @Column(name = "descripcion_larga", length = 2000)
+    private String descripcion_larga;
+
     @Transient
     private Persona personaAsociada;
 

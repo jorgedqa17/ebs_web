@@ -530,6 +530,16 @@ public class BeanProductos {
     public boolean validarProducto() {
         boolean resultado = true;
 
+        String detalle = this.producto.getDescripcion_larga();
+        if (detalle != null) {
+            detalle = detalle.trim();
+            if (detalle.length() > 2000) {
+                MensajeUtil.agregarMensajeAdvertencia("La descripción detallada no puede superar los 2000 caracteres");
+                return false;
+            }
+            this.producto.setDescripcion_larga(detalle.isEmpty() ? null : detalle);
+        }
+
         if (this.idUnidadMedidaSeleccionado == null || this.idUnidadMedidaSeleccionado.equals(0l)) {
             MensajeUtil.agregarMensajeAdvertencia(EtiquetasUtil.obtenerMensaje("mensaje.validacion.unidad.medida"));
             return false;
